@@ -1,12 +1,12 @@
 
-# Dict
+# Dic
 
-[![Dict on nuget.org](https://img.shields.io/nuget/v/Dict)](https://www.nuget.org/packages/Dict/)
-[![Dict on fuget.org](https://www.fuget.org/packages/Dict/badge.svg)](https://www.fuget.org/packages/Dict)
-![code size](https://img.shields.io/github/languages/code-size/goswinr/Dict.svg)
-[![license](https://img.shields.io/github/license/goswinr/Dict)](LICENSE)
+[![Dic on nuget.org](https://img.shields.io/nuget/v/Dic)](https://www.nuget.org/packages/Dic/)
+[![Dic on fuget.org](https://www.fuget.org/packages/Dic/badge.svg)](https://www.fuget.org/packages/Dic)
+![code size](https://img.shields.io/github/languages/code-size/goswinr/Dic.svg)
+[![license](https://img.shields.io/github/license/goswinr/Dic)](LICENSE)
 
-![Logo](https://raw.githubusercontent.com/goswinr/Dict/main/Doc/logo.png)
+![Logo](https://raw.githubusercontent.com/goswinr/Dic/main/Doc/logo.png)
 
 A small F# library extending the .NET Dictionary
 
@@ -32,7 +32,7 @@ npm test
 ```
 
 ### License
-[MIT](https://raw.githubusercontent.com/goswinr/Dict/main/LICENSE.txt)
+[MIT](https://raw.githubusercontent.com/goswinr/Dic/main/LICENSE.txt)
 
 ### Changelog
 

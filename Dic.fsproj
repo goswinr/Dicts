@@ -8,12 +8,12 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <!--to only have the English resources-->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <RootNamespace>Dict</RootNamespace>
-    <AssemblyName>Dict</AssemblyName>
-    <AssemblyTitle>Dict</AssemblyTitle>
-    <Title>Dict</Title>
-    <Product>Dict</Product>
-    <PackageId>Dict</PackageId>
+    <RootNamespace>Dic</RootNamespace>
+    <AssemblyName>Dic</AssemblyName>
+    <AssemblyTitle>Dic</AssemblyTitle>
+    <Title>Dic</Title>
+    <Product>Dic</Product>
+    <PackageId>Dic</PackageId>
     <Version>0.1.0</Version>
     <AssemblyVersion>0.1.0</AssemblyVersion>
     <FileVersion>0.1.0</FileVersion>
@@ -39,8 +39,8 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/goswinr/Dict</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/goswinr/Dict</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/goswinr/Dic</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/goswinr/Dic</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageIcon>logo128.png</PackageIcon>
     <PackageReadmeFile>READMEnuget.md</PackageReadmeFile>

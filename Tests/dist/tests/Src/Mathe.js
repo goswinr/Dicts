@@ -10,72 +10,72 @@ import { op_Addition, toInt64 } from "../fable_modules/fable-library-js.4.21.0/B
 import { StringBuilder__get_Length, StringBuilder__Append_244C7CD6, StringBuilder_$ctor_Z524259A4 } from "../fable_modules/fable-library-js.4.21.0/System.Text.js";
 import { FSharpRef, toString } from "../fable_modules/fable-library-js.4.21.0/Types.js";
 
-export function DictFail_fail11(x, func) {
-    throw new Error(toText(interpolate("Dict.%P(): input must be between -1.00001 and +1.00001 but is %8f%P()", [func, x])));
+export function DicFail_fail11(x, func) {
+    throw new Error(toText(interpolate("Dic.%P(): input must be between -1.00001 and +1.00001 but is %8f%P()", [func, x])));
 }
 
-export function DictFail_failClamp(maxVal, minVal) {
-    throw new Error(`Dict.clamp: max value ${maxVal} must be bigger than min ${minVal}`);
+export function DicFail_failClamp(maxVal, minVal) {
+    throw new Error(`Dic.clamp: max value ${maxVal} must be bigger than min ${minVal}`);
 }
 
-export function DictFail_failInfNaN(func) {
-    throw new Error(`Dict.${func}: given input is NaN or Infinity`);
+export function DicFail_failInfNaN(func) {
+    throw new Error(`Dic.${func}: given input is NaN or Infinity`);
 }
 
-export function DictFail_failInfNaNv(func, name) {
-    throw new Error(`Dict.${func}: given input '${name}' is NaN`);
+export function DicFail_failInfNaNv(func, name) {
+    throw new Error(`Dic.${func}: given input '${name}' is NaN`);
 }
 
-export function DictFail_failNaN(func) {
-    throw new Error(`Dict.${func}: given input is NaN`);
+export function DicFail_failNaN(func) {
+    throw new Error(`Dic.${func}: given input is NaN`);
 }
 
-export function DictFail_failNaNv(func, name) {
-    throw new Error(`Dict.${func}: given input '${name}' is NaN`);
+export function DicFail_failNaNv(func, name) {
+    throw new Error(`Dic.${func}: given input '${name}' is NaN`);
 }
 
-export function DictFail_failTiny18(func) {
-    throw new Error(`Dict.${func}: given input is smaller than + or - 1-e18.`);
+export function DicFail_failTiny18(func) {
+    throw new Error(`Dic.${func}: given input is smaller than + or - 1-e18.`);
 }
 
-export function DictFail_failTiny18v(func, name) {
-    throw new Error(`Dict.${func}: given input '${name}' is smaller than + or - 1-e18.`);
+export function DicFail_failTiny18v(func, name) {
+    throw new Error(`Dic.${func}: given input '${name}' is smaller than + or - 1-e18.`);
 }
 
-export function DictFail_failBig36(func) {
-    throw new Error(`Dict.${func}: given input is bigger than + or - 1e36.`);
+export function DicFail_failBig36(func) {
+    throw new Error(`Dic.${func}: given input is bigger than + or - 1e36.`);
 }
 
-export function DictFail_failBig36v(func, name) {
-    throw new Error(`Dict.${func}: given input '${name}' is bigger than + or - 1e36.`);
+export function DicFail_failBig36v(func, name) {
+    throw new Error(`Dic.${func}: given input '${name}' is bigger than + or - 1e36.`);
 }
 
-export function DictFail_failNotPos(func, name, v) {
-    throw new Error(`Dict.${func}: given input '${name}' must be positive but is ${v}.`);
+export function DicFail_failNotPos(func, name, v) {
+    throw new Error(`Dic.${func}: given input '${name}' must be positive but is ${v}.`);
 }
 
-export class Dict {
+export class Dic {
     constructor() {
     }
 }
 
-export function Dict_$reflection() {
-    return class_type("Dict.Dict", undefined, Dict);
+export function Dic_$reflection() {
+    return class_type("Dic.Dic", undefined, Dic);
 }
 
-function Dict_$ctor() {
-    return new Dict();
+function Dic_$ctor() {
+    return new Dic();
 }
 
 (() => {
-    Dict.rand = nonSeeded();
+    Dic.rand = nonSeeded();
 })();
 
 /**
  * Returns a function to find linear interpolations in one table.
  * The input table is a sorted (increasing) array of tuples of input and respective output values.
  */
-export function Dict_interpolateTable_16FC164C(table) {
+export function Dic_interpolateTable_16FC164C(table) {
     const enumerator = getEnumerator(windowed(2, table));
     try {
         while (enumerator["System.Collections.IEnumerator.MoveNext"]()) {
@@ -83,7 +83,7 @@ export function Dict_interpolateTable_16FC164C(table) {
             const t = item(0, tn);
             const n = item(1, tn);
             if (t[0] >= n[0]) {
-                throw new Error(`Dict.interpolateTable: Table input is not sorted increasing ${t} >= ${n}:
+                throw new Error(`Dic.interpolateTable: Table input is not sorted increasing ${t} >= ${n}:
 ${table}`);
             }
         }
@@ -97,7 +97,7 @@ ${table}`);
             const stepOut = table[1][1] - table[0][1];
             const distIn = table[0][0] - x;
             if (Math.abs(stepIn) < 1E-16) {
-                throw new Error(`Dict.interpolateTable: Table query ${x} is smaller than first element in table ${table[0]} and the first two Input elements are almost the same, so a meaningful prediction is not possible.`);
+                throw new Error(`Dic.interpolateTable: Table query ${x} is smaller than first element in table ${table[0]} and the first two Input elements are almost the same, so a meaningful preDicion is not possible.`);
             }
             else {
                 const sc = distIn / stepIn;
@@ -110,7 +110,7 @@ ${table}`);
             const stepOut_1 = table[li][1] - table[li - 1][1];
             const distIn_1 = x - table[li][0];
             if (Math.abs(stepIn_1) < 1E-16) {
-                throw new Error(`Dict.interpolateTable: Table query ${x} is bigger than last element in table ${table[li]} and the last two Input elements are almost the same, so a meaningful prediction is not possible.`);
+                throw new Error(`Dic.interpolateTable: Table query ${x} is bigger than last element in table ${table[li]} and the last two Input elements are almost the same, so a meaningful preDicion is not possible.`);
             }
             else {
                 const sc_1 = distIn_1 / stepIn_1;
@@ -139,14 +139,14 @@ ${table}`);
  * Returns a function to find linear interpolations from two sorted(increasing) Lists of input and respective output values.
  * Includes a check that both list have the same length
  */
-export function Dict_interpolateLists(input, output) {
+export function Dic_interpolateLists(input, output) {
     if (count(input) !== count(output)) {
-        throw new Error(`Dict.interpolateLists: Tables length don't match:
+        throw new Error(`Dic.interpolateLists: Tables length don't match:
 ${input}
 and:
 ${output}`);
     }
-    return Dict_interpolateTable_16FC164C(Array.from(zip(input, output)));
+    return Dic_interpolateTable_16FC164C(Array.from(zip(input, output)));
 }
 
 /**
@@ -154,16 +154,16 @@ ${output}`);
  * Define scale by giving amount of steps(int) to double or half a value.
  * Fails if input is zero or less than 1e-24.
  */
-export function Dict_roundUpToNextLogSteps(stepsToDouble, x) {
+export function Dic_roundUpToNextLogSteps(stepsToDouble, x) {
     let arg1__3;
     if (Number.isNaN(x)) {
-        DictFail_failNaN("roundUpToNextLogSteps");
+        DicFail_failNaN("roundUpToNextLogSteps");
     }
     if (stepsToDouble < 0) {
-        DictFail_failNotPos("roundUpToNextLogSteps", "stepsToDouble", stepsToDouble);
+        DicFail_failNotPos("roundUpToNextLogSteps", "stepsToDouble", stepsToDouble);
     }
     if (Math.abs(x) < 1E-24) {
-        DictFail_failTiny18("roundUpToNextLogSteps");
+        DicFail_failTiny18("roundUpToNextLogSteps");
     }
     let logBase;
     const arg1__1 = 1 / stepsToDouble;
@@ -182,16 +182,16 @@ export function Dict_roundUpToNextLogSteps(stepsToDouble, x) {
  * Define scale by giving amount of steps(int) to double or half a value.
  * Fails if input is zero or less than 1e-24.
  */
-export function Dict_roundDownToNextLogSteps(stepsToDouble, x) {
+export function Dic_roundDownToNextLogSteps(stepsToDouble, x) {
     let arg1__3;
     if (Number.isNaN(x)) {
-        DictFail_failNaN("roundDownToNextLogSteps");
+        DicFail_failNaN("roundDownToNextLogSteps");
     }
     if (stepsToDouble < 0) {
-        DictFail_failNotPos("roundDownToNextLogSteps", "stepsToDouble", stepsToDouble);
+        DicFail_failNotPos("roundDownToNextLogSteps", "stepsToDouble", stepsToDouble);
     }
     if (Math.abs(x) < 1E-24) {
-        DictFail_failTiny18("roundDownToNextLogSteps");
+        DicFail_failTiny18("roundDownToNextLogSteps");
     }
     let logBase;
     const arg1__1 = 1 / stepsToDouble;
@@ -210,23 +210,23 @@ export function Dict_roundDownToNextLogSteps(stepsToDouble, x) {
  * The F# build in range fails for example on [0.0 .. 0.1 .. 0.2 ] , it equals [0.0 .. 0.1 .. 0.3 ]
  * It increases the stop value by the smallest step possible 15 times, to ensure end value is included in returned seq.
  */
-export function Dict_floatRange_Z1EAE0AEB(start, step, stop) {
+export function Dic_floatRange_Z1EAE0AEB(start, step, stop) {
     let f, f_1, f_2;
     if ((f = start, isInfinity(f) ? true : Number.isNaN(f))) {
-        DictFail_failInfNaNv("floatRange", "start");
+        DicFail_failInfNaNv("floatRange", "start");
     }
     if ((f_1 = stop, isInfinity(f_1) ? true : Number.isNaN(f_1))) {
-        DictFail_failInfNaNv("floatRange", "stop");
+        DicFail_failInfNaNv("floatRange", "stop");
     }
     if ((f_2 = step, isInfinity(f_2) ? true : Number.isNaN(f_2))) {
-        DictFail_failInfNaNv("floatRange", "step");
+        DicFail_failInfNaNv("floatRange", "step");
     }
     if (Math.abs(step) < 1E-36) {
-        throw new Error(`Dict.floatRange: step-size cannot be zero: start: ${start} step: ${step} stop: ${stop}`);
+        throw new Error(`Dic.floatRange: step-size cannot be zero: start: ${start} step: ${step} stop: ${stop}`);
     }
     const steps = int64BitsToDouble(toInt64(op_Addition(15n, doubleToInt64Bits(stop - start)))) / step;
     if (steps < 1E-36) {
-        throw new Error(`Dict.floatRange: stop value can never be reached: start: ${start} step: ${step} stop: ${stop}`);
+        throw new Error(`Dic.floatRange: stop value can never be reached: start: ${start} step: ${step} stop: ${stop}`);
     }
     return delay(() => {
         let i = 0;
@@ -241,16 +241,16 @@ export function Dict_floatRange_Z1EAE0AEB(start, step, stop) {
  * Given mean and standardDeviation returns a random value from this Gaussian distribution.
  * If mean is 0.0 and the standard deviation is 1.0 then 99% of values are within -2.3 to +2.3 ; 70% within -1 to +1
  */
-export function Dict_randomStandardDeviation_B9AD360(mean, standardDeviation) {
+export function Dic_randomStandardDeviation_B9AD360(mean, standardDeviation) {
     let f, f_1;
     if ((f = mean, isInfinity(f) ? true : Number.isNaN(f))) {
-        DictFail_failInfNaNv("randomStandardDeviation", "mean");
+        DicFail_failInfNaNv("randomStandardDeviation", "mean");
     }
     if ((f_1 = standardDeviation, isInfinity(f_1) ? true : Number.isNaN(f_1))) {
-        DictFail_failInfNaNv("randomStandardDeviation", "standardDeviation");
+        DicFail_failInfNaNv("randomStandardDeviation", "standardDeviation");
     }
-    const u1 = 1 - Dict.rand.NextDouble();
-    const u2 = Dict.rand.NextDouble();
+    const u1 = 1 - Dic.rand.NextDouble();
+    const u2 = Dic.rand.NextDouble();
     return mean + (standardDeviation * (Math.sqrt(-2 * Math.log(u1)) * Math.sin((2 * 3.141592653589793) * u2)));
 }
 
@@ -260,7 +260,7 @@ export function Dict_randomStandardDeviation_B9AD360(mean, standardDeviation) {
  * and considers a period '.' as decimal separator.
  * Does NOT allow for scientific notation !
  */
-export function Dict_tryParseFloatTolerant_Z721C83C5(s) {
+export function Dic_tryParseFloatTolerant_Z721C83C5(s) {
     const sb = StringBuilder_$ctor_Z524259A4(s.length);
     for (let i = 0; i <= (s.length - 1); i++) {
         const c = s[i];
@@ -293,7 +293,7 @@ export function Dict_tryParseFloatTolerant_Z721C83C5(s) {
  * and considers a comma ',' as decimal separator.
  * Does NOT allow for scientific notation !
  */
-export function Dict_tryParseFloatDeTolerant_Z721C83C5(s) {
+export function Dic_tryParseFloatDeTolerant_Z721C83C5(s) {
     const sb = StringBuilder_$ctor_Z524259A4(s.length);
     for (let i = 0; i <= (s.length - 1); i++) {
         const c = s[i];

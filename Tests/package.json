@@ -2,8 +2,8 @@
   "type": "module",
   "scripts": {
     "ts": "tsc --target es2022 ../Src/Dict.fs.ts",
-    "watchTS": "dotnet fable watch ../Dict.fsproj --lang typescript          --run npm run ts" ,
-    "buildTS": "dotnet fable       ../Dict.fsproj --lang typescript --silent --run npm run ts" ,
+    "watchTS": "dotnet fable watch ../Dic.fsproj --lang typescript          --run npm run ts" ,
+    "buildTS": "dotnet fable       ../Dic.fsproj --lang typescript --silent --run npm run ts" ,
     "pretest": "dotnet fable  --noCache --outDir dist/tests ",
     "test": "mocha dist/tests && npm run buildTS"
   },
