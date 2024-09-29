@@ -1,12 +1,11 @@
 
 # Dict
 
-[![Dict on nuget.org](https://img.shields.io/nuget/v/Dict)](https://www.nuget.org/packages/Dict/)
-[![Dict on fuget.org](https://www.fuget.org/packages/Dict/badge.svg)](https://www.fuget.org/packages/Dict)
 ![code size](https://img.shields.io/github/languages/code-size/goswinr/Dict.svg)
 [![license](https://img.shields.io/github/license/goswinr/Dict)](LICENSE)
 
 ![Logo](https://raw.githubusercontent.com/goswinr/Dict/main/Doc/logo.png)
+
 
 A small F# library extending the .NET Dictionary
 
@@ -38,4 +37,3 @@ npm test
 
 `0.1.0`
 - ported from FsEx library
-

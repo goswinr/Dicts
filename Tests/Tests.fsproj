@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><!-- Exe = console app -->
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Core" Version="4.3.0" />
+    <PackageReference Include="Fable.Mocha" Version="2.17.0" />
+    <PackageReference Include="Expecto" Version="10.1.0" />
+    <ProjectReference Include="../Dict.fsproj" />
+    <Compile Include="Tests.fs" />
+    <Compile Include="RunTests.fs" />
+  </ItemGroup>
+</Project>
