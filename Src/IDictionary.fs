@@ -2,6 +2,7 @@
 
 
 open System.Collections.Generic
+open ExtensionsExceptions
 
 /// Provides Extensions for IDictionary
 /// Such as Items as key value tuples , Pop(key)  or GetValue with nicer error message)

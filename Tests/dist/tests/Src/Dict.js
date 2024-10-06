@@ -1,12 +1,12 @@
 import { structuralHash, defaultOf, safeHash, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
 import { removeInPlace } from "../fable_modules/fable-library-js.4.21.0/Array.js";
 import { map, delay, contains } from "../fable_modules/fable-library-js.4.21.0/Seq.js";
-import { containsValue, tryGetValue, addToDict } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
+import { System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7, System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7 } from "./DefaultDict.js";
+import { printf } from "../fable_modules/fable-library-js.4.21.0/String.js";
+import { containsValue, addToDict, tryGetValue } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
 import { FSharpRef } from "../fable_modules/fable-library-js.4.21.0/Types.js";
 import { class_type } from "../fable_modules/fable-library-js.4.21.0/Reflection.js";
 import { Dictionary } from "../fable_modules/fable-library-js.4.21.0/MutableMap.js";
-import { System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7, System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7 } from "./DefaultDict.js";
-import { printf } from "../fable_modules/fable-library-js.4.21.0/String.js";
 
 export class Dict$2 {
     constructor(dic) {
@@ -74,11 +74,30 @@ export class Dict$2 {
     }
     "System.Collections.Generic.IDictionary`2.get_Item2B595"(k) {
         const _ = this;
-        return Dict$2__get$0027_2B595(_, k);
+        const dic = _.dic;
+        const key = k;
+        if (equals(key, defaultOf())) {
+            return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.get: key is null "));
+        }
+        else {
+            let matchValue_1;
+            let outArg = defaultOf();
+            matchValue_1 = [tryGetValue(dic, key, new FSharpRef(() => outArg, (v) => {
+                outArg = v;
+            })), outArg];
+            return matchValue_1[0] ? matchValue_1[1] : System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7(printf("Dict.get failed to find key %A in %A of %d items"))(key)(dic)(dic.size);
+        }
     }
     "System.Collections.Generic.IDictionary`2.set_Item5BDDA1"(k, v) {
         const _ = this;
-        Dict$2__set$0027(_, k, v);
+        const key = k;
+        const value = v;
+        if (equals(key, defaultOf())) {
+            System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.set key is null for value %A"))(value);
+        }
+        else {
+            _.dic.set(key, value);
+        }
     }
     "System.Collections.Generic.IDictionary`2.get_Keys"() {
         const _ = this;
@@ -115,7 +134,19 @@ export class Dict$2 {
     }
     "System.Collections.Generic.IReadOnlyDictionary`2.get_Item2B595"(k) {
         const _ = this;
-        return Dict$2__get$0027_2B595(_, k);
+        const dic = _.dic;
+        const key = k;
+        if (equals(key, defaultOf())) {
+            return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.get: key is null "));
+        }
+        else {
+            let matchValue_1;
+            let outArg = defaultOf();
+            matchValue_1 = [tryGetValue(dic, key, new FSharpRef(() => outArg, (v) => {
+                outArg = v;
+            })), outArg];
+            return matchValue_1[0] ? matchValue_1[1] : System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7(printf("Dict.get failed to find key %A in %A of %d items"))(key)(dic)(dic.size);
+        }
     }
     "System.Collections.Generic.IReadOnlyDictionary`2.get_Keys"() {
         const _ = this;
@@ -190,35 +221,90 @@ export function Dict$2__get_Dictionary(_) {
  * For Index operator .[i]: get or set the value for given key
  */
 export function Dict$2__get_Item_2B595(_, k) {
-    return Dict$2__get$0027_2B595(_, k);
+    const dic = _.dic;
+    const key = k;
+    if (equals(key, defaultOf())) {
+        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.get: key is null "));
+    }
+    else {
+        let matchValue_1;
+        let outArg = defaultOf();
+        matchValue_1 = [tryGetValue(dic, key, new FSharpRef(() => outArg, (v) => {
+            outArg = v;
+        })), outArg];
+        if (matchValue_1[0]) {
+            return matchValue_1[1];
+        }
+        else {
+            return System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7(printf("Dict.get failed to find key %A in %A of %d items"))(key)(dic)(dic.size);
+        }
+    }
 }
 
 /**
  * For Index operator .[i]: get or set the value for given key
  */
 export function Dict$2__set_Item_5BDDA1(_, k, v) {
-    Dict$2__set$0027(_, k, v);
+    const key = k;
+    const value = v;
+    if (equals(key, defaultOf())) {
+        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.set key is null for value %A"))(value);
+    }
+    else {
+        _.dic.set(key, value);
+    }
 }
 
 /**
  * Get value for given key
  */
 export function Dict$2__Get_2B595(_, key) {
-    return Dict$2__get$0027_2B595(_, key);
+    const dic = _.dic;
+    const key_1 = key;
+    if (equals(key_1, defaultOf())) {
+        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.get: key is null "));
+    }
+    else {
+        let matchValue_1;
+        let outArg = defaultOf();
+        matchValue_1 = [tryGetValue(dic, key_1, new FSharpRef(() => outArg, (v) => {
+            outArg = v;
+        })), outArg];
+        if (matchValue_1[0]) {
+            return matchValue_1[1];
+        }
+        else {
+            return System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7(printf("Dict.get failed to find key %A in %A of %d items"))(key_1)(dic)(dic.size);
+        }
+    }
 }
 
 /**
  * Set value for given key, same as <c>Dict.add key value</c>
  */
 export function Dict$2__set(_, key, value) {
-    Dict$2__set$0027(_, key, value);
+    const key_1 = key;
+    const value_1 = value;
+    if (equals(key_1, defaultOf())) {
+        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.set key is null for value %A"))(value_1);
+    }
+    else {
+        _.dic.set(key_1, value_1);
+    }
 }
 
 /**
  * Set value for given key, same as <c>Dict.set key value</c>
  */
 export function Dict$2__add(_, key, value) {
-    Dict$2__set$0027(_, key, value);
+    const key_1 = key;
+    const value_1 = value;
+    if (equals(key_1, defaultOf())) {
+        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.set key is null for value %A"))(value_1);
+    }
+    else {
+        _.dic.set(key_1, value_1);
+    }
 }
 
 /**
@@ -394,7 +480,14 @@ export function Dict$2__get_Values(_) {
  * Add the specified key and value to the Dictionary.
  */
 export function Dict$2__Add_5BDDA1(_, key, value) {
-    Dict$2__set$0027(_, key, value);
+    const key_1 = key;
+    const value_1 = value;
+    if (equals(key_1, defaultOf())) {
+        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.set key is null for value %A"))(value_1);
+    }
+    else {
+        _.dic.set(key_1, value_1);
+    }
 }
 
 /**
@@ -443,33 +536,5 @@ export function Dict$2__TryGetValue_6DC89625(_, key, refValue) {
  */
 export function Dict$2__GetEnumerator(_) {
     return getEnumerator(_.dic);
-}
-
-export function Dict$2__get$0027_2B595(this$, key) {
-    if (equals(key, defaultOf())) {
-        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.get: key is null "));
-    }
-    else {
-        let matchValue_1;
-        let outArg = defaultOf();
-        matchValue_1 = [tryGetValue(this$.dic, key, new FSharpRef(() => outArg, (v) => {
-            outArg = v;
-        })), outArg];
-        if (matchValue_1[0]) {
-            return matchValue_1[1];
-        }
-        else {
-            return System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7(printf("Dict.get failed to find key %A in %A of %d items"))(key)(this$.dic)(this$.dic.size);
-        }
-    }
-}
-
-export function Dict$2__set$0027(this$, key, value) {
-    if (equals(key, defaultOf())) {
-        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.set key is null for value %A"))(value);
-    }
-    else {
-        this$.dic.set(key, value);
-    }
 }
 

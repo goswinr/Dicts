@@ -4,20 +4,42 @@ open System
 open System.Collections.Generic
 
 
-/// This module is set to auto open when opening FsEx namespace.
-/// Static Extension methods on Exceptions to cal Exception.Raise "%A" x with F# printf string formatting
-[<AutoOpen>]
-[<Obsolete("It is not actually obsolete, but hidden from editor tools.")>]
-module  AutoOpenExtensionsExceptions =
 
+// [<AutoOpen>]
+// [<Obsolete("It is not actually obsolete, but hidden from editor tools. and public for inlining")>]
+
+/// Static Extension methods on Exceptions to cal Exception.Raise "%A" x with F# printf string formatting
+module internal ExtensionsExceptions =
     type ArgumentNullException with
         /// Raise ArgumentNullException with F# printf string formatting
-        static member Raise msg =  Printf.kprintf (fun s -> raise (ArgumentNullException(s))) msg
+        static member Raise msg = Printf.kprintf (fun s -> raise (ArgumentNullException(s))) msg
 
     type KeyNotFoundException with
         /// Raise KeyNotFoundException with F# printf string formatting
-        static member Raise msg =  Printf.kprintf (fun s -> raise (KeyNotFoundException(s))) msg
+        static member Raise msg = Printf.kprintf (fun s -> raise (KeyNotFoundException(s))) msg
 
+open ExtensionsExceptions
+
+module internal DefaultDicUtil =
+    // these functions can't be inside the class because of https://github.com/fable-compiler/Fable/issues/3911
+
+    let inline dGet (baseDic:Dictionary<'K,'V>) defaultOfKeyFun key  =
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise "DefaultDic.get key is null "
+        | _ ->
+            match baseDic.TryGetValue(key) with
+            |true , v -> v
+            |false, _ ->
+                let v = defaultOfKeyFun(key)
+                baseDic.[key] <- v
+                v
+
+    let inline set' (baseDic:Dictionary<'K,'V>) key value =
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise  "DefaultDic.set key is null for value %A" value
+        | _ -> baseDic.[key] <- value
+
+open DefaultDicUtil
 
 /// A System.Collections.Generic.Dictionary with default Values that get created upon accessing a missing key.
 /// If accessing a non exiting key , the default function is called to create and set it.
@@ -30,22 +52,6 @@ module  AutoOpenExtensionsExceptions =
 type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, baseDic : Dictionary<'K,'V>) =
 
     //using inheritance from Dictionary would not work because .Item method is sealed and cant have an override
-
-    let dGet key  =
-        match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "DefaultDic.get key is null "
-        | _ ->
-            match baseDic.TryGetValue(key) with
-            |true , v -> v
-            |false, _ ->
-                let v = defaultOfKeyFun(key)
-                baseDic.[key] <- v
-                v
-
-    let set' key value =
-        match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise  "DefaultDic.set key is null for value %A" value
-        | _ -> baseDic.[key] <- value
 
 
     /// <summary>A System.Collections.Generic.Dictionary with default Values that get created upon accessing a key.
@@ -79,20 +85,20 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
 
     /// For Index operator: get or set the value for given key
     member _.Item
-        with get k   = dGet k
-        and  set k v = set' k v
+        with get k   = dGet baseDic defaultOfKeyFun k
+        and  set k v = set' baseDic k v
 
     /// Get value for given key.
     /// Calls defaultFun to get value if key not found.
     /// Also sets key to returned value.
     /// Use .TryGetValue(k) if you don't want a missing key to be created
-    member _.Get k = dGet k
+    member _.Get k = dGet baseDic defaultOfKeyFun k
 
     /// Set value for given key, same as <c>Dic.add key value</c>
-    member _.set key value = set' key value // dic.[key] <- value
+    member _.set key value = set' baseDic key value // dic.[key] <- value
 
     /// Set value for given key, same as <c>Dic.set key value</c>
-    member _.add key value = set' key value // dic.[key] <- value
+    member _.add key value = set' baseDic key value // dic.[key] <- value
 
     /// Get a value and remove key and value it from Dictionary, like *.pop() in Python
     /// Will fail if key does not exist
@@ -202,8 +208,8 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
 
     interface IDictionary<'K,'V> with
         member _.Item
-            with get k   = dGet k
-            and  set k v = set' k v
+            with get k   = dGet baseDic defaultOfKeyFun k
+            and  set k v = set' baseDic k v
 
         member _.Keys = (baseDic:>IDictionary<'K,'V>).Keys
 
@@ -222,7 +228,7 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
 
     interface IReadOnlyDictionary<'K,'V> with
         member _.Item
-            with get k = dGet k
+            with get k = dGet baseDic defaultOfKeyFun k
 
         member _.Keys = (baseDic:>IReadOnlyDictionary<'K,'V>).Keys
 

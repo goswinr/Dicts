@@ -2,7 +2,31 @@ namespace Dic
 
 open System
 open System.Collections.Generic
+open ExtensionsExceptions
 
+module internal DictUtil =
+    // these functions can't be inside the class because of https://github.com/fable-compiler/Fable/issues/3911
+
+    /// the internal get function, that throws a nice exception if the key is not found
+    let inline get' (dic:Dictionary<'K,'V>) key  =
+            match box key with // or https://stackoverflow.com/a/864860/969070
+            | null -> ArgumentNullException.Raise "Dict.get: key is null "
+            | _ ->
+                match dic.TryGetValue(key) with
+                |true, v-> v
+                |false, _ ->
+                //  let keys = NiceString.toNiceString dic.Keys
+                //  KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items. Keys: %s" key dic dic.Count keys
+                KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items" key dic dic.Count
+
+    /// the internal set function, that throws an exception if the key is null
+    let inline set' (dic:Dictionary<'K,'V>) key value =
+            match box key with // or https://stackoverflow.com/a/864860/969070
+            | null -> ArgumentNullException.Raise  "Dict.set key is null for value %A" value
+            | _ -> dic.[key] <- value
+
+
+open DictUtil
 
 /// A thin wrapper over System.Collections.Generic.Dictionary<'K,'V>) with nicer Error messages on accessing missing keys.
 /// There is a hidden member called "Dictionary" to access the underlying Collections.Generic.Dictionary<'K,'V> directly.
@@ -13,22 +37,6 @@ open System.Collections.Generic
 type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     //using inheritance from Dictionary would not work because .Item method is sealed and can't have an override
-
-    let get' key  =
-         match box key with // or https://stackoverflow.com/a/864860/969070
-         | null -> ArgumentNullException.Raise "Dict.get: key is null "
-         | _ ->
-             match dic.TryGetValue(key) with
-             |true, v-> v
-             |false, _ ->
-                //  let keys = NiceString.toNiceString dic.Keys
-                //  KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items. Keys: %s" key dic dic.Count keys
-                KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items" key dic dic.Count
-
-    let set' key value =
-         match box key with // or https://stackoverflow.com/a/864860/969070
-         | null -> ArgumentNullException.Raise  "Dict.set key is null for value %A" value
-         | _ -> dic.[key] <- value
 
     /// Create a new empty Dict<'K,'V>.
     /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary<'K,'V>) with nicer Error messages on accessing missing keys.
@@ -51,17 +59,17 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// For Index operator .[i]: get or set the value for given key
     member _.Item
-        with get k   = get' k
-        and  set k v = set' k v //dic.[k] <- v
+        with get k   = get' dic  k
+        and  set k v = set' dic  k v //dic.[k] <- v
 
     /// Get value for given key
-    member _.Get key = get' key
+    member _.Get key = get' dic key
 
     /// Set value for given key, same as <c>Dict.add key value</c>
-    member _.set key value = set' key value // dic.[key] <- value
+    member _.set key value = set' dic key value // dic.[key] <- value
 
     /// Set value for given key, same as <c>Dict.set key value</c>
-    member _.add key value = set' key value // dic.[key] <- value
+    member _.add key value = set' dic key value // dic.[key] <- value
 
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
@@ -181,7 +189,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     // -------------------------------------methods:-------------------------------
 
     /// Add the specified key and value to the Dictionary.
-    member _.Add(key, value) = set' key value //dic.Add(key, value)
+    member _.Add(key, value) = set' dic key value //dic.Add(key, value)
 
     /// Removes all keys and values from the Dictionary
     member _.Clear() = dic.Clear()
@@ -244,8 +252,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     interface IDictionary<'K,'V> with
         member _.Item
-            with get k   = get' k
-            and  set k v = set' k v // dic.[k] <- v
+            with get k   = get' dic k
+            and  set k v = set' dic k v // dic.[k] <- v
 
         member _.Keys = (dic:>IDictionary<'K,'V>).Keys
 
@@ -268,7 +276,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     interface IReadOnlyDictionary<'K,'V> with
         member _.Item
-            with get k = get' k
+            with get k = get' dic k
 
         member _.Keys = (dic:>IReadOnlyDictionary<'K,'V>).Keys
 

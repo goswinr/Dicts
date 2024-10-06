@@ -1,11 +1,11 @@
-import { defaultOf, disposeSafe, structuralHash, safeHash, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
+import { disposeSafe, structuralHash, defaultOf, safeHash, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
 import { removeInPlace } from "../fable_modules/fable-library-js.4.21.0/Array.js";
 import { singleton, collect, delay, contains } from "../fable_modules/fable-library-js.4.21.0/Seq.js";
-import { containsValue, tryGetValue, addToDict } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
+import { toText, printf } from "../fable_modules/fable-library-js.4.21.0/String.js";
+import { containsValue, addToDict, tryGetValue } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
 import { FSharpRef } from "../fable_modules/fable-library-js.4.21.0/Types.js";
 import { class_type } from "../fable_modules/fable-library-js.4.21.0/Reflection.js";
 import { Dictionary } from "../fable_modules/fable-library-js.4.21.0/MutableMap.js";
-import { toText, printf } from "../fable_modules/fable-library-js.4.21.0/String.js";
 
 /**
  * Raise ArgumentNullException with F# printf string formatting
@@ -92,11 +92,37 @@ export class DefaultDic$2 {
     }
     "System.Collections.Generic.IDictionary`2.get_Item2B595"(k) {
         const _ = this;
-        return DefaultDic$2__dGet_2B595(_, k);
+        const baseDic = _.baseDic;
+        const key = k;
+        if (equals(key, defaultOf())) {
+            return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.get key is null "));
+        }
+        else {
+            let matchValue_1;
+            let outArg = defaultOf();
+            matchValue_1 = [tryGetValue(baseDic, key, new FSharpRef(() => outArg, (v) => {
+                outArg = v;
+            })), outArg];
+            if (matchValue_1[0]) {
+                return matchValue_1[1];
+            }
+            else {
+                const v_2 = _.defaultOfKeyFun(key);
+                baseDic.set(key, v_2);
+                return v_2;
+            }
+        }
     }
     "System.Collections.Generic.IDictionary`2.set_Item5BDDA1"(k, v) {
         const _ = this;
-        DefaultDic$2__set$0027(_, k, v);
+        const key = k;
+        const value = v;
+        if (equals(key, defaultOf())) {
+            System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.set key is null for value %A"))(value);
+        }
+        else {
+            _.baseDic.set(key, value);
+        }
     }
     "System.Collections.Generic.IDictionary`2.get_Keys"() {
         const _ = this;
@@ -130,7 +156,26 @@ export class DefaultDic$2 {
     }
     "System.Collections.Generic.IReadOnlyDictionary`2.get_Item2B595"(k) {
         const _ = this;
-        return DefaultDic$2__dGet_2B595(_, k);
+        const baseDic = _.baseDic;
+        const key = k;
+        if (equals(key, defaultOf())) {
+            return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.get key is null "));
+        }
+        else {
+            let matchValue_1;
+            let outArg = defaultOf();
+            matchValue_1 = [tryGetValue(baseDic, key, new FSharpRef(() => outArg, (v) => {
+                outArg = v;
+            })), outArg];
+            if (matchValue_1[0]) {
+                return matchValue_1[1];
+            }
+            else {
+                const v_2 = _.defaultOfKeyFun(key);
+                baseDic.set(key, v_2);
+                return v_2;
+            }
+        }
     }
     "System.Collections.Generic.IReadOnlyDictionary`2.get_Keys"() {
         const _ = this;
@@ -222,14 +267,40 @@ export function DefaultDic$2__get_Dictionary(_) {
  * For Index operator: get or set the value for given key
  */
 export function DefaultDic$2__get_Item_2B595(_, k) {
-    return DefaultDic$2__dGet_2B595(_, k);
+    const baseDic = _.baseDic;
+    const key = k;
+    if (equals(key, defaultOf())) {
+        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.get key is null "));
+    }
+    else {
+        let matchValue_1;
+        let outArg = defaultOf();
+        matchValue_1 = [tryGetValue(baseDic, key, new FSharpRef(() => outArg, (v) => {
+            outArg = v;
+        })), outArg];
+        if (matchValue_1[0]) {
+            return matchValue_1[1];
+        }
+        else {
+            const v_2 = _.defaultOfKeyFun(key);
+            baseDic.set(key, v_2);
+            return v_2;
+        }
+    }
 }
 
 /**
  * For Index operator: get or set the value for given key
  */
 export function DefaultDic$2__set_Item_5BDDA1(_, k, v) {
-    DefaultDic$2__set$0027(_, k, v);
+    const key = k;
+    const value = v;
+    if (equals(key, defaultOf())) {
+        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.set key is null for value %A"))(value);
+    }
+    else {
+        _.baseDic.set(key, value);
+    }
 }
 
 /**
@@ -239,21 +310,54 @@ export function DefaultDic$2__set_Item_5BDDA1(_, k, v) {
  * Use .TryGetValue(k) if you don't want a missing key to be created
  */
 export function DefaultDic$2__Get_2B595(_, k) {
-    return DefaultDic$2__dGet_2B595(_, k);
+    const baseDic = _.baseDic;
+    const key = k;
+    if (equals(key, defaultOf())) {
+        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.get key is null "));
+    }
+    else {
+        let matchValue_1;
+        let outArg = defaultOf();
+        matchValue_1 = [tryGetValue(baseDic, key, new FSharpRef(() => outArg, (v) => {
+            outArg = v;
+        })), outArg];
+        if (matchValue_1[0]) {
+            return matchValue_1[1];
+        }
+        else {
+            const v_2 = _.defaultOfKeyFun(key);
+            baseDic.set(key, v_2);
+            return v_2;
+        }
+    }
 }
 
 /**
  * Set value for given key, same as <c>Dic.add key value</c>
  */
 export function DefaultDic$2__set(_, key, value) {
-    DefaultDic$2__set$0027(_, key, value);
+    const key_1 = key;
+    const value_1 = value;
+    if (equals(key_1, defaultOf())) {
+        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.set key is null for value %A"))(value_1);
+    }
+    else {
+        _.baseDic.set(key_1, value_1);
+    }
 }
 
 /**
  * Set value for given key, same as <c>Dic.set key value</c>
  */
 export function DefaultDic$2__add(_, key, value) {
-    DefaultDic$2__set$0027(_, key, value);
+    const key_1 = key;
+    const value_1 = value;
+    if (equals(key_1, defaultOf())) {
+        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.set key is null for value %A"))(value_1);
+    }
+    else {
+        _.baseDic.set(key_1, value_1);
+    }
 }
 
 /**
@@ -365,35 +469,5 @@ export function DefaultDic$2__TryGetValue_2B595(_, k) {
  */
 export function DefaultDic$2__GetEnumerator(_) {
     return getEnumerator(_.baseDic);
-}
-
-export function DefaultDic$2__dGet_2B595(this$, key) {
-    if (equals(key, defaultOf())) {
-        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.get key is null "));
-    }
-    else {
-        let matchValue_1;
-        let outArg = defaultOf();
-        matchValue_1 = [tryGetValue(this$.baseDic, key, new FSharpRef(() => outArg, (v) => {
-            outArg = v;
-        })), outArg];
-        if (matchValue_1[0]) {
-            return matchValue_1[1];
-        }
-        else {
-            const v_2 = this$.defaultOfKeyFun(key);
-            this$.baseDic.set(key, v_2);
-            return v_2;
-        }
-    }
-}
-
-export function DefaultDic$2__set$0027(this$, key, value) {
-    if (equals(key, defaultOf())) {
-        System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("DefaultDic.set key is null for value %A"))(value);
-    }
-    else {
-        this$.baseDic.set(key, value);
-    }
 }
 
