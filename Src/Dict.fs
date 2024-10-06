@@ -66,17 +66,17 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     member _.Get key = get' dic key
 
     /// Set value for given key, same as <c>Dict.add key value</c>
-    member _.set key value = set' dic key value // dic.[key] <- value
+    member _.Set key value = set' dic key value // dic.[key] <- value
 
     /// Set value for given key, same as <c>Dict.set key value</c>
-    member _.add key value = set' dic key value // dic.[key] <- value
+    member _.Add' key value = set' dic key value // dic.[key] <- value
 
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
     /// Same as <c>Dict.addOnce key value</c>
-    member _.setIfKeyAbsent (key:'K) (value:'V) =
+    member _.SetIfKeyAbsent (key:'K) (value:'V) =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "Dict.setOnce key is null "
+        | null -> ArgumentNullException.Raise "Dict.SetIfKeyAbsent key is null "
         | _ ->
             if dic.ContainsKey key then
                 false
@@ -86,9 +86,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
     /// Same as <c>Dict.setOnce key value</c>
-    member _.addIfKeyAbsent  (key:'K) (value:'V) =
+    member _.AddIfKeyAbsent  (key:'K) (value:'V) =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "Dict.addOnce key is null "
+        | null -> ArgumentNullException.Raise "Dict.AddIfKeyAbsent key is null "
         | _ ->
             if dic.ContainsKey key then
                 false
@@ -98,9 +98,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// If the key ist not present calls the default function, set it as value at the key and return the value.
     /// This function is an alternative to the DefaultDic type. Use it if you need to provide a custom implementation of the default function depending on the key.
-    member _.getOrSetDefault (getDefault:'K -> 'V) (key:'K)   =
+    member _.GetOrSetDefault (getDefault:'K -> 'V) (key:'K)   =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "Dict.getOrSetDefault key is null "
+        | null -> ArgumentNullException.Raise "Dict.GetOrSetDefault key is null "
         | _ ->
             match dic.TryGetValue(key) with
             |true, v-> v
@@ -109,9 +109,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 dic.[key] <- v
                 v
     /// If the key ist not present set it as value at the key and return the value.
-    member _.getOrSetDefaultValue (defaultValue: 'V) (key:'K)   =
+    member _.GetOrSetDefaultValue (defaultValue: 'V) (key:'K)   =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "Dict.getOrSetDefaultValue key is null "
+        | null -> ArgumentNullException.Raise "Dict.GetOrSetDefaultValue key is null "
         | _ ->
             match dic.TryGetValue(key) with
             |true, v-> v
@@ -166,13 +166,17 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         //        yield! v.ToString()
         //    yield "..."
         //    }
+
+
     // ------------------member to match ofSystem.Collections.Generic.Dictionary<'K,'V>-------------
 
     // -------------------- properties:  --------------------------------------
 
-    // Removed because not supported by Fable
+    // #if FABLE_COMPILER
+    // #else
     // /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the Dictionary.
-    // member _.Comparer with get() = dic.Comparer
+    // member _.Comparer with get() = baseDic.Comparer
+    // #endif
 
 
     /// Gets the number of key/value pairs contained in the Dictionary
@@ -226,6 +230,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     interface Collections.IEnumerable with // Non generic needed too ?
         member __.GetEnumerator() = dic.GetEnumerator():> System.Collections.IEnumerator
 
+
     interface Collections.ICollection with // Non generic needed too ?
         member _.Count = dic.Count
 
@@ -236,19 +241,20 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         member _.SyncRoot= (dic:>Collections.ICollection).SyncRoot
 
     interface ICollection<KeyValuePair<'K,'V>> with
-        member _.Add(x) = (dic:>ICollection<KeyValuePair<'K,'V>>).Add(x)
+        member _.Add(x) = dic.Add(x.Key, x.Value) //(dic:>ICollection<KeyValuePair<'K,'V>>).Add(x) // fails on Fable: https://github.com/fable-compiler/Fable/issues/3914
 
         member _.Clear() = dic.Clear()
 
-        member _.Remove kvp = (dic:>ICollection<KeyValuePair<'K,'V>>).Remove kvp
+        member _.Remove kvp =  dic.Remove(kvp.Key) // (dic:>ICollection<KeyValuePair<'K,'V>>).Remove kvp
 
-        member _.Contains kvp = (dic:>ICollection<KeyValuePair<'K,'V>>).Contains kvp
+        member _.Contains kvp =   dic.ContainsKey kvp.Key  // (dic:>ICollection<KeyValuePair<'K,'V>>).Contains kvp
 
-        member _.CopyTo(arr, i) = (dic:>ICollection<KeyValuePair<'K,'V>>).CopyTo(arr, i)
+        member _.CopyTo(arr, i) =  (dic:>ICollection<KeyValuePair<'K,'V>>).CopyTo(arr, i)
 
         member _.IsReadOnly = false
 
         member _.Count = dic.Count
+
 
     interface IDictionary<'K,'V> with
         member _.Item

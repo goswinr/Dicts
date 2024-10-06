@@ -1,29 +1,11 @@
-import { disposeSafe, structuralHash, defaultOf, safeHash, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
-import { removeInPlace } from "../fable_modules/fable-library-js.4.21.0/Array.js";
-import { singleton, collect, delay, contains } from "../fable_modules/fable-library-js.4.21.0/Seq.js";
+import { disposeSafe, structuralHash, defaultOf, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
+import { containsValue, tryGetValue, addToDict } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
+import { System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7 } from "./IDictionary.js";
 import { toText, printf } from "../fable_modules/fable-library-js.4.21.0/String.js";
-import { containsValue, addToDict, tryGetValue } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
 import { FSharpRef } from "../fable_modules/fable-library-js.4.21.0/Types.js";
 import { class_type } from "../fable_modules/fable-library-js.4.21.0/Reflection.js";
 import { Dictionary } from "../fable_modules/fable-library-js.4.21.0/MutableMap.js";
-
-/**
- * Raise ArgumentNullException with F# printf string formatting
- */
-export function System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(msg) {
-    return msg.cont((s) => {
-        throw new Error(s);
-    });
-}
-
-/**
- * Raise KeyNotFoundException with F# printf string formatting
- */
-export function System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7(msg) {
-    return msg.cont((s) => {
-        throw new Error(s);
-    });
-}
+import { singleton, collect, delay } from "../fable_modules/fable-library-js.4.21.0/Seq.js";
 
 export class DefaultDic$2 {
     constructor(defaultOfKeyFun, baseDic) {
@@ -59,7 +41,7 @@ export class DefaultDic$2 {
     }
     "System.Collections.Generic.ICollection`1.Add2B595"(x) {
         const _ = this;
-        void (_.baseDic.push(x));
+        addToDict(_.baseDic, x[0], x[1]);
     }
     "System.Collections.Generic.ICollection`1.Clear"() {
         const _ = this;
@@ -67,17 +49,11 @@ export class DefaultDic$2 {
     }
     "System.Collections.Generic.ICollection`1.Remove2B595"(x) {
         const _ = this;
-        return removeInPlace(x, _.baseDic, {
-            Equals: equals,
-            GetHashCode: safeHash,
-        });
+        return _.baseDic.delete(x[0]);
     }
     "System.Collections.Generic.ICollection`1.Contains2B595"(x) {
         const _ = this;
-        return contains(x, _.baseDic, {
-            Equals: equals,
-            GetHashCode: safeHash,
-        });
+        return _.baseDic.has(x[0]);
     }
     "System.Collections.Generic.ICollection`1.CopyToZ3B4C077E"(arr, i) {
         const _ = this;

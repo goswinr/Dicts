@@ -1,4 +1,5 @@
 
+![Logo](https://raw.githubusercontent.com/goswinr/Dic/main/Doc/logo128.png)
 # Dic
 
 [![Dic on nuget.org](https://img.shields.io/nuget/v/Dic)](https://www.nuget.org/packages/Dic/)
@@ -6,10 +7,7 @@
 ![code size](https://img.shields.io/github/languages/code-size/goswinr/Dic.svg)
 [![license](https://img.shields.io/github/license/goswinr/Dic)](LICENSE)
 
-![Logo](https://raw.githubusercontent.com/goswinr/Dic/main/Doc/logo.png)
-
 A small F# library extending the .NET Dictionary
-
 
 ### Test
 All Tests run in both javascript and dotnet.
@@ -35,6 +33,8 @@ npm test
 [MIT](https://raw.githubusercontent.com/goswinr/Dic/main/LICENSE.txt)
 
 ### Changelog
+`0.2.0`
+- fix Fable compatibility
 
 `0.1.0`
 - ported from FsEx library

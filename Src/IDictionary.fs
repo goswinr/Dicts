@@ -1,7 +1,19 @@
 ﻿namespace Dic
 
-
+open System
 open System.Collections.Generic
+
+
+/// Static Extension methods on Exceptions to cal Exception.Raise "%A" x with F# printf string formatting
+module internal ExtensionsExceptions =
+    type ArgumentNullException with
+        /// Raise ArgumentNullException with F# printf string formatting
+        static member Raise msg = Printf.kprintf (fun s -> raise (ArgumentNullException(s))) msg
+
+    type KeyNotFoundException with
+        /// Raise KeyNotFoundException with F# printf string formatting
+        static member Raise msg = Printf.kprintf (fun s -> raise (KeyNotFoundException(s))) msg
+
 open ExtensionsExceptions
 
 /// Provides Extensions for IDictionary
@@ -14,38 +26,38 @@ module ExtensionsIDictionary =
 
         /// Set/add value at key, with nicer error messages.
         /// Same as <c>Dic.addValue key value</c>
-        member inline  d.setValue k v = // this cant be called just 'set' because there would be a clash in member overloading with Dic type that is also a IDictionary
+        member d.setValue k v = // this cant be called just 'set' because there would be a clash in member overloading with Dic type that is also a IDictionary
             try  d.[k] <- v
             with
-                | :? KeyNotFoundException  ->  KeyNotFoundException.Raise "IDictionary.SetValue failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
+                | :? KeyNotFoundException  -> KeyNotFoundException.Raise "Dic: IDictionary.SetValue failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
                 | e                        -> raise e
 
         /// Set/add value at key, with nicer error messages.
         /// Same as <c>Dic.setValue key value</c>
-        member inline  d.addValue k v = // this cant be called just 'add' because there would be a clash in member overloading with Dic type that is also a IDictionary
+        member d.addValue k v = // this cant be called just 'add' because there would be a clash in member overloading with Dic type that is also a IDictionary
             try  d.[k] <-v
             with
-                | :? KeyNotFoundException  ->  KeyNotFoundException.Raise "IDictionary.SetValue failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
+                | :? KeyNotFoundException  -> KeyNotFoundException.Raise "Dic: IDictionary.SetValue failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
                 | e                        -> raise e
 
         /// Get value at key, with nicer error messages.
-        member inline d.Get k  =
+        member d.Get k  =
              let ok, v = d.TryGetValue(k)
              if ok then  v
-             else KeyNotFoundException.Raise "IDictionary.GetValue failed to find key %A in %A of %d items" k d d.Count
+             else KeyNotFoundException.Raise "Dic: IDictionary.GetValue failed to find key %A in %A of %d items" k d d.Count
 
 
         /// Get a value and remove it from Dictionary, like *.pop() in Python.
-        member inline d.Pop k  =
+        member d.Pop k  =
             let ok, v = d.TryGetValue(k)
             if ok then
                 d.Remove k |>ignore
                 v
             else
-                KeyNotFoundException.Raise "IDictionary.Pop(key): Failed to pop key %A in %A of %d items" k d d.Count
+                KeyNotFoundException.Raise "Dic: IDictionary.Pop(key): Failed to pop key %A in %A of %d items" k d d.Count
 
         /// Returns a lazy seq of key and value tuples
-        member inline d.Items : seq<'K*'V> =
+        member d.Items : seq<'K*'V> =
             seq { for KeyValue(k, v) in d -> k, v}
 
         // /// A property like the ToString() method,

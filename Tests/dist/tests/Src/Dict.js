@@ -1,12 +1,11 @@
-import { structuralHash, defaultOf, safeHash, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
-import { removeInPlace } from "../fable_modules/fable-library-js.4.21.0/Array.js";
-import { map, delay, contains } from "../fable_modules/fable-library-js.4.21.0/Seq.js";
-import { System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7, System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7 } from "./DefaultDict.js";
+import { structuralHash, defaultOf, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
+import { containsValue, tryGetValue, addToDict } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
+import { System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7, System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7 } from "./IDictionary.js";
 import { printf } from "../fable_modules/fable-library-js.4.21.0/String.js";
-import { containsValue, addToDict, tryGetValue } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
 import { FSharpRef } from "../fable_modules/fable-library-js.4.21.0/Types.js";
 import { class_type } from "../fable_modules/fable-library-js.4.21.0/Reflection.js";
 import { Dictionary } from "../fable_modules/fable-library-js.4.21.0/MutableMap.js";
+import { map, delay } from "../fable_modules/fable-library-js.4.21.0/Seq.js";
 
 export class Dict$2 {
     constructor(dic) {
@@ -41,7 +40,7 @@ export class Dict$2 {
     }
     "System.Collections.Generic.ICollection`1.Add2B595"(x) {
         const _ = this;
-        void (_.dic.push(x));
+        addToDict(_.dic, x[0], x[1]);
     }
     "System.Collections.Generic.ICollection`1.Clear"() {
         const _ = this;
@@ -49,17 +48,11 @@ export class Dict$2 {
     }
     "System.Collections.Generic.ICollection`1.Remove2B595"(kvp) {
         const _ = this;
-        return removeInPlace(kvp, _.dic, {
-            Equals: equals,
-            GetHashCode: safeHash,
-        });
+        return _.dic.delete(kvp[0]);
     }
     "System.Collections.Generic.ICollection`1.Contains2B595"(kvp) {
         const _ = this;
-        return contains(kvp, _.dic, {
-            Equals: equals,
-            GetHashCode: safeHash,
-        });
+        return _.dic.has(kvp[0]);
     }
     "System.Collections.Generic.ICollection`1.CopyToZ3B4C077E"(arr, i) {
         const _ = this;

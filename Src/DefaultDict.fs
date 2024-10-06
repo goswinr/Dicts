@@ -2,22 +2,6 @@ namespace Dic
 
 open System
 open System.Collections.Generic
-
-
-
-// [<AutoOpen>]
-// [<Obsolete("It is not actually obsolete, but hidden from editor tools. and public for inlining")>]
-
-/// Static Extension methods on Exceptions to cal Exception.Raise "%A" x with F# printf string formatting
-module internal ExtensionsExceptions =
-    type ArgumentNullException with
-        /// Raise ArgumentNullException with F# printf string formatting
-        static member Raise msg = Printf.kprintf (fun s -> raise (ArgumentNullException(s))) msg
-
-    type KeyNotFoundException with
-        /// Raise KeyNotFoundException with F# printf string formatting
-        static member Raise msg = Printf.kprintf (fun s -> raise (KeyNotFoundException(s))) msg
-
 open ExtensionsExceptions
 
 module internal DefaultDicUtil =
@@ -133,11 +117,11 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
 
     // -------------------- properties: --------------------------------------
 
-    #if FABLE_COMPILER
-    #else
-    /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the Dictionary.
-    member _.Comparer with get() = baseDic.Comparer
-    #endif
+    // #if FABLE_COMPILER
+    // #else
+    // /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the Dictionary.
+    // member _.Comparer with get() = baseDic.Comparer
+    // #endif
 
     /// Gets the number of key/value pairs contained in the Dictionary
     member _.Count with get() = baseDic.Count
@@ -182,6 +166,8 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
     interface Collections.IEnumerable with // Non generic needed too ?
         member __.GetEnumerator() = baseDic.GetEnumerator():> System.Collections.IEnumerator
 
+
+    //no ICollections because of https://github.com/fable-compiler/Fable/issues/3914
     interface Collections.ICollection with // Non generic needed too ?
         member _.Count = baseDic.Count
 
@@ -192,19 +178,20 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
         member _.SyncRoot= (baseDic:>Collections.ICollection).SyncRoot
 
     interface ICollection<KeyValuePair<'K,'V>> with
-        member _.Add(x) = (baseDic:>ICollection<KeyValuePair<'K,'V>>).Add(x)
+        member _.Add(x) = baseDic.Add(x.Key, x.Value) //(baseDic:>ICollection<KeyValuePair<'K,'V>>).Add(x) // fails on Fable: https://github.com/fable-compiler/Fable/issues/3914
 
         member _.Clear() = baseDic.Clear()
 
-        member _.Remove x = (baseDic:>ICollection<KeyValuePair<'K,'V>>).Remove x
+        member _.Remove x =  baseDic.Remove(x.Key) // (baseDic:>ICollection<KeyValuePair<'K,'V>>).Remove x
 
-        member _.Contains x = (baseDic:>ICollection<KeyValuePair<'K,'V>>).Contains x
+        member _.Contains x =  baseDic.ContainsKey x.Key //(baseDic:>ICollection<KeyValuePair<'K,'V>>).Contains x
 
         member _.CopyTo(arr, i) = (baseDic:>ICollection<KeyValuePair<'K,'V>>).CopyTo(arr, i)
 
         member _.IsReadOnly = false
 
         member _.Count = baseDic.Count
+
 
     interface IDictionary<'K,'V> with
         member _.Item
