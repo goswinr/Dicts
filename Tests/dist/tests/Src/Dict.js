@@ -1,11 +1,11 @@
-import { structuralHash, defaultOf, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
-import { containsValue, tryGetValue, addToDict } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
+import { structuralHash, defaultOf, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.22.0/Util.js";
+import { containsValue, tryGetValue, addToDict } from "../fable_modules/fable-library-js.4.22.0/MapUtil.js";
 import { System_Collections_Generic_KeyNotFoundException__KeyNotFoundException_Raise_Static_1DA990F7, System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7 } from "./IDictionary.js";
-import { printf } from "../fable_modules/fable-library-js.4.21.0/String.js";
-import { FSharpRef } from "../fable_modules/fable-library-js.4.21.0/Types.js";
-import { class_type } from "../fable_modules/fable-library-js.4.21.0/Reflection.js";
-import { Dictionary } from "../fable_modules/fable-library-js.4.21.0/MutableMap.js";
-import { map, delay } from "../fable_modules/fable-library-js.4.21.0/Seq.js";
+import { printf } from "../fable_modules/fable-library-js.4.22.0/String.js";
+import { FSharpRef } from "../fable_modules/fable-library-js.4.22.0/Types.js";
+import { class_type } from "../fable_modules/fable-library-js.4.22.0/Reflection.js";
+import { Dictionary } from "../fable_modules/fable-library-js.4.22.0/MutableMap.js";
+import { map, delay } from "../fable_modules/fable-library-js.4.22.0/Seq.js";
 
 export class Dict$2 {
     constructor(dic) {
@@ -204,9 +204,8 @@ export function Dict$2_CreateDirectly_138B901B(dic) {
 /**
  * Access the underlying Collections.Generic.Dictionary<'K,'V>)
  * ATTENTION! This is not even a shallow copy, mutating it will also change this instance of Dict!
- * use #nowarn "44" to disable the obsolete warning
  */
-export function Dict$2__get_Dictionary(_) {
+export function Dict$2__get_InternalDictionary(_) {
     return _.dic;
 }
 
@@ -275,7 +274,7 @@ export function Dict$2__Get_2B595(_, key) {
 /**
  * Set value for given key, same as <c>Dict.add key value</c>
  */
-export function Dict$2__set(_, key, value) {
+export function Dict$2__Set(_, key, value) {
     const key_1 = key;
     const value_1 = value;
     if (equals(key_1, defaultOf())) {
@@ -288,8 +287,9 @@ export function Dict$2__set(_, key, value) {
 
 /**
  * Set value for given key, same as <c>Dict.set key value</c>
+ * This method is the same as the tupled version .Add(key,value), but in curried form.
  */
-export function Dict$2__add(_, key, value) {
+export function Dict$2__Add$0027(_, key, value) {
     const key_1 = key;
     const value_1 = value;
     if (equals(key_1, defaultOf())) {
@@ -303,11 +303,10 @@ export function Dict$2__add(_, key, value) {
 /**
  * Set value only if key does not exist yet.
  * Returns false if key already exist, does not set value in this case
- * Same as <c>Dict.addOnce key value</c>
  */
-export function Dict$2__setIfKeyAbsent(_, key, value) {
+export function Dict$2__SetIfKeyAbsent(_, key, value) {
     if (equals(key, defaultOf())) {
-        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.setOnce key is null "));
+        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.SetIfKeyAbsent key is null "));
     }
     else if (_.dic.has(key)) {
         return false;
@@ -323,9 +322,9 @@ export function Dict$2__setIfKeyAbsent(_, key, value) {
  * Returns false if key already exist, does not set value in this case
  * Same as <c>Dict.setOnce key value</c>
  */
-export function Dict$2__addIfKeyAbsent(_, key, value) {
+export function Dict$2__AddIfKeyAbsent(_, key, value) {
     if (equals(key, defaultOf())) {
-        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.addOnce key is null "));
+        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.AddIfKeyAbsent key is null "));
     }
     else if (_.dic.has(key)) {
         return false;
@@ -340,9 +339,9 @@ export function Dict$2__addIfKeyAbsent(_, key, value) {
  * If the key ist not present calls the default function, set it as value at the key and return the value.
  * This function is an alternative to the DefaultDic type. Use it if you need to provide a custom implementation of the default function depending on the key.
  */
-export function Dict$2__getOrSetDefault(_, getDefault, key) {
+export function Dict$2__GetOrSetDefault(_, getDefault, key) {
     if (equals(key, defaultOf())) {
-        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.getOrSetDefault key is null "));
+        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.GetOrSetDefault key is null "));
     }
     else {
         let matchValue_1;
@@ -364,9 +363,9 @@ export function Dict$2__getOrSetDefault(_, getDefault, key) {
 /**
  * If the key ist not present set it as value at the key and return the value.
  */
-export function Dict$2__getOrSetDefaultValue(_, defaultValue, key) {
+export function Dict$2__GetOrSetDefaultValue(_, defaultValue, key) {
     if (equals(key, defaultOf())) {
-        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.getOrSetDefaultValue key is null "));
+        return System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7(printf("Dict.GetOrSetDefaultValue key is null "));
     }
     else {
         let matchValue_1;
@@ -467,6 +466,13 @@ export function Dict$2__get_Keys(_) {
  */
 export function Dict$2__get_Values(_) {
     return _.dic.values();
+}
+
+/**
+ * Tests if the Dictionary is Empty.
+ */
+export function Dict$2__get_IsEmpty(_) {
+    return _.dic.size === 0;
 }
 
 /**

@@ -26,19 +26,17 @@ module ExtensionsIDictionary =
 
         /// Set/add value at key, with nicer error messages.
         /// Same as <c>Dic.addValue key value</c>
-        member d.setValue k v = // this cant be called just 'set' because there would be a clash in member overloading with Dic type that is also a IDictionary
+        member d.Set k v = // this cant be called just 'set' because there would be a clash in member overloading with Dic type that is also a IDictionary
             try  d.[k] <- v
-            with
-                | :? KeyNotFoundException  -> KeyNotFoundException.Raise "Dic: IDictionary.SetValue failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
-                | e                        -> raise e
+            with _  -> KeyNotFoundException.Raise "Dic: IDictionary.Set failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
+
 
         /// Set/add value at key, with nicer error messages.
         /// Same as <c>Dic.setValue key value</c>
-        member d.addValue k v = // this cant be called just 'add' because there would be a clash in member overloading with Dic type that is also a IDictionary
+        member d.Add' k v = // this cant be called just 'add' because there would be a clash in member overloading with Dic type that is also a IDictionary
             try  d.[k] <-v
-            with
-                | :? KeyNotFoundException  -> KeyNotFoundException.Raise "Dic: IDictionary.SetValue failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
-                | e                        -> raise e
+            with _ ->  KeyNotFoundException.Raise "Dic: IDictionary.SetValue failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
+
 
         /// Get value at key, with nicer error messages.
         member d.Get k  =

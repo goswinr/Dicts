@@ -1,11 +1,11 @@
-import { disposeSafe, structuralHash, defaultOf, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.21.0/Util.js";
-import { containsValue, tryGetValue, addToDict } from "../fable_modules/fable-library-js.4.21.0/MapUtil.js";
+import { disposeSafe, structuralHash, defaultOf, equals, toIterator, getEnumerator } from "../fable_modules/fable-library-js.4.22.0/Util.js";
+import { containsValue, tryGetValue, addToDict } from "../fable_modules/fable-library-js.4.22.0/MapUtil.js";
 import { System_ArgumentNullException__ArgumentNullException_Raise_Static_1DA990F7 } from "./IDictionary.js";
-import { toText, printf } from "../fable_modules/fable-library-js.4.21.0/String.js";
-import { FSharpRef } from "../fable_modules/fable-library-js.4.21.0/Types.js";
-import { class_type } from "../fable_modules/fable-library-js.4.21.0/Reflection.js";
-import { Dictionary } from "../fable_modules/fable-library-js.4.21.0/MutableMap.js";
-import { singleton, collect, delay } from "../fable_modules/fable-library-js.4.21.0/Seq.js";
+import { toText, printf } from "../fable_modules/fable-library-js.4.22.0/String.js";
+import { FSharpRef } from "../fable_modules/fable-library-js.4.22.0/Types.js";
+import { class_type } from "../fable_modules/fable-library-js.4.22.0/Reflection.js";
+import { Dictionary } from "../fable_modules/fable-library-js.4.22.0/MutableMap.js";
+import { singleton, collect, delay } from "../fable_modules/fable-library-js.4.22.0/Seq.js";
 
 export class DefaultDic$2 {
     constructor(defaultOfKeyFun, baseDic) {

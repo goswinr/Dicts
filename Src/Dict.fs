@@ -7,6 +7,8 @@ open ExtensionsExceptions
 module internal DictUtil =
     // these functions can't be inside the class because of https://github.com/fable-compiler/Fable/issues/3911
 
+    //using inheritance from Dictionary would not work because .Item method is sealed and can't have an override
+
     /// the internal get function, that throws a nice exception if the key is not found
     let inline get' (dic:Dictionary<'K,'V>) key  =
             match box key with // or https://stackoverflow.com/a/864860/969070
@@ -28,15 +30,13 @@ module internal DictUtil =
 
 open DictUtil
 
-/// A thin wrapper over System.Collections.Generic.Dictionary<'K,'V>) with nicer Error messages on accessing missing keys.
-/// There is a hidden member called "Dictionary" to access the underlying Collections.Generic.Dictionary<'K,'V> directly.
-/// In F# use #nowarn "44" to disable the obsolete warning for this hidden member.
+/// A thin wrapper over System.Collections.Generic.Dictionary<'K,'V>)
+/// with nicer Error messages on accessing missing keys.
 [<NoComparison>]
 [<NoEquality>] // TODO add structural equality
 [<Sealed>]
 type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
-    //using inheritance from Dictionary would not work because .Item method is sealed and can't have an override
 
     /// Create a new empty Dict<'K,'V>.
     /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary<'K,'V>) with nicer Error messages on accessing missing keys.
@@ -53,9 +53,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// Access the underlying Collections.Generic.Dictionary<'K,'V>)
     /// ATTENTION! This is not even a shallow copy, mutating it will also change this instance of Dict!
-    /// use #nowarn "44" to disable the obsolete warning
-    [<Obsolete("It is not actually obsolete, but normally not used, so hidden from editor tools. In F# use #nowarn \"44\" to disable the obsolete warning")>]
-    member _.Dictionary = dic
+    // [<Obsolete("It is not actually obsolete, but normally not used, so hidden from editor tools. In F# use #nowarn \"44\" to disable the obsolete warning")>]
+    member _.InternalDictionary = dic
 
     /// For Index operator .[i]: get or set the value for given key
     member _.Item
@@ -69,11 +68,11 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     member _.Set key value = set' dic key value // dic.[key] <- value
 
     /// Set value for given key, same as <c>Dict.set key value</c>
+    /// This method is the same as the tupled version .Add(key,value), but in curried form.
     member _.Add' key value = set' dic key value // dic.[key] <- value
 
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
-    /// Same as <c>Dict.addOnce key value</c>
     member _.SetIfKeyAbsent (key:'K) (value:'V) =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.SetIfKeyAbsent key is null "
@@ -83,6 +82,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
             else
                 dic.[key] <- value
                 true
+
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
     /// Same as <c>Dict.setOnce key value</c>
@@ -180,15 +180,18 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
 
     /// Gets the number of key/value pairs contained in the Dictionary
-    member _.Count with get() = dic.Count
+    member _.Count  = dic.Count
 
     /// Gets a collection containing the keys in the Dictionary
     /// same as on System.Collections.Generic.Dictionary<'K,'V>
-    member _.Keys with get() = dic.Keys
+    member _.Keys = dic.Keys
 
     /// Gets a collection containing the values in the Dictionary
     /// same as on System.Collections.Generic.Dictionary<'K,'V>
-    member _.Values with get() = dic.Values
+    member _.Values = dic.Values
+
+    /// Tests if the Dictionary is Empty.
+    member _.IsEmpty = dic.Count = 0
 
     // -------------------------------------methods:-------------------------------
 
@@ -224,6 +227,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     //---------------------------------------interfaces:-------------------------------------
     // TODO dic XML doc str
 
+    // https://fable.io/repl/#?code=LAKA9gDgpgdgBAZQJ4GcAuUC2pK0ajTAOgGEwAbcqAYzQEswYUiBxWKAJzutFDSWhwAItzQAeAOQBpADQSAanADuACzzSAXFACOAVwCG5OvzgA+OAAoAlHAC8vEHCdwqaOABNud4aIYx9HEiSsgqm1g7OcAD0MXAASlBouhxMcPrwsLqYnPpoYBxwaCq5cMY5GCiFKhxgugDmKlVQPrR+AUhEoJHZmABGnHAA+qyJAKIwWeX51t6e1CNo45McudNWXc4xALQ7u3v7B4dHu3QwGBwAZvrUUCgaxw+PhxHOp+dXN3AAkkvZK71UMRSKBIeSGXRQAAK+joHGCcDk8lM5iUxhUG0iTh6-QKwzYiwmf1WHBmtkscw0pi+IlajHawURpisC1+UxJ6xAGNKZ04H2aZEoNHojGYP0JOQBzVRRWiUTgADlGHA6uwuNQ4DAoFB3NrCmAwHAAPxc7pYHFDPFjcUrPLs2bcFnW4nWSn4dBYUgUKi0phEMXLYkvJxvXnXfleoV+UUC73C+DSxqxRXwFWatUarU69x6g3GxyYrFmgbDMi6M72+als5BzHY4ueiBIAAqYAsAQ4MlKNjJFgpphjkZFfoHPuZZEbLbbHA7XZrpr69a+KGQMGo1UYdAAXtqe32R3HoxHR37l0hV+uYFvtXPnHXcUQV9Q4vq0LvuJT91Hh0e48zH8+wDQGsQ0uMNvk-RggRBMFyAhaFYQZUIUTRE1byLe8AEF3HcCwAA9uw8B0sJw3CiGBJBO1ImCIRsGJe3fKkIJgKDQXBKEYThaRGSZIhiLw2i5SuOhyEqJUADF9ElDQ4BUNA0AgO4YjqNFdF6IhqDATAoiuSUtg0zAIGEzgogkyUojoFAUAhFAogAZgATgARgAFhvQsF3vEgqACUlCMrbz2TcuA7yGIgEkwMAADdmgAa0iiAKzCrAoqgCw4ogMiQRsIKQpLRg0BhVJ0u8PzPTOQqUHIuB0sypA4By9DQvHZtW3bTs6AI+jqEpL4mJY6j2IQrikLHSAWqnGcOoajzQqXBJ9HcAB5GByDqskrhEqBpvNPKyzcMk5k9PaHC5EC+W+Gk43pYakWUFD8wLXK-UIVCCwTZVEmq5wDu4ABtGKAF1XsxdJszgFBPpiuBIorf6AbgMQtmh+rOQe2tGuGcjKjfbqqUutpAkQpFmSx7b6wG7HyQY6lfDpQmbp4imycw7C0s7SKCMOviYvZjlgaeshytOSqQS+n7K3yiqqpi5nQqbQJ8QGtKQQ0aQETgX6xDiPa6GyP0eRqCAEE4SLuFuIhFt0NBTHhjgoAuAa4Gk3okDti5JGJp24F6fVyDsYHIlcYKrckqg4Fqfa4AAVXPGgYu1IgdSuXRyDyd3QgD5wg4uWoYGzcWiHlpBFbY5WKLgAAyCOOQLAs3cdxHw6tzOnBzst3Fl4ZwpSsvOYdbvot70AgA&html=Q&css=Q
+
     interface IEnumerable<KeyValuePair<'K ,'V>> with
         member _.GetEnumerator() = (dic:>IDictionary<'K,'V>).GetEnumerator()
 
@@ -245,11 +250,11 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
         member _.Clear() = dic.Clear()
 
-        member _.Remove kvp =  dic.Remove(kvp.Key) // (dic:>ICollection<KeyValuePair<'K,'V>>).Remove kvp
+        member _.Remove kvp = dic.Remove(kvp.Key) // (dic:>ICollection<KeyValuePair<'K,'V>>).Remove kvp
 
-        member _.Contains kvp =   dic.ContainsKey kvp.Key  // (dic:>ICollection<KeyValuePair<'K,'V>>).Contains kvp
+        member _.Contains kvp =  dic.ContainsKey kvp.Key  // (dic:>ICollection<KeyValuePair<'K,'V>>).Contains kvp
 
-        member _.CopyTo(arr, i) =  (dic:>ICollection<KeyValuePair<'K,'V>>).CopyTo(arr, i)
+        member _.CopyTo(arr, i) = (dic:>ICollection<KeyValuePair<'K,'V>>).CopyTo(arr, i)
 
         member _.IsReadOnly = false
 
@@ -297,6 +302,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
             found
 
     // TODO
+
+
 
     //member _.GetObjectData(info,context) = dic.GetObjectData(info,context)
 
