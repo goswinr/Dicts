@@ -1,15 +1,15 @@
-namespace Dic
+namespace Dicts
 
 open System
 open System.Collections.Generic
 open ExtensionsExceptions
 
-module internal DefaultDicUtil =
+module internal DefaultDictUtil =
     // these functions can't be inside the class because of https://github.com/fable-compiler/Fable/issues/3911
 
     let inline dGet (baseDic:Dictionary<'K,'V>) defaultOfKeyFun key  =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "DefaultDic.get key is null "
+        | null -> ArgumentNullException.Raise "DefaultDict.get key is null "
         | _ ->
             match baseDic.TryGetValue(key) with
             |true , v -> v
@@ -20,54 +20,61 @@ module internal DefaultDicUtil =
 
     let inline set' (baseDic:Dictionary<'K,'V>) key value =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise  "DefaultDic.set key is null for value %A" value
+        | null -> ArgumentNullException.Raise  "DefaultDict.set key is null for value %A" value
         | _ -> baseDic.[key] <- value
 
-open DefaultDicUtil
 
-/// A System.Collections.Generic.Dictionary with default Values that get created upon accessing a missing key.
+    let inline toString (baseDic:Dictionary<'K,'V>) (k:string)  (v:string) =
+        if baseDic.Count = 0 then
+            $"empty DefaultDict<{k},{v}>"
+        elif baseDic.Count = 1 then
+            $"DefaultDict<{k},{v}> with 1 item"
+        else
+            $"DefaultDict<{k},{v}> with {baseDic.Count} items"
+
+
+open DefaultDictUtil
+
+/// A Collections.Generic.Dictionary<'K,'V>  with default Values that get created upon accessing a missing key.
 /// If accessing a non exiting key , the default function is called to create and set it.
-/// Like defaultDic in Python
-/// If you need to provide a custom implementation of the default function depending on the key
-/// then use the Dic type and its method <c>Dic.getOrSetDefault func key</c>.
+/// Inspired by the  defaultdict in Python.
+/// If you need to provide a custom implementation of the default function depending on each key,
+/// then use the Dict<'K,'V>  type and it's method <c>Dicts.getOrSetDefault func key</c>.
 [<NoComparison>]
 [<NoEquality>] // TODO add structural equality
 [<Sealed>]
-type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, baseDic : Dictionary<'K,'V>) =
-
-    //using inheritance from Dictionary would not work because .Item method is sealed and cant have an override
+type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, baseDic : Dictionary<'K,'V>) =
 
 
-    /// <summary>A System.Collections.Generic.Dictionary with default Values that get created upon accessing a key.
+    /// <summary>A Collections.Generic.Dictionary with default Values that get created upon accessing a key.
     /// If accessing a non exiting key , the default function is called on the key to create the value and set it.
     /// Similar to  defaultDic in Python</summary>
     /// <param name="defaultOfKeyFun">(&apos;K-&gt;&apos;V): The function to create a default value from the key</param>
     new (defaultOfKeyFun: 'K -> 'V) =
         let d = new  Dictionary<'K,'V>()
-        DefaultDic( defaultOfKeyFun, d )
+        DefaultDict( defaultOfKeyFun, d )
 
 
-    /// Constructs a new DefaultDic by using the supplied Dictionary<'K,'V> directly, without any copying of items
+    /// Constructs a new DefaultDict by using the supplied Dictionary<'K,'V>  directly, without any copying of items
     static member createDirectly (defaultOfKeyFun: 'K->'V) (di:Dictionary<'K,'V> ) =
-        if isNull di then ArgumentNullException.Raise "Dictionary in DefaultDic.CreateDirectly is null"
+        if isNull di then ArgumentNullException.Raise "Dictionary in DefaultDict.CreateDirectly is null"
         let d = new  Dictionary<'K,'V>()
-        DefaultDic( defaultOfKeyFun, d)
+        DefaultDict( defaultOfKeyFun, d)
 
-    /// Constructs a new DefaultDic from seq of key and value pairs
+    /// Constructs a new DefaultDict from seq of key and value pairs
     static member create (defaultOfKeyFun: 'K->'V) (keysValues: seq<'K * 'V>) =
-        if isNull keysValues then ArgumentNullException.Raise "seq in DefaultDic.Create is null"
+        if isNull keysValues then ArgumentNullException.Raise "seq in DefaultDict.Create is null"
         let d = new  Dictionary<'K,'V>()
         for k,v in keysValues do
             d.[k] <- v
-        DefaultDic( defaultOfKeyFun, d)
+        DefaultDict( defaultOfKeyFun, d)
 
-    /// Access the underlying Collections.Generic.Dictionary<'K,'V>
-    /// ATTENTION! This is not even a shallow copy, mutating it will also change this Instance of DefaultDic!
-    /// Use #nowarn "44" to disable the obsolete warning
-    [<Obsolete("It is not actually obsolete but unsafe to use, so hidden from editor tools. In F# use #nowarn \"44\" to disable the obsolete warning")>]
-    member _.Dictionary = baseDic
+    /// Access the underlying Collections.Generic.Dictionary<'K,'V>.
+    /// ATTENTION! This is not even a shallow copy, mutating it will also change this instance of DefaultDict!
+    member _.InternalDictionary =
+        baseDic
 
-    /// For Index operator: get or set the value for given key
+    /// For Index operator .[i]: get or set the value for a given key
     member _.Item
         with get k   = dGet baseDic defaultOfKeyFun k
         and  set k v = set' baseDic k v
@@ -76,77 +83,119 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
     /// Calls defaultFun to get value if key not found.
     /// Also sets key to returned value.
     /// Use .TryGetValue(k) if you don't want a missing key to be created
-    member _.Get k = dGet baseDic defaultOfKeyFun k
+    member _.Get k =
+        dGet baseDic defaultOfKeyFun k
 
-    /// Set value for given key, same as <c>Dic.add key value</c>
-    member _.set key value = set' baseDic key value // dic.[key] <- value
+    /// Set value for given key, same as <c>Dicts.Add(key, value)</c>
+    member _.Set key value =
+        set' baseDic key value
 
-    /// Set value for given key, same as <c>Dic.set key value</c>
-    member _.add key value = set' baseDic key value // dic.[key] <- value
 
     /// Get a value and remove key and value it from Dictionary, like *.pop() in Python
     /// Will fail if key does not exist
     /// Does not set any new key if key is missing
     member _.Pop(k:'K) =
         match box k with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "DefaultDic.Pop(key) key is null"
+        | null -> ArgumentNullException.Raise "DefaultDict.Pop(key) key is null"
         | _ ->
             let ok, v = baseDic.TryGetValue(k)
             if ok then
                 baseDic.Remove k |>ignore
                 v
             else
-                raise <|  KeyNotFoundException( sprintf "DefaultDic.Pop(key): Failed to pop key %A in %A of %d items" k baseDic baseDic.Count)
+                raise <|  KeyNotFoundException( sprintf "DefaultDict.Pop(key): Failed to pop key %A in %A of %d items" k baseDic baseDic.Count)
 
     /// Returns a (lazy) sequence of key and value tuples
     member _.Items =
         seq { for KeyValue(k, v) in baseDic -> k, v}
 
-    // override baseDic.ToString() = // covered by NiceString Pretty printer ?
-        //stringBuffer {
-        //    yield "DefaultDic with "
-        //    yield baseDic.Count.ToString()
-        //    yield! "entries"
-        //    for k, v in baseDic.Items  |> Seq.truncate 3 do // Add sorting ? print 3 lines??
-        //        yield  k.ToString()
-        //        yield " : "
-        //        yield! v.ToString()
-        //    yield "..."
-        //    }
+    /// Determines whether the DefaultDict does not contains the specified key.
+    /// not(dic.ContainsKey(key))
+    member _.DoesNotContainKey(key) = not(baseDic.ContainsKey(key))
 
+
+    /// The string representation of the DefaultDict including the count of entries.
+    override _.ToString() =
+        #if FABLE_COMPILER
+        let k = "'K"
+        let v = "'V"
+        #else
+        let k = typeof<'K>.Name
+        let v = typeof<'V>.Name
+        #endif
+        toString baseDic k v
+
+    /// A string representation of the DefaultDict including the count of entries and the first 5 entries.
+    member inline this.AsString =  // inline needed for Fable
+        let b = Text.StringBuilder()
+        let c = baseDic.Count
+        let st = toString baseDic (typeof<'K>.Name) (typeof<'V>.Name)
+        b.Append st |> ignore
+        if c > 0  then b.AppendLine ":"  |> ignore
+        for KeyValue(k, v) in baseDic  |> Seq.truncate 5 do // Add sorting ? print 3 lines??
+            b.AppendLine $"  {k} : {v}" |> ignore
+        if c > 5 then b.AppendLine "  ..." |> ignore
+        b.ToString()
+
+
+    /// A string representation of the DefaultDict including the count of entries
+    /// and the specified amount of entries.
+    member inline this.ToString(entriesToPrint) = // inline needed for Fable
+        let b = Text.StringBuilder()
+        let c = baseDic.Count
+        let st = toString baseDic (typeof<'K>.Name) (typeof<'V>.Name)
+        b.Append st |> ignore
+        if c > 0  && entriesToPrint > 0 then b.AppendLine ":"  |> ignore
+        for KeyValue(k, v) in baseDic |> Seq.truncate (max 0 entriesToPrint) do // Add sorting ? print 3 lines??
+            b.AppendLine $"  {k} : {v}" |> ignore
+        if c > entriesToPrint then b.AppendLine "  ..." |> ignore
+        b.ToString()
+
+    /// Set value for given key, same as <c>Dicts.Add(key, value)</c>
+    static member set (dd:DefaultDict<'K,'V>) key value =
+        dd.Set key value
+
+    /// Get value for given key.
+    static member get (dd:DefaultDict<'K,'V>) key =
+        dd.Get key
+
+
+    // -------------------------------------------------------------------
+    // members to match ofSystem.Collections.Generic.Dictionary<'K,'V>:
+    // -------------------------------------------------------------------
 
     // -------------------- properties: --------------------------------------
 
     // #if FABLE_COMPILER
     // #else
-    // /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the Dictionary.
+    // /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the DefaultDict.
     // member _.Comparer with get() = baseDic.Comparer
     // #endif
 
-    /// Gets the number of key/value pairs contained in the Dictionary
+    /// Gets the number of key/value pairs contained in the DefaultDict
     member _.Count with get() = baseDic.Count
 
-    /// Gets a collection containing the keys in the Dictionary
+    /// Gets a collection containing the keys in the DefaultDict
     member _.Keys with get() = baseDic.Keys
 
-    /// Gets a collection containing the values in the Dictionary
+    /// Gets a collection containing the values in the DefaultDict
     member _.Values with get() = baseDic.Values
 
     // -------------------------------------methods:-------------------------------
 
-    /// Add the specified key and value to the Dictionary.
+    /// Add the specified key and value to the DefaultDict.
     member _.Add(k, v) = baseDic.Add(k, v)
 
-    /// Removes all keys and values from the Dictionary
+    /// Removes all keys and values from the DefaultDict
     member _.Clear() = baseDic.Clear()
 
-    /// Determines whether the Dictionary contains the specified key.
+    /// Determines whether the DefaultDict contains the specified key.
     member _.ContainsKey(k) = baseDic.ContainsKey(k)
 
-    /// Determines whether the Dictionary contains a specific value.
+    /// Determines whether the DefaultDict contains a specific value.
     member _.ContainsValue(v) = baseDic.ContainsValue(v)
 
-    /// Removes the value with the specified key from the Dictionary.
+    /// Removes the value with the specified key from the DefaultDict.
     /// See also .Pop(key) method to get the contained value too.
     member _.Remove(k) = baseDic.Remove(k)
 
@@ -154,7 +203,8 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
     /// As opposed to Get(key) this does not create a key if it is missing.
     member _.TryGetValue(k) = baseDic.TryGetValue(k)
 
-    /// Returns an enumerator that iterates through the Dictionary.
+    (*
+    /// Returns an enumerator that iterates through the DefaultDict.
     member _.GetEnumerator() = baseDic.GetEnumerator()
 
     //---------------------------------------interfaces:-------------------------------------
@@ -224,6 +274,7 @@ type DefaultDic<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, bas
         member _.ContainsKey k = baseDic.ContainsKey k
 
         member _.TryGetValue(k, r ) = baseDic.TryGetValue(k, ref r)
+    *)
 
     // TODO add these too?
 

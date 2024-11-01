@@ -1,4 +1,4 @@
-﻿namespace Dic
+﻿namespace Dicts
 
 open System
 open System.Collections.Generic
@@ -16,33 +16,45 @@ module internal ExtensionsExceptions =
 
 open ExtensionsExceptions
 
-/// Provides Extensions for IDictionary
+/// Provides Extensions for IDictionary<'K,'V> interface.
 /// Such as Items as key value tuples , Pop(key)  or GetValue with nicer error message)
 module ExtensionsIDictionary =
+
+
+            /// The string representation of the Dict including the count of entries.
+    let inline internal toString(dic: IDictionary<'K,'V>) =
+        let d =
+            let fn = dic.GetType().Name
+            let start = fn.IndexOf '`'
+            if start = -1 then fn
+            else fn.Substring(0, start) // trim off the `2 suffix on the type
+        let k = typeof<'K>.Name
+        let v = typeof<'V>.Name
+        if dic.Count = 0 then
+            $"empty {d}<{k},{v}>"
+        elif dic.Count = 1 then
+            $"{d}<{k},{v}> with 1 item"
+        else
+            $"{d}<{k},{v}> with {dic.Count} items"
+
 
     type IDictionary<'K,'V> with
         // overrides of existing methods are unfortunately silently ignored and not possible.
         // see https://github.com/dotnet/fsharp/issues/3692#issuecomment-334297164
 
         /// Set/add value at key, with nicer error messages.
-        /// Same as <c>Dic.addValue key value</c>
-        member d.Set k v = // this cant be called just 'set' because there would be a clash in member overloading with Dic type that is also a IDictionary
-            try  d.[k] <- v
-            with _  -> KeyNotFoundException.Raise "Dic: IDictionary.Set failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
-
-
-        /// Set/add value at key, with nicer error messages.
-        /// Same as <c>Dic.setValue key value</c>
-        member d.Add' k v = // this cant be called just 'add' because there would be a clash in member overloading with Dic type that is also a IDictionary
-            try  d.[k] <-v
-            with _ ->  KeyNotFoundException.Raise "Dic: IDictionary.SetValue failed to find key '%A' in %A of %d items (for value: '%A')" k d d.Count v
-
+        /// Same as <c>Dicts.addValue key value</c>
+        member d.Set k v =
+            // this cant be called just .Set because
+            // there would be a clash in member overloading with Dicts type that is also a IDictionary ??
+            try d.[k] <- v
+            with _  -> KeyNotFoundException.Raise "Dicts: IDictionary.Set failed for key '%A' in %A of %d items (for value: '%A')" k d d.Count v
 
         /// Get value at key, with nicer error messages.
         member d.Get k  =
              let ok, v = d.TryGetValue(k)
              if ok then  v
-             else KeyNotFoundException.Raise "Dic: IDictionary.GetValue failed to find key %A in %A of %d items" k d d.Count
+             else KeyNotFoundException.Raise "Dicts: IDictionary.GetValue failed to find key %A in %A of %d items" k d d.Count
 
 
         /// Get a value and remove it from Dictionary, like *.pop() in Python.
@@ -52,15 +64,45 @@ module ExtensionsIDictionary =
                 d.Remove k |>ignore
                 v
             else
-                KeyNotFoundException.Raise "Dic: IDictionary.Pop(key): Failed to pop key %A in %A of %d items" k d d.Count
+                KeyNotFoundException.Raise "Dicts: IDictionary.Pop(key): Failed to pop key %A in %A of %d items" k d d.Count
 
         /// Returns a lazy seq of key and value tuples
         member d.Items : seq<'K*'V> =
             seq { for KeyValue(k, v) in d -> k, v}
 
-        // /// A property like the ToString() method,
-        // /// But with richer formatting for collections
-        // member obj.ToNiceString =
-        //     NiceString.toNiceString obj
+        /// Returns a (lazy) sequence of values
+        member d.ValuesSeq with get() =
+            seq { for kvp in d -> kvp.Value}
+
+        /// Returns a (lazy) sequence of Keys
+        member d.KeysSeq with get() =
+            seq { for kvp in d -> kvp.Key}
+
+        /// Determines whether the Dictionary does not contains the specified key.
+        /// not(dic.ContainsKey(key))
+        member d.DoesNotContainKey(key) = not(d.ContainsKey(key))
 
 
+        /// A string representation of the IDictionary including the count of entries and the first 5 entries.
+        member inline this.AsString =  // inline needed for Fable
+            let b = Text.StringBuilder()
+            let c = this.Count
+            b.Append(toString this) |> ignore
+            if c > 0  then b.AppendLine ":"  |> ignore
+            for KeyValue(k, v) in this |> Seq.truncate 5 do // Add sorting ? print 3 lines??
+                b.AppendLine $"  {k} : {v}" |> ignore
+            if c > 5 then b.AppendLine "  ..." |> ignore
+            b.ToString()
+
+
+        /// A string representation of the IDictionary including the count of entries
+        /// and the specified amount of entries.
+        member inline this.ToString(entriesToPrint) = // inline needed for Fable
+            let b = Text.StringBuilder()
+            let c = this.Count
+            b.Append(toString this) |> ignore
+            if c > 0  && entriesToPrint > 0 then b.AppendLine ":"  |> ignore
+            for KeyValue(k, v) in this |> Seq.truncate (max 0 entriesToPrint) do // Add sorting ? print 3 lines??
+                b.AppendLine $"  {k} : {v}" |> ignore
+            if c > entriesToPrint then b.AppendLine "  ..." |> ignore
+            b.ToString()

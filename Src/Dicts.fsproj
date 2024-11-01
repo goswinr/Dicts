@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>  <!-- not the plural TargetFrameworks. fails with  https://fsprojects.github.io/FSharp.Formatting/apidocs.html -->
+    <LangVersion>preview</LangVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!--to only have the English resources-->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>Dicts</RootNamespace>
+    <AssemblyName>Dicts</AssemblyName>
+    <AssemblyTitle>Dicts</AssemblyTitle>
+    <Title>Dicts</Title>
+    <Product>Dicts</Product>
+    <PackageId>Dicts</PackageId>
+    <!-- <Version>0.2.0</Version> done by Ionide.KeepAChangelog.Tasks
+    <AssemblyVersion>0.2.0</AssemblyVersion>
+    <FileVersion>0.2.0</FileVersion>
+    <PackageReleaseNotes></PackageReleaseNotes> -->
+    <Authors>GoswinR</Authors>
+    <Copyright>Goswin Rothenthal 2021</Copyright>
+    <Description>An F# library for working with .NET Dictionary and similar types. Works in Fable too.</Description>
+    <PackageDescription>An F# library for working with .NET Dictionary and similar types. Works in Fable too.</PackageDescription> <!--used on nuget.org-->
+    <WarningLevel>5</WarningLevel><!-- WarningLevel 3 is default , see https://github.com/dsyme/fsharp-presentations/blob/master/design-notes/off-by-default-warnings.md -->
+    <OtherFlags>$(OtherFlags)--warnon:3390</OtherFlags> <!-- warnon:3390 is to verify xml docstrings https://devblogs.microsoft.com/dotnet/announcing-f-5/#improved-compiler-analysis-for-library-authors -->
+    <OtherFlags>$(OtherFlags) --warnon:1182</OtherFlags>     <!-- 1182: warn on unused variables -->
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile> <!-- for FsDocs -->
+    <Configuration>Release</Configuration>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <!-- <SymbolPackageFormat>snupkg</SymbolPackageFormat> --><!-- using  snupkg the readme does not pack https://github.com/NuGet/Home/issues/10791 -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageIcon>logo128.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>fsharp;Dictionary;DefaultDict;fable;fable-library</PackageTags>
+    <DebugType>embedded</DebugType>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <RepositoryUrl>https://github.com/goswinr/Dicts</RepositoryUrl>
+    <FsDocsLicenseLink>https://github.com/goswinr/Dicts/blob/main//LICENSE.md</FsDocsLicenseLink>
+    <FsDocsReleaseNotesLink>https://github.com/goswinr/Dicts/blob/main/CHANGELOG.md</FsDocsReleaseNotesLink>
+    <PackageProjectUrl>https://goswinr.github.io/Dicts</PackageProjectUrl>
+
+    <FsDocsFaviconSource>img/favicon.ico</FsDocsFaviconSource>
+    <FsDocsWarnOnMissingDocs>true</FsDocsWarnOnMissingDocs>
+
+    <ChangelogFile>../CHANGELOG.md</ChangelogFile>
+  </PropertyGroup>
+  <ItemGroup>
+     <PackageReference Update="FSharp.Core" Version="6.0.7" />
+    <PackageReference Include="Fable.Core" Version="4.3.0"  Condition="$(DefineConstants.Contains('FABLE_COMPILER'))" />  <!-- see https://github.com/thoth-org/Thoth.Json.Net/issues/59 it needs the fable compiler flag: - -test:MSBuildCracker -->
+
+    <PackageReference Include="Ionide.KeepAChangelog.Tasks" Version="0.1.8" PrivateAssets="all"  />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="" />
+    <None Include="../Docs/img/logo128.png" Pack="true" PackagePath="" /> <!--PackagePath = "" makes the file available to nuget pack tool-->
+    <Content Include="*.fsproj; **/*.fs; **/*.fsi" PackagePath="fable/" />
+
+    <Compile Include="IDictionary.fs" />
+    <Compile Include="Dict.fs" />
+    <Compile Include="DefaultDict.fs" />
+  </ItemGroup>
+</Project>

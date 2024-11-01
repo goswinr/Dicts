@@ -1,78 +1,115 @@
-namespace Dic
+namespace Dicts
 
 open System
 open System.Collections.Generic
 open ExtensionsExceptions
 
+// #if FABLE_COMPILER
+// open Fable.Core.JsInterop // to work around https://github.com/fable-compiler/Fable/issues/3914
+// #endif
+
+
 module internal DictUtil =
     // these functions can't be inside the class because of https://github.com/fable-compiler/Fable/issues/3911
 
-    //using inheritance from Dictionary would not work because .Item method is sealed and can't have an override
 
     /// the internal get function, that throws a nice exception if the key is not found
     let inline get' (dic:Dictionary<'K,'V>) key  =
-            match box key with // or https://stackoverflow.com/a/864860/969070
-            | null -> ArgumentNullException.Raise "Dict.get: key is null "
-            | _ ->
-                match dic.TryGetValue(key) with
-                |true, v-> v
-                |false, _ ->
-                //  let keys = NiceString.toNiceString dic.Keys
-                //  KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items. Keys: %s" key dic dic.Count keys
-                KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items" key dic dic.Count
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise "Dict.get: key is null "
+        | _ ->
+            match dic.TryGetValue(key) with
+            |true, v-> v
+            |false, _ ->
+            //  let keys = NiceString.toNiceString dic.Keys
+            //  KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items. Keys: %s" key dic dic.Count keys
+            KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items" key dic dic.Count
 
     /// the internal set function, that throws an exception if the key is null
     let inline set' (dic:Dictionary<'K,'V>) key value =
-            match box key with // or https://stackoverflow.com/a/864860/969070
-            | null -> ArgumentNullException.Raise  "Dict.set key is null for value %A" value
-            | _ -> dic.[key] <- value
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise  "Dict.set key is null for value %A" value
+        | _ -> dic.[key] <- value
+
+    let inline toString (dic:Dictionary<'K,'V>) (k:string)  (v:string) =
+        if dic.Count = 0 then
+            $"empty Dict<{k},{v}>"
+        elif dic.Count = 1 then
+            $"Dict<{k},{v}> with 1 item"
+        else
+            $"Dict<{k},{v}> with {dic.Count} items"
 
 
 open DictUtil
 
-/// A thin wrapper over System.Collections.Generic.Dictionary<'K,'V>)
+/// A thin wrapper over Collections.Generic.Dictionary<'K,'V>
 /// with nicer Error messages on accessing missing keys.
 [<NoComparison>]
 [<NoEquality>] // TODO add structural equality
 [<Sealed>]
 type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
+    // one of the reasons for this class is to have a nicer error message when a key is not found.
+    // just using inheritance from Dictionary would not work because  the dict.Item method is sealed and can't have an override.
 
 
-    /// Create a new empty Dict<'K,'V>.
-    /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary<'K,'V>) with nicer Error messages on accessing missing keys.
-    new () = Dict(new Dictionary<'K,'V>())
+    // #if FABLE_COMPILER
+    // do
+    //     emitJsStatement () "this.push = ((kv) => {this.dic.set(kv[0], kv[1])});" //  temp fix for https://github.com/fable-compiler/Fable/issues/3914
+    //     emitJsStatement () "this.clear = (() => {this.dic.clear()});"
+    // #endif
 
-    /// Create a new empty Dict<'K,'V> with an IEqualityComparer like HashIdentity.Structural.
-    /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary<'K,'V>) with nicer Error messages on accessing missing keys.
-    new (iEqualityComparer:IEqualityComparer<'K>) = Dict(new Dictionary<'K,'V>(iEqualityComparer))
+    /// Create a new empty Dict<'K,'V> .
+    /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary<'K,'V> ) with nicer Error messages on accessing missing keys.
+    new () =
+        Dict(new Dictionary<'K,'V>())
 
-    /// Constructs a new Dict by using the supplied Dictionary<'K,'V> directly, without any copying of items
-    static member CreateDirectly (dic:Dictionary<'K,'V> ) =
-        if isNull dic then ArgumentNullException.Raise "Dictionary in Dict.CreateDirectly is null"
+    /// Create a new empty Dict<'K,'V>  with an IEqualityComparer like HashIdentity.Structural.
+    /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary<'K,'V> ) with nicer Error messages on accessing missing keys.
+    new (iEqualityComparer:IEqualityComparer<'K>) =
+        Dict(new Dictionary<'K,'V>(iEqualityComparer))
+
+    /// Constructs a new Dict by using the supplied Dictionary<'K,'V>  directly, without any copying of items
+    static member createDirectly (dic:Dictionary<'K,'V> ) =
+        if isNull dic then ArgumentNullException.Raise "Dictionary in Dict.createDirectly is null"
         Dict(dic)
 
-    /// Access the underlying Collections.Generic.Dictionary<'K,'V>)
+    /// Constructs a new Dict from a sequence of key-value tuples.
+    static member create (pairs:seq<'K * 'V>) =
+        let dic = Dictionary()
+        for k, v in pairs do
+            dic.Add(k, v)
+        Dict(dic)
+
+    /// Access the underlying Collections.Generic.Dictionary<'K,'V>.
     /// ATTENTION! This is not even a shallow copy, mutating it will also change this instance of Dict!
-    // [<Obsolete("It is not actually obsolete, but normally not used, so hidden from editor tools. In F# use #nowarn \"44\" to disable the obsolete warning")>]
-    member _.InternalDictionary = dic
+    member _.InternalDictionary =
+        dic
 
     /// For Index operator .[i]: get or set the value for given key
+    /// Throws a nice exception if the key is not found.
     member _.Item
-        with get k   = get' dic  k
-        and  set k v = set' dic  k v //dic.[k] <- v
+        with get k   = get' dic k
+        and  set k v = set' dic k v
 
     /// Get value for given key
-    member _.Get key = get' dic key
+    member _.Get key =
+        get' dic key
 
     /// Set value for given key, same as <c>Dict.add key value</c>
-    member _.Set key value = set' dic key value // dic.[key] <- value
+    member _.Set key value =
+        set' dic key value
 
-    /// Set value for given key, same as <c>Dict.set key value</c>
-    /// This method is the same as the tupled version .Add(key,value), but in curried form.
-    member _.Add' key value = set' dic key value // dic.[key] <- value
+    /// Set value for given key, same as <c>Dicts.Add(key, value)</c>
+    static member set  (dd:Dict<'K,'V>) key value =
+        dd.Set key value
+
+    /// Get value for given key.
+    static member get (dd:Dict<'K,'V>) key =
+        dd.Get key
 
     /// Set value only if key does not exist yet.
-    /// Returns false if key already exist, does not set value in this case
+    /// Returns false if key already exist, does not set value in this case.
+    /// Same as <c>Dict.AddIfKeyAbsent key value</c>
     member _.SetIfKeyAbsent (key:'K) (value:'V) =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.SetIfKeyAbsent key is null "
@@ -84,8 +121,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 true
 
     /// Set value only if key does not exist yet.
-    /// Returns false if key already exist, does not set value in this case
-    /// Same as <c>Dict.setOnce key value</c>
+    /// Returns false if key already exist, does not set value in this case.
+    /// Same as <c>Dict.SetIfKeyAbsent key value</c>
     member _.AddIfKeyAbsent  (key:'K) (value:'V) =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.AddIfKeyAbsent key is null "
@@ -108,6 +145,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 let v = getDefault(key)
                 dic.[key] <- v
                 v
+
     /// If the key ist not present set it as value at the key and return the value.
     member _.GetOrSetDefaultValue (defaultValue: 'V) (key:'K)   =
         match box key with // or https://stackoverflow.com/a/864860/969070
@@ -120,8 +158,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 dic.[key] <- v
                 v
 
-
-    /// Get a value and remove key and value it from Dictionary, like *.pop() in Python.
+    /// Get a value and remove key and value it from Dict.
     /// Will fail if key does not exist
     member _.Pop(key:'K) =
         match box key with // or https://stackoverflow.com/a/864860/969070
@@ -146,69 +183,96 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     member _.KeysSeq with get() =
         seq { for kvp in dic -> kvp.Key}
 
-    /// Determines whether the Dictionary does not contains the specified key.
+    /// Determines whether the Dict does not contains the specified key.
     /// not(dic.ContainsKey(key))
     member _.DoesNotContainKey(key) = not(dic.ContainsKey(key))
 
-    /// Determines whether the Dictionary does not contains the specified key.
-    /// not(dic.ContainsKey(key))
-    [<Obsolete("Use more explicit method 'DoesNotContainKey' instead")>]
-    member _.DoesNotContain(key) = not(dic.ContainsKey(key))
 
-    //override dic.ToString() = // covered by NiceString Pretty printer ? TODO
-        //stringBuffer {
-        //    yield "DefaultDic with "
-        //    yield dic.Count.ToString()
-        //    yield! "entries"
-        //    for k, v in dic.Items  |> Seq.truncate 3 do // dic sorting ? print 3 lines??
-        //        yield  k.ToString()
-        //        yield " : "
-        //        yield! v.ToString()
-        //    yield "..."
-        //    }
+    /// The string representation of the Dict including the count of entries.
+    override _.ToString() =
+        #if FABLE_COMPILER
+        let k = "'K"
+        let v = "'V"
+        #else
+        let k = typeof<'K>.Name
+        let v = typeof<'V>.Name
+        #endif
+        toString dic k v
 
 
-    // ------------------member to match ofSystem.Collections.Generic.Dictionary<'K,'V>-------------
+    /// A string representation of the Dict including the count of entries and the first 5 entries.
+    member inline this.AsString = // inline needed for Fable
+        let b = Text.StringBuilder()
+        let c = dic.Count
+        let st = toString dic (typeof<'K>.Name) (typeof<'V>.Name)
+        b.Append st |> ignore
+        if c > 0  then b.AppendLine ":"  |> ignore
+        for KeyValue(k, v) in dic  |> Seq.truncate 5 do // Add sorting ? print 3 lines??
+            b.AppendLine $"  {k} : {v}" |> ignore
+        if c > 5 then b.AppendLine "  ..." |> ignore
+        b.ToString()
+
+
+    /// A string representation of the Dict including the count of entries
+    /// and the specified amount of entries.
+    member inline this.ToString(entriesToPrint) = // inline needed for Fable
+        let b = Text.StringBuilder()
+        let c = dic.Count
+        let st = toString dic (typeof<'K>.Name) (typeof<'V>.Name)
+        b.Append st |> ignore
+        if c > 0  && entriesToPrint > 0 then b.AppendLine ":"  |> ignore
+        for KeyValue(k, v) in dic |> Seq.truncate (max 0 entriesToPrint) do // Add sorting ? print 3 lines??
+            b.AppendLine $"  {k} : {v}" |> ignore
+        if c > entriesToPrint then b.AppendLine "  ..." |> ignore
+        b.ToString()
+
+
+    // -------------------------------------------------------------------
+    // members to match ofSystem.Collections.Generic.Dictionary<'K,'V>:
+    // -------------------------------------------------------------------
 
     // -------------------- properties:  --------------------------------------
 
     // #if FABLE_COMPILER
     // #else
-    // /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the Dictionary.
+    // /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the Dict.
     // member _.Comparer with get() = baseDic.Comparer
     // #endif
 
 
-    /// Gets the number of key/value pairs contained in the Dictionary
+    /// Gets the number of key/value pairs contained in the Dict
     member _.Count  = dic.Count
 
-    /// Gets a collection containing the keys in the Dictionary
-    /// same as on System.Collections.Generic.Dictionary<'K,'V>
+    /// Gets a collection containing the keys in the Dict
+    /// same as on System.Collections.Generic.Dict<'K,'V>
     member _.Keys = dic.Keys
 
-    /// Gets a collection containing the values in the Dictionary
-    /// same as on System.Collections.Generic.Dictionary<'K,'V>
+    /// Gets a collection containing the values in the Dict
+    /// same as on System.Collections.Generic.Dict<'K,'V>
     member _.Values = dic.Values
 
-    /// Tests if the Dictionary is Empty.
+    /// Tests if the Dict is Empty.
     member _.IsEmpty = dic.Count = 0
+
+    /// Tests if the Dict is NOT Empty.
+    member _.IsNotEmpty = dic.Count > 0
 
     // -------------------------------------methods:-------------------------------
 
-    /// Add the specified key and value to the Dictionary.
+    /// Add the specified key and value to the Dict.
     member _.Add(key, value) = set' dic key value //dic.Add(key, value)
 
-    /// Removes all keys and values from the Dictionary
+    /// Removes all keys and values from the Dict
     member _.Clear() = dic.Clear()
 
-    /// Determines whether the Dictionary contains the specified key.
+    /// Determines whether the Dict contains the specified key.
     member _.ContainsKey(key) = dic.ContainsKey(key)
 
-    /// Determines whether the Dictionary contains a specific value.
+    /// Determines whether the Dict contains a specific value.
     member _.ContainsValue(value) = dic.ContainsValue(value)
 
-    /// Removes the value with the specified key from the Dictionary.
-    /// See also .Pop(key) method that gets the contained value too.
+    /// Removes the value with the specified key from the Dict.
+    /// See also .Pop(key) method that return the contained value.
     member _.Remove(key) = dic.Remove(key)
 
     /// <summary>Lookup an element in the Dict, assigning it to <c>refValue</c> if the element is in the Dict and return true. Otherwise returning <c>false</c> .</summary>
@@ -221,7 +285,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         refValue <- out
         found
 
-    /// Returns an enumerator that iterates through the Dictionary.
+    (*
+
+    /// Returns an enumerator that iterates through the Dict.
     member _.GetEnumerator() = dic.GetEnumerator()
 
     //---------------------------------------interfaces:-------------------------------------
@@ -246,7 +312,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         member _.SyncRoot= (dic:>Collections.ICollection).SyncRoot
 
     interface ICollection<KeyValuePair<'K,'V>> with
-        member _.Add(x) = dic.Add(x.Key, x.Value) //(dic:>ICollection<KeyValuePair<'K,'V>>).Add(x) // fails on Fable: https://github.com/fable-compiler/Fable/issues/3914
+        member _.Add(x) = set' dic x.Key x.Value
 
         member _.Clear() = dic.Clear()
 
@@ -300,9 +366,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
             let found = dic.TryGetValue(key, &out)
             refValue <- out
             found
+    *)
 
     // TODO
-
 
 
     //member _.GetObjectData(info,context) = dic.GetObjectData(info,context)
