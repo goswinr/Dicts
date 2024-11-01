@@ -30,7 +30,8 @@ dd.["A"].Value  = 101 // true
 
 ### Full API Documentation
 
-[goswinr.github.io/Dicts](https://goswinr.github.io/Dicts/reference/Dicts.html)
+[goswinr.github.io/Dicts](https://goswinr.github.io/Dicts/reference/dicts.html)
+
 
 ### Tests
 All Tests run in both javascript and dotnet.
