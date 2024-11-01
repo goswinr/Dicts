@@ -1,11 +1,11 @@
 {
   "type": "module",
   "scripts": {
-    "ts": "tsc --target es2022 ../Src/Dict.fs.ts ../Src/DefaultDict.fs.ts ../Src/IDictionary.fs.ts",
-    "watchTS": "dotnet fable watch ../Dic.fsproj --lang typescript          --run npm run ts" ,
-    "buildTS": "dotnet fable       ../Dic.fsproj --lang typescript --silent --run npm run ts" ,
-    "pretest": "dotnet fable --noCache --outDir dist/tests ",
-    "test": "mocha dist/tests && npm run buildTS"
+    "watchTS": "dotnet fable watch --outDir ts --lang typescript ../Src/Dicts.fsproj --run npx tsc" ,
+
+    "buildTS": "dotnet fable --outDir ts --noCache  --lang typescript ../Src/Dicts.fsproj --silent --run npx tsc" ,
+    "pretest": "dotnet fable --outDir js --noCache ",
+    "test": "mocha js && npm run buildTS"
   },
   "dependencies": {
     "mocha": "^10.7.3"

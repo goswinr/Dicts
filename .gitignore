@@ -1,7 +1,14 @@
+.vs/
 bin/
 obj/
 fable_modules/
 node_modules/
-package-lock.json
-*.fs.js
-*.fs.ts
+js/
+ts/
+# *.js
+# *.ts
+
+# FSharp.Formatting
+.fsdocs/
+output/
+tmp/
