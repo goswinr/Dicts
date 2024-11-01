@@ -126,6 +126,7 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
         toString baseDic k v
 
     /// A string representation of the DefaultDict including the count of entries and the first 5 entries.
+    /// When used in Fable this member is inlined for reflection to work.
     #if FABLE_COMPILER
     member inline _.AsString =  // inline needed for Fable reflection
     #else
@@ -144,6 +145,7 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
 
     /// A string representation of the DefaultDict including the count of entries
     /// and the specified amount of entries.
+    /// When used in Fable this member is inlined for reflection to work.
     #if FABLE_COMPILER
     member inline _.ToString(entriesToPrint) =  // inline needed for Fable reflection
     #else

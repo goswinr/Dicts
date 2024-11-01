@@ -84,7 +84,11 @@ module ExtensionsIDictionary =
 
 
         /// A string representation of the IDictionary including the count of entries and the first 5 entries.
-        member inline this.AsString =  // inline needed for Fable
+        #if FABLE_COMPILER
+        member inline this.AsString =  // inline needed for Fable reflection
+        #else
+        member this.AsString =  // on .NET inline fails because it's using internal DefaultDictUtil
+        #endif
             let b = Text.StringBuilder()
             let c = this.Count
             b.Append(toString this) |> ignore
@@ -97,7 +101,11 @@ module ExtensionsIDictionary =
 
         /// A string representation of the IDictionary including the count of entries
         /// and the specified amount of entries.
-        member inline this.ToString(entriesToPrint) = // inline needed for Fable
+        #if FABLE_COMPILER
+        member inline this.ToString(entriesToPrint) =  // inline needed for Fable reflection
+        #else
+        member this.ToString(entriesToPrint) = // on .NET inline fails because it's using internal DefaultDictUtil
+        #endif
             let b = Text.StringBuilder()
             let c = this.Count
             b.Append(toString this) |> ignore

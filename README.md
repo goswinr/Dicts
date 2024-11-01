@@ -9,12 +9,25 @@
 [![license](https://img.shields.io/github/license/goswinr/Dicts)](LICENSE.md)
 ![code size](https://img.shields.io/github/languages/code-size/goswinr/Dicts.svg)
 
+
 This F# library provides:
+
 - A dedicated `Dict<'T>` type. It is a thin wrapper around `Dictionary<'T>` with more functionality and nicer Error messages.
-- A `DefaultDict<'T>` type. It works like [Python's' defaultdict](https://docs.python.org/3/library/collections.html#collections.defaultdict).\
+
+- A `DefaultDict<'T>` type. It works like [Python's' defaultdict](https://docs.python.org/3/library/collections.html#collections.defaultdict).<br>
 By providing a default function in the constructor it will always return a value for any key.
+
 - Extension methods for working with the `IDictionary<'T>` interface.
 
+It also works in JS and TS with [Fable](https://fable.io/).
+
+This library was designed for use with F# scripting.
+Functions and methods never return null.
+Only functions starting with `try...` will return an F# Option.
+Otherwise when a function fails on invalid input it will throw a descriptive exception.
+
+I was always annoyed that a KeyNotFoundExceptions does not include the actual bad key nor a pretty printed dictionary.
+This library fixes that in `iDictionary.Get`, `iDictionary.Set` and other item access functions.
 
 ### Example
 

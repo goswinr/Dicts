@@ -69,4 +69,10 @@
     <Compile Include="Dict.fs" />
     <Compile Include="DefaultDict.fs" />
   </ItemGroup>
+
+  <Target Name="CopyReadmeToDocs" AfterTargets="Build">
+    <!-- for fsdocs to build locally -->
+    <Copy SourceFiles="../README.md" DestinationFiles="../Docs/index.md" ContinueOnError="false"/>
+  </Target>
+
 </Project>
