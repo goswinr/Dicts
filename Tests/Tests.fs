@@ -306,7 +306,7 @@ let tests  =
         let result = b.Get "A"
         Expect.equal result 1 "DefaultDict should return the existing value when the key exists"
 
-    testCase "DefaultDict - default value" <| fun _ ->
+    testCase "DefaultDict - default value incr" <| fun _ ->
         let b = DefaultDict(fun _ -> ref 0)
         incr (b.Get "A")
         Expect.equal b.["A"].Value  1 "DefaultDict should return the default value when the key does not exist"

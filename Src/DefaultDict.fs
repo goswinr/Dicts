@@ -126,7 +126,11 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
         toString baseDic k v
 
     /// A string representation of the DefaultDict including the count of entries and the first 5 entries.
-    member inline this.AsString =  // inline needed for Fable
+    #if FABLE_COMPILER
+    member inline _.AsString =  // inline needed for Fable reflection
+    #else
+    member _.AsString =  // on .NET inline fails because it's using internal DefaultDictUtil
+    #endif
         let b = Text.StringBuilder()
         let c = baseDic.Count
         let st = toString baseDic (typeof<'K>.Name) (typeof<'V>.Name)
@@ -140,7 +144,11 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
 
     /// A string representation of the DefaultDict including the count of entries
     /// and the specified amount of entries.
-    member inline this.ToString(entriesToPrint) = // inline needed for Fable
+    #if FABLE_COMPILER
+    member inline _.ToString(entriesToPrint) =  // inline needed for Fable reflection
+    #else
+    member _.ToString(entriesToPrint) = // on .NET inline fails because it's using internal DefaultDictUtil
+    #endif
         let b = Text.StringBuilder()
         let c = baseDic.Count
         let st = toString baseDic (typeof<'K>.Name) (typeof<'V>.Name)

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2024-10-30
+## [0.2.1] - 2024-10-30
 ### Changed
 - Removed IDictionary and IEnumerable interface becaus not compatible with Fable JS & TS yet
 - Unified API
@@ -22,8 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added more tests
 
 
-[Unreleased]: https://github.com/goswinr/Dicts/compare/0.2.0...HEAD
-[0.2.0]: https://github.com/goswinr/Dicts/compare/0.1.0...0.2.0
+[Unreleased]: https://github.com/goswinr/Dicts/compare/0.2.1...HEAD
+[0.2.0]: https://github.com/goswinr/Dicts/compare/0.1.0...0.2.1
 [0.1.0]: https://github.com/goswinr/Dicts/releases/tag/0.1.0
 
 <!--

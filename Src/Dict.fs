@@ -201,7 +201,11 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
 
     /// A string representation of the Dict including the count of entries and the first 5 entries.
-    member inline this.AsString = // inline needed for Fable
+    #if FABLE_COMPILER
+    member inline _.AsString =  // inline needed for Fable reflection
+    #else
+    member _.AsString =  // on .NET inline fails because it's using internal DefaultDictUtil
+    #endif
         let b = Text.StringBuilder()
         let c = dic.Count
         let st = toString dic (typeof<'K>.Name) (typeof<'V>.Name)
@@ -215,7 +219,11 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// A string representation of the Dict including the count of entries
     /// and the specified amount of entries.
-    member inline this.ToString(entriesToPrint) = // inline needed for Fable
+    #if FABLE_COMPILER
+    member inline _.ToString(entriesToPrint) =  // inline needed for Fable reflection
+    #else
+    member _.ToString(entriesToPrint) = // on .NET inline fails because it's using internal DefaultDictUtil
+    #endif
         let b = Text.StringBuilder()
         let c = dic.Count
         let st = toString dic (typeof<'K>.Name) (typeof<'V>.Name)
