@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed interfaces to be compatible with Fable JS & TS
 ### Added
 - TryPop function
-## Changed
+### Changed
 - in IDictionary rename Get ans Set to GetValue and SetValue
 
 ## [0.2.1] - 2024-10-30
