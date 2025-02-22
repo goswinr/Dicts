@@ -21,7 +21,7 @@ open ExtensionsExceptions
 module ExtensionsIDictionary =
 
 
-            /// The string representation of the Dict including the count of entries.
+    /// The string representation of the Dict including the count of entries.
     let inline internal toString(dic: IDictionary<'K,'V>) =
         let d =
             let fn = dic.GetType().Name
@@ -44,17 +44,20 @@ module ExtensionsIDictionary =
 
         /// Set/add value at key, with nicer error messages.
         /// Same as <c>Dicts.addValue key value</c>
-        member d.Set k v =
+        member d.SetValue k v =
             // this cant be called just .Set because
-            // there would be a clash in member overloading with Dicts type that is also a IDictionary ??
+            // there would be a clash in member overloading a curried function with Dicts type that is also a IDictionary ??
             try d.[k] <- v
-            with _  -> KeyNotFoundException.Raise "Dicts: IDictionary.Set failed for key '%A' in %A of %d items (for value: '%A')" k d d.Count v
+            with _  -> KeyNotFoundException.Raise "Dicts: IDictionary.SetValue key value ;failed for key '%A' in %A of %d items (for value: '%A')" k d d.Count v
 
         /// Get value at key, with nicer error messages.
-        member d.Get k  =
-             let ok, v = d.TryGetValue(k)
-             if ok then  v
-             else KeyNotFoundException.Raise "Dicts: IDictionary.GetValue failed to find key %A in %A of %d items" k d d.Count
+        member d.GetValue k  =
+            // try d.[k]
+            // with _ -> KeyNotFoundException.Raise "Dicts: IDictionary.GetValue(key) failed to find key %A in %A of %d items" k d d.Count
+            // don't do it like this, because get on a defaultDict should set a missing value, TryGetValue does not for defaultDict
+            let ok, v = d.TryGetValue(k)
+            if ok then  v
+            else KeyNotFoundException.Raise "Dicts: IDictionary.Get(key) failed to find key %A in %A of %d items" k d d.Count
 
 
         /// Get a value and remove it from Dictionary, like *.pop() in Python.
@@ -65,6 +68,16 @@ module ExtensionsIDictionary =
                 v
             else
                 KeyNotFoundException.Raise "Dicts: IDictionary.Pop(key): Failed to pop key %A in %A of %d items" k d d.Count
+
+        /// Try to get a value and remove it from Dictionary, like *.pop() in Python.
+        /// Returns None if key is not found.
+        member d.TryPop k  =
+            let ok, v = d.TryGetValue(k)
+            if ok then
+                d.Remove k |>ignore
+                Some v
+            else
+                None
 
         /// Returns a lazy seq of key and value tuples
         member d.Items : seq<'K*'V> =

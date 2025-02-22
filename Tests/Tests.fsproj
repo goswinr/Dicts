@@ -4,11 +4,17 @@
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <IsTestProject>true</IsTestProject>
+    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference> <!-- so that dependabot can check it https://github.com/dependabot/dependabot-core/issues/10883 -->
+
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Fable.Core" Version="4.3.0" />
     <PackageReference Include="Fable.Mocha" Version="2.17.0" />
     <PackageReference Include="Expecto" Version="10.2.1" />
+    <PackageReference Include="FSharp.Core" Version="9.0.101" /><!-- `Include` syntax for dependabot -->
+
+
+
     <ProjectReference Include="../Src//Dicts.fsproj" />
     <Compile Include="Tests.fs" />
     <Compile Include="RunTests.fs" />

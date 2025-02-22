@@ -34,7 +34,7 @@ let tests  =
     testCase "iDic-Get" <| fun _ ->
         let b = Dictionary() :> IDictionary<string, int>
         b.["A"] <- 1
-        let result = b.Get "A"
+        let result = b.GetValue "A"
         Expect.equal result 1 "Get returns the value of key A"
 
 
@@ -77,8 +77,8 @@ let tests  =
         Expect.throws (fun () -> b.Get "B" |> ignore ) "Item throws exception when key does not exist"
 
     testCase "Add fails" <| fun _ ->
-        let b = Dict()
-        Expect.throws (fun () -> b.Set null 1 ) "Add throws exception when key does not exist"
+        let b = Dict<string,int>()
+        Expect.throws (fun () ->b.Set null 1 ) "Add throws exception when key does not exist"
 
 
     testCase "Remove" <| fun _ ->
@@ -242,7 +242,7 @@ let tests  =
         Expect.isTrue result "iEqualityComparer should allow case-insensitive key lookup with object expression"
 
 
-    (*
+
     testCase "KV-Add" <| fun _ ->
         let b = Dict<string, int>()
         let kvp = KeyValuePair("A", 1)
@@ -259,12 +259,12 @@ let tests  =
 
     // TODO still fails: https://fable.io/repl/#?code=PYBwpgdgBAygngZwC5gLYDoDCwA2OwDGSAlsBAugOKRgBOxBAUKJFAGICGARvlsLWHQApBAEkIKWqEaN8SKABMoAXigARBiTIdacADzEJAGkNIAfAAoAlLLDyCKxVABcZqKOx5CWiHoDSYHAAahw4AK5gAAocxLQGxlCmZmaMCugA2gCMALpQegC0UAAMMrbyAqjAAG5gnjgWANZVzgHBoRHRsfFIJhJmRooKzhpEpBA6+qa95laqjFALiQBmg3wSMeStUE3oWwBke6vpO625qjsh4WBQSAAWrPOLT08KaQBKaNXXJ4GPz1BgHAIMB-f6LJahYGgxhoYhIEQwJAcFCoSDyaxQABEFS+4kiOA4BGuqiWYQgozIjSqRgIRjAAEcrABvARIMK0aA4mp1Kk0qwAXwA3JjQWCoKU5Nsqo5WpcOjFaBZMgMijZJVywAo-EFHAR0B9KjUqTYQPQJEtoAASTGy9pRBVQADuHAQUA1QygLM+NS1QX5IvV3s1akc7yDSpNZqQFqg1q2CFuwDCOCUXGuAHMyGABlwwvJiK6CBxoGm3UGlBBgI7nJ73Wp-UA&html=DwCwLgtgNgfAsAKAAQqaApgQwCb2ag4CdMTJcMABwFp0BHAVwEsA3AXgCIBhAewDsw6AdQAqAT0roOSAMb9BAzoIAeYAPThoAbhkhMAJwDOJNgzAAzagA4OeQhqy5EhAEY9sYu6mBq3HvD6asEA&css=Q
 
-    // testCase "KV-Remove" <| fun _ ->
-    //     let b = Dict<string, int>()
-    //     b.Add("A", 1)
-    //     let result = (b :> ICollection<KeyValuePair<string, int>>).Remove(KeyValuePair("A", 1))
-    //     Expect.isTrue result "Remove should return true when the key-value pair is removed"
-    //     Expect.isFalse (b.ContainsKey "A") "Remove should remove the key-value pair from the dictionary"
+    testCase "KV-Remove" <| fun _ ->
+        let b = Dict<string, int>()
+        b.Add("A", 1)
+        let result = (b :> ICollection<KeyValuePair<string, int>>).Remove(KeyValuePair("A", 1))
+        Expect.isTrue result "Remove should return true when the key-value pair is removed"
+        Expect.isFalse (b.ContainsKey "A") "Remove should remove the key-value pair from the dictionary"
 
     testCase "KV-Contains" <| fun _ ->
         let b = Dict<string, int>()
@@ -289,10 +289,119 @@ let tests  =
         b.Add("A", 1)
         let result = (b :> ICollection<KeyValuePair<string, int>>).Count
         Expect.equal result 1 "Count should return the number of key-value pairs in the dictionary"
-    *)
+
+
+    testCase "iDictionary - Add" <| fun _ ->
+        let b = Dict<string,int>() :> IDictionary<string,int>
+        b.Add("A", 1)
+        let hasKey = b.ContainsKey("A")
+        Expect.isTrue hasKey "IDictionary Add should add key-value pair"
+
+    testCase "iDictionary - Remove" <| fun _ ->
+        let b = Dict<string,int>() :> IDictionary<string,int>
+        b.Add("A", 1)
+        b.Remove("A") |> ignore
+        let removed = not (b.ContainsKey("A"))
+        Expect.isTrue removed "IDictionary Remove should remove key"
+
+    testCase "iDictionary - Clear" <| fun _ ->
+        let b = Dict<string,int>() :> IDictionary<string,int>
+        b.Add("A", 1)
+        b.Add("B", 2)
+        b.Clear()
+        let cleared = b.Count = 0
+        Expect.isTrue cleared "IDictionary Clear should remove all items"
+
+    testCase "iDictionary - Keys" <| fun _ ->
+        let b = Dict<string,int>() :> IDictionary<string,int>
+        b.Add("A", 1)
+        b.Add("B", 2)
+        let keys = b.Keys |> Seq.toList
+        Expect.equal keys ["A"; "B"] "IDictionary Keys should return all keys"
+
+    testCase "iDictionary - Values" <| fun _ ->
+        let b = Dict<string,int>() :> IDictionary<string,int>
+        b.Add("A", 1)
+        b.Add("B", 2)
+        let values = b.Values |> Seq.toList
+        Expect.equal values [1; 2] "IDictionary Values should return all values"
+
+    testCase "iDictionary - TryGetValue exists" <| fun _ ->
+        let b = Dict<string,int>() :> IDictionary<string,int>
+        b.Add("A", 1)
+        let success, value = b.TryGetValue("A")
+        Expect.isTrue success "TryGetValue should return true for existing key"
+        Expect.equal value 1 "TryGetValue should return correct value"
+
+    testCase "iDictionary - TryGetValue missing" <| fun _ ->
+        let b = Dict<string,int>() :> IDictionary<string,int>
+        let success, value = b.TryGetValue("missing")
+        Expect.isFalse success "TryGetValue should return false for missing key"
+        Expect.equal value 0 "TryGetValue should return default value"
+
+    testCase "Remove - key does not exist" <| fun _ ->
+        let b = Dict<string,int>()
+        let result = b.Remove "NonExistentKey"
+        Expect.isFalse result "Remove should return false when key does not exist"
+
+    testCase "Remove - key exists" <| fun _ ->
+        let b = Dict<string,int>()
+        b.["A"] <- 1
+        let result = b.Remove "A"
+        Expect.isTrue result "Remove should return true when key exists"
+        Expect.isFalse (b.ContainsKey "A") "Remove should remove the key"
+
+    testCase "Remove - multiple keys" <| fun _ ->
+        let b = Dict<string,int>()
+        b.["A"] <- 1
+        b.["B"] <- 2
+        b.["C"] <- 3
+        let result1 = b.Remove "A"
+        let result2 = b.Remove "B"
+        Expect.isTrue (result1 && result2) "Remove should return true for existing keys"
+        Expect.equal b.Count 1 "Remove should decrease count accordingly"
+
+    testCase "Get - key exists" <| fun _ ->
+        let b = Dict<string,int>()
+        b.["A"] <- 1
+        let result = b["A" ]
+        Expect.equal result 1 "Get should return value for existing key"
+
+    testCase "Get - key does not exist" <| fun _ ->
+        let b = Dict<string,int>()
+        Expect.throws (fun () -> b.Get "A" |> ignore) "Get should throw for missing key"
+
+    testCase "Set - add new key" <| fun _ ->
+        let b = Dict<string,int>()
+        b.Set "A" 1
+        let result = b["A" ]
+        Expect.equal result 1 "Set should add new key-value pair"
+
+    testCase "Set - update existing key" <| fun _ ->
+        let b = Dict<string,int>()
+        b.["A"] <- 1
+        b.Set "A" 2
+        let result = b.Get "A"
+        Expect.equal result 2 "Set should update value for existing key"
+
+    testCase "Set - null key" <| fun _ ->
+        let b = Dict<string,int>()
+        Expect.throws (fun () -> b[null ] <- 1) "Set should throw for null key"
+
+
 
     // ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // ---------------------------------------------------------
     // DefaultDict:
+    // DefaultDict:
+    // ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // ---------------------------------------------------------
     // ---------------------------------------------------------
 
     testCase "DefaultDict" <| fun _ ->
@@ -308,7 +417,7 @@ let tests  =
 
     testCase "DefaultDict - default value incr" <| fun _ ->
         let b = DefaultDict(fun _ -> ref 0)
-        incr (b.Get "A")
+        incr (b.["A"])
         Expect.equal b.["A"].Value  1 "DefaultDict should return the default value when the key does not exist"
 
     testCase "DefaultDict - key exists - default value" <| fun _ ->
@@ -399,6 +508,140 @@ let tests  =
             b.["B"] <- 2
             let result = b.AsString.Replace("\r\n", "\n").Replace("\n", "$")
             Expect.equal result "DefaultDict<String,Int32> with 2 items:$  A : 1$  B : 2$" "DefaultDict should return the correct string representation with items"
+
+    testCase "DefaultDict - KV-Add" <| fun _ ->
+        let b = DefaultDict(fun _ -> 0)
+        let kvp = KeyValuePair("A", 1)
+        let iColl = (b :> ICollection<KeyValuePair<string, int>>)
+        iColl.Add(kvp)
+        Expect.equal (b.Get "A") 1 "Add should add the key-value pair to the dictionary"
+
+    testCase "DefaultDict - KV-Clear" <| fun _ ->
+        let b = DefaultDict(fun _ -> 0)
+        b.Add("A", 1)
+        (b :> ICollection<KeyValuePair<string, int>>).Clear()
+        Expect.isFalse (b.ContainsKey "A") "Clear should remove all key-value pairs"
+
+    testCase "DefaultDict - KV-Remove" <| fun _ ->
+        let b = DefaultDict(fun _ -> 0)
+        b.Add("A", 1)
+        let result = (b :> ICollection<KeyValuePair<string, int>>).Remove(KeyValuePair("A", 1))
+        Expect.isTrue result "Remove should return true when pair removed"
+        Expect.isFalse (b.ContainsKey "A") "Remove should remove the key-value pair"
+
+    testCase "DefaultDict - KV-Contains" <| fun _ ->
+        let b = DefaultDict(fun _ -> 0)
+        b.Add("A", 1)
+        let result = (b :> ICollection<KeyValuePair<string, int>>).Contains(KeyValuePair("A", 1))
+        Expect.isTrue result "Contains should return true for existing pair"
+
+    testCase "DefaultDict - KV-CopyTo" <| fun _ ->
+        let b = DefaultDict(fun _ -> 0)
+        b.Add("A", 1)
+        let arr = Array.zeroCreate<KeyValuePair<string, int>> 1
+        (b :> ICollection<KeyValuePair<string, int>>).CopyTo(arr, 0)
+        Expect.equal arr.[0] (KeyValuePair("A", 1)) "CopyTo should copy pairs to array"
+
+    testCase "DefaultDict - KV-IsReadOnly" <| fun _ ->
+        let b = DefaultDict(fun _ -> 0)
+        let result = (b :> ICollection<KeyValuePair<string, int>>).IsReadOnly
+        Expect.isFalse result "IsReadOnly should return false"
+
+    testCase "DefaultDict - KV-Count" <| fun _ ->
+        let b = DefaultDict(fun _ -> 0)
+        b.Add("A", 1)
+        let result = (b :> ICollection<KeyValuePair<string, int>>).Count
+        Expect.equal result 1 "Count should return number of pairs"
+
+    testCase "Dict ReadOnly collection" <| fun _ ->
+        let b = Dict<string,int>()
+        b.["A"] <- 1
+        b.["B"] <- 2
+        let ro = b//.AsReadOnly() is not supported by Fable
+        let result = ro :> IReadOnlyCollection<KeyValuePair<string,int>>
+        Expect.equal result.Count 2 "ReadOnly collection count should match original"
+
+    testCase "Dict ReadOnly collection content" <| fun _ ->
+        let b = Dict<string,int>()
+        b.["A"] <- 1
+        b.["B"] <- 2
+        let ro = b//.AsReadOnly() is not supported by Fable
+        let pairs = ro |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Set.ofSeq
+        let expected = set [("A",1); ("B",2)]
+        Expect.equal pairs expected "ReadOnly collection should have same content"
+
+    testCase "DefaultDict ReadOnly collection" <| fun _ ->
+        let b = DefaultDict(fun _ -> 8)
+        b.["A"] <- 1
+        b.["B"] <- 2
+        let result = b :> IReadOnlyCollection<KeyValuePair<string,int>>
+        Expect.equal result.Count 2 "ReadOnly collection count should match original"
+
+    testCase "DefaultDict ReadOnly collection content" <| fun _ ->
+        let b = DefaultDict(fun _ -> 8)
+        b.["A"] <- 1
+        b.["B"] <- 2
+        let ro = b
+        let pairs = ro |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Set.ofSeq
+        let expected = set [("A",1); ("B",2)]
+        Expect.equal pairs expected "ReadOnly collection should have same content"
+
+    // IDictionary interface is removed from DefaultDict
+
+    // testCase "iDictionary DefDict - Get item" <| fun _ ->
+    //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
+    //     let d = b.["A"]
+    //     let hasKey = b.ContainsKey("A")
+    //     Expect.isTrue (hasKey && d=0) "IDictionary Get should add key-value pair"
+
+    // testCase "iDictionary DefDict - Get method" <| fun _ ->
+    //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
+    //     let d = b.Get "A"
+    //     let hasKey = b.ContainsKey("A")
+    //     Expect.isTrue (hasKey && d=0) "IDictionary Get should add key-value pair"
+
+
+    // testCase "iDictionary DefDict - Add" <| fun _ ->
+    //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
+    //     b.Add("A", 1)
+    //     let hasKey = b.ContainsKey("A")
+    //     Expect.isTrue hasKey "IDictionary Add should add key-value pair"
+
+    // testCase "iDictionary DefDict - Remove" <| fun _ ->
+    //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
+    //     b.Add("A", 1)
+    //     b.Remove("A") |> ignore
+    //     let removed = not (b.ContainsKey("A"))
+    //     Expect.isTrue removed "IDictionary Remove should remove key"
+
+    // testCase "iDictionary DefDict - Clear" <| fun _ ->
+    //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
+    //     b.Add("A", 1)
+    //     b.Add("B", 2)
+    //     b.Clear()
+    //     let cleared = b.Count = 0
+    //     Expect.isTrue cleared "IDictionary Clear should remove all items"
+
+    // testCase "iDictionary DefDict - TryGetValue exists for add" <| fun _ ->
+    //     let b = DefaultDict(fun _ -> 3) :> IDictionary<string,int>
+    //     b.Add("A", 8)
+    //     let success, value = b.TryGetValue("A")
+    //     Expect.isTrue success "TryGetValue should return true for existing key"
+    //     Expect.equal value 8 "TryGetValue should return correct value"
+
+    // testCase "iDictionary DefDict - TryGetValue exists for <- " <| fun _ ->
+    //     let dd = DefaultDict(fun _ -> 3)
+    //     dd["A"] <- 8
+    //     let b = dd :> IDictionary<string,int>
+    //     let success, value = b.TryGetValue("A")
+    //     Expect.isTrue success "TryGetValue should return true for existing key"
+    //     Expect.equal value 8 "TryGetValue should return correct value"
+
+
+    // testCase "iDictionary DefDict - TryGetValue missing" <| fun _ ->
+    //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
+    //     let success, _ = b.TryGetValue("missing")
+    //     Expect.isFalse success "TryGetValue should return true even for missing key"
 
 
   ]

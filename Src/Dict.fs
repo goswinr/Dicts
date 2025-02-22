@@ -40,6 +40,18 @@ module internal DictUtil =
             $"Dict<{k},{v}> with {dic.Count} items"
 
 
+    #if FABLE_COMPILER
+    /// otherwise IDictionary<_,_> ContainsKey is not available in Fable
+    type IJSMap<'Key,'Value> =
+        abstract has : 'Key -> bool
+        abstract get : 'Key -> 'Value
+        abstract set : 'Key * 'Value -> unit
+        abstract delete : 'Key -> bool
+        abstract keys: unit -> seq<'Key>
+        abstract values : unit -> seq<'Value>
+    #endif
+
+
 open DictUtil
 
 /// A thin wrapper over Collections.Generic.Dictionary<'K,'V>
@@ -68,6 +80,17 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     new (iEqualityComparer:IEqualityComparer<'K>) =
         Dict(new Dictionary<'K,'V>(iEqualityComparer))
 
+    #if FABLE_COMPILER
+    // use an interface so that the members don't get mangled by Fable
+    interface IJSMap<'K,'V> with // otherwise IDictionary is not available in Fable
+        member _.has(x:'K) = dic.ContainsKey x
+        member _.set(x:'K, v:'V) = dic.[x] <- v
+        member _.get(x:'K) = dic.[x]
+        member _.delete(x:'K) = dic.Remove x
+        member _.keys() = dic.Keys
+        member _.values() = dic.Values
+    #endif
+
     /// Constructs a new Dict by using the supplied Dictionary<'K,'V>  directly, without any copying of items
     static member createDirectly (dic:Dictionary<'K,'V> ) =
         if isNull dic then ArgumentNullException.Raise "Dictionary in Dict.createDirectly is null"
@@ -79,6 +102,14 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         for k, v in pairs do
             dic.Add(k, v)
         Dict(dic)
+
+        /// Set value for given key, same as the static <c>Dict.Add(key, value)</c>
+    static member set (dd:Dict<'K,'V>) key value =
+        dd.Set key value
+
+    /// Get value for given key.
+    static member get (dd:Dict<'K,'V>) key =
+        dd.Get key
 
     /// Access the underlying Collections.Generic.Dictionary<'K,'V>.
     /// ATTENTION! This is not even a shallow copy, mutating it will also change this instance of Dict!
@@ -95,17 +126,10 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     member _.Get key =
         get' dic key
 
-    /// Set value for given key, same as <c>Dict.add key value</c>
+    /// Set value for given key, same as the static <c>Dict.add key value</c>
     member _.Set key value =
         set' dic key value
 
-    /// Set value for given key, same as <c>Dicts.Add(key, value)</c>
-    static member set  (dd:Dict<'K,'V>) key value =
-        dd.Set key value
-
-    /// Get value for given key.
-    static member get (dd:Dict<'K,'V>) key =
-        dd.Get key
 
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case.
@@ -170,6 +194,20 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 v
             else
                 KeyNotFoundException.Raise "Dict.Pop(key): Failed to pop key %A in %A of %d items" key dic dic.Count
+
+    /// Try to get a value and remove key and value it from Dict.
+    /// Returns None if key is not found.
+    /// Returns Some value if key is found.
+    member _.TryPop(key:'K) =
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise "Dict.TryPop(key) key is null"
+        | _ ->
+            let ok, v = dic.TryGetValue(key)
+            if ok then
+                dic.Remove key |>ignore
+                Some v
+            else
+                None
 
     /// Returns a (lazy) sequence of key and value tuples
     member _.Items =
@@ -295,15 +333,12 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         refValue <- out
         found
 
-    (*
 
     /// Returns an enumerator that iterates through the Dict.
     member _.GetEnumerator() = dic.GetEnumerator()
 
     //---------------------------------------interfaces:-------------------------------------
     // TODO dic XML doc str
-
-    // https://fable.io/repl/#?code=LAKA9gDgpgdgBAZQJ4GcAuUC2pK0ajTAOgGEwAbcqAYzQEswYUiBxWKAJzutFDSWhwAItzQAeAOQBpADQSAanADuACzzSAXFACOAVwCG5OvzgA+OAAoAlHAC8vEHCdwqaOABNud4aIYx9HEiSsgqm1g7OcAD0MXAASlBouhxMcPrwsLqYnPpoYBxwaCq5cMY5GCiFKhxgugDmKlVQPrR+AUhEoJHZmABGnHAA+qyJAKIwWeX51t6e1CNo45McudNWXc4xALQ7u3v7B4dHu3QwGBwAZvrUUCgaxw+PhxHOp+dXN3AAkkvZK71UMRSKBIeSGXRQAAK+joHGCcDk8lM5iUxhUG0iTh6-QKwzYiwmf1WHBmtkscw0pi+IlajHawURpisC1+UxJ6xAGNKZ04H2aZEoNHojGYP0JOQBzVRRWiUTgADlGHA6uwuNQ4DAoFB3NrCmAwHAAPxc7pYHFDPFjcUrPLs2bcFnW4nWSn4dBYUgUKi0phEMXLYkvJxvXnXfleoV+UUC73C+DSxqxRXwFWatUarU69x6g3GxyYrFmgbDMi6M72+als5BzHY4ueiBIAAqYAsAQ4MlKNjJFgpphjkZFfoHPuZZEbLbbHA7XZrpr69a+KGQMGo1UYdAAXtqe32R3HoxHR37l0hV+uYFvtXPnHXcUQV9Q4vq0LvuJT91Hh0e48zH8+wDQGsQ0uMNvk-RggRBMFyAhaFYQZUIUTRE1byLe8AEF3HcCwAA9uw8B0sJw3CiGBJBO1ImCIRsGJe3fKkIJgKDQXBKEYThaRGSZIhiLw2i5SuOhyEqJUADF9ElDQ4BUNA0AgO4YjqNFdF6IhqDATAoiuSUtg0zAIGEzgogkyUojoFAUAhFAogAZgATgARgAFhvQsF3vEgqACUlCMrbz2TcuA7yGIgEkwMAADdmgAa0iiAKzCrAoqgCw4ogMiQRsIKQpLRg0BhVJ0u8PzPTOQqUHIuB0sypA4By9DQvHZtW3bTs6AI+jqEpL4mJY6j2IQrikLHSAWqnGcOoajzQqXBJ9HcAB5GByDqskrhEqBpvNPKyzcMk5k9PaHC5EC+W+Gk43pYakWUFD8wLXK-UIVCCwTZVEmq5wDu4ABtGKAF1XsxdJszgFBPpiuBIorf6AbgMQtmh+rOQe2tGuGcjKjfbqqUutpAkQpFmSx7b6wG7HyQY6lfDpQmbp4imycw7C0s7SKCMOviYvZjlgaeshytOSqQS+n7K3yiqqpi5nQqbQJ8QGtKQQ0aQETgX6xDiPa6GyP0eRqCAEE4SLuFuIhFt0NBTHhjgoAuAa4Gk3okDti5JGJp24F6fVyDsYHIlcYKrckqg4Fqfa4AAVXPGgYu1IgdSuXRyDyd3QgD5wg4uWoYGzcWiHlpBFbY5WKLgAAyCOOQLAs3cdxHw6tzOnBzst3Fl4ZwpSsvOYdbvot70AgA&html=Q&css=Q
 
     interface IEnumerable<KeyValuePair<'K ,'V>> with
         member _.GetEnumerator() = (dic:>IDictionary<'K,'V>).GetEnumerator()
@@ -312,14 +347,15 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         member __.GetEnumerator() = dic.GetEnumerator():> System.Collections.IEnumerator
 
 
-    interface Collections.ICollection with // Non generic needed too ?
-        member _.Count = dic.Count
+    // interface Collections.ICollection with // Non generic needed too ? // would yield invalid signatures in Fable Typescript target
+    // https://fable.io/repl/#?code=LAKA9gDgpgdgBAZQJ4GcAuUC2pK0ajTAOgCUBXGNAS0yiIElKoAnSBFgNyoGMoUdo8ZOixEAwmAA2kqN2pgYKIgHFYLHqFBok0OAFkkAER5oAPAHIA0gBpzANTgB3ABZ4rALigBHMgENJVNpwAHxwABQAlHAAvJogcAlwMmhwACY8MXDGclQKvsxIFjb2wZFxiXBUTMwAZr68cPQAojBktMy+AEYyppZQSHb+ZFAACr5UzEVwtnbBoY6BzqAVFbSYnSxwAPoqUGgtbSy+aGDMkZl1VJILaM41cABEABoP5YlVGLX1UHAS0rLyRQMA7tLoyJyLOAAeihcAAcgo4ABzNTMHjWOAwKBQVI4uAnMBwZYrBJrDbMbY7VT7Vqgk5nKLROCXa6Le7PV4gYkJGGVap1Bp-GQ5BRKehCgG5eA3ZzQ2EI+AorFo7gYrE4vEEuAAfm5cpWZM2OwkFBSTJZMvZLz1vNWWHJ23EkCQABUwGF8swMVRGczxqzblbORVbYlDRSdvQUMgYNxnKwYFQAF5483+y2Pa3xRKh0n2o1EGPcEhgMBmv1XDMct4JD4sAU-cVSYWA3r9QaSYZjCZFGZzCG3PV29YFgCCqVSYQAHr6LWzM8GSXBw46xDJ8uc05X59XsySVzsSFgwBwfgBrDgQC7pndZpfL-MRp2UcaKOAXq9MisBu4Lodhx9V2dN0PWYL1KlnG9Az-PcDUAyMUCPXxUgAeRgSQkGvbdoN3e8DydU0sJ-IMaz5T4G0abJAXyQorD7Acllg4cHUjQh-xJGVkT2d9EiZdJuAAbTPABddiVl8GBUgSFBuLPOAOEyfihOEuBTAAWnkokuSYgCRyfPpUCIqs7yXfCO2GFAjNvRd93gohx0nM8MQ4SDsN-XDTLsiQXyqFADJ4rdiJgvC7JdApqXMqAwjPfp3CsaY4AE0wULINBghU5goBqSK4HcOBOiQTKagsWYojyzpS0kKycJM2y9MdI9MBPKKYqQVygo5IA&html=Q&css=Q
+    //     member _.Count = dic.Count
 
-        member _.CopyTo(arr, i) = (dic:>Collections.ICollection).CopyTo(arr, i)
+    //     member _.CopyTo(arr, i) = (dic:>Collections.ICollection).CopyTo(arr, i)
 
-        member _.IsSynchronized= (dic:>Collections.ICollection).IsSynchronized
+    //     member _.IsSynchronized= (dic:>Collections.ICollection).IsSynchronized
 
-        member _.SyncRoot= (dic:>Collections.ICollection).SyncRoot
+    //     member _.SyncRoot= (dic:>Collections.ICollection).SyncRoot
 
     interface ICollection<KeyValuePair<'K,'V>> with
         member _.Add(x) = set' dic x.Key x.Value
@@ -376,7 +412,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
             let found = dic.TryGetValue(key, &out)
             refValue <- out
             found
-    *)
+
 
     // TODO
 

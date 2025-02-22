@@ -37,7 +37,7 @@ open DefaultDictUtil
 
 /// A Collections.Generic.Dictionary<'K,'V>  with default Values that get created upon accessing a missing key.
 /// If accessing a non exiting key , the default function is called to create and set it.
-/// Inspired by the  defaultdict in Python.
+/// Inspired by the defaultdict in Python.
 /// If you need to provide a custom implementation of the default function depending on each key,
 /// then use the Dict<'K,'V>  type and it's method <c>Dicts.getOrSetDefault func key</c>.
 [<NoComparison>]
@@ -75,6 +75,9 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
         baseDic
 
     /// For Index operator .[i]: get or set the value for a given key
+    /// Calls defaultFun to get value if key not found.
+    /// Also sets the key to returned value.
+    /// Use dict.TryGetValue(k) if you don't want a missing key to be created on the DefaultDict
     member _.Item
         with get k   = dGet baseDic defaultOfKeyFun k
         and  set k v = set' baseDic k v
@@ -104,6 +107,21 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
                 v
             else
                 raise <|  KeyNotFoundException( sprintf "DefaultDict.Pop(key): Failed to pop key %A in %A of %d items" k baseDic baseDic.Count)
+
+    /// Get a value and remove key and value it from Dictionary, like *.pop() in Python
+    /// Returns None if key does not exist
+    /// Does not set any new key if key is missing
+    member _.TryPop(k:'K) =
+        match box k with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise "DefaultDict.TryPop(key) key is null"
+        | _ ->
+            let ok, v = baseDic.TryGetValue(k)
+            if ok then
+                baseDic.Remove k |>ignore
+                Some v
+            else
+                None
+
 
     /// Returns a (lazy) sequence of key and value tuples
     member _.Items =
@@ -213,7 +231,7 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
     /// As opposed to Get(key) this does not create a key if it is missing.
     member _.TryGetValue(k) = baseDic.TryGetValue(k)
 
-    (*
+
     /// Returns an enumerator that iterates through the DefaultDict.
     member _.GetEnumerator() = baseDic.GetEnumerator()
 
@@ -228,17 +246,19 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
 
 
     //no ICollections because of https://github.com/fable-compiler/Fable/issues/3914
-    interface Collections.ICollection with // Non generic needed too ?
-        member _.Count = baseDic.Count
+    // interface Collections.ICollection with // Non generic needed too ? // would yield invalid signatures in Fable Typescript target
+    // https://fable.io/repl/#?code=LAKA9gDgpgdgBAZQJ4GcAuUC2pK0ajTAOgCUBXGNAS0yiIElKoAnSBFgNyoGMoUdo8ZOixEAwmAA2kqN2pgYKIgHFYLHqFBok0OAFkkAER5oAPAHIA0gBpzANTgB3ABZ4rALigBHMgENJVNpwAHxwABQAlHAAvJogcAlwMmhwACY8MXDGclQKvsxIFjb2wZFxiXBUTMwAZr68cPQAojBktMy+AEYyppZQSHb+ZFAACr5UzEVwtnbBoY6BzqAVFbSYnSxwAPoqUGgtbSy+aGDMkZl1VJILaM41cABEABoP5YlVGLX1UHAS0rLyRQMA7tLoyJyLOAAeihcAAcgo4ABzNTMHjWOAwKBQVI4uAnMBwZYrBJrDbMbY7VT7Vqgk5nKLROCXa6Le7PV4gYkJGGVap1Bp-GQ5BRKehCgG5eA3ZzQ2EI+AorFo7gYrE4vEEuAAfm5cpWZM2OwkFBSTJZMvZLz1vNWWHJ23EkCQABUwGF8swMVRGczxqzblbORVbYlDRSdvQUMgYNxnKwYFQAF5483+y2Pa3xRKh0n2o1EGPcEhgMBmv1XDMct4JD4sAU-cVSYWA3r9QaSYZjCZFGZzCG3PV29YFgCCqVSYQAHr6LWzM8GSXBw46xDJ8uc05X59XsySVzsSFgwBwfgBrDgQC7pndZpfL-MRp2UcaKOAXq9MisBu4Lodhx9V2dN0PWYL1KlnG9Az-PcDUAyMUCPXxUgAeRgSQkGvbdoN3e8DydU0sJ-IMaz5T4G0abJAXyQorD7Acllg4cHUjQh-xJGVkT2d9EiZdJuAAbTPABddiVl8GBUgSFBuLPOAOEyfihOEuBTAAWnkokuSYgCRyfPpUCIqs7yXfCO2GFAjNvRd93gohx0nM8MQ4SDsN-XDTLsiQXyqFADJ4rdiJgvC7JdApqXMqAwjPfp3CsaY4AE0wULINBghU5goBqSK4HcOBOiQTKagsWYojyzpS0kKycJM2y9MdI9MBPKKYqQVygo5IA&html=Q&css=Q
 
-        member _.CopyTo(arr, i) = (baseDic:>Collections.ICollection).CopyTo(arr, i)
+    //     member _.Count = baseDic.Count
 
-        member _.IsSynchronized= (baseDic:>Collections.ICollection).IsSynchronized
+    //     member _.CopyTo(arr, i) = (baseDic:>Collections.ICollection).CopyTo(arr, i)
 
-        member _.SyncRoot= (baseDic:>Collections.ICollection).SyncRoot
+    //     member _.IsSynchronized= (baseDic:>Collections.ICollection).IsSynchronized
+
+    //     member _.SyncRoot= (baseDic:>Collections.ICollection).SyncRoot
 
     interface ICollection<KeyValuePair<'K,'V>> with
-        member _.Add(x) = baseDic.Add(x.Key, x.Value) //(baseDic:>ICollection<KeyValuePair<'K,'V>>).Add(x) // fails on Fable: https://github.com/fable-compiler/Fable/issues/3914
+        member _.Add(x) = set' baseDic x.Key x.Value //(baseDic:>ICollection<KeyValuePair<'K,'V>>).Add(x) // fails on Fable: https://github.com/fable-compiler/Fable/issues/3914
 
         member _.Clear() = baseDic.Clear()
 
@@ -252,39 +272,46 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
 
         member _.Count = baseDic.Count
 
-
-    interface IDictionary<'K,'V> with
-        member _.Item
-            with get k   = dGet baseDic defaultOfKeyFun k
-            and  set k v = set' baseDic k v
-
-        member _.Keys = (baseDic:>IDictionary<'K,'V>).Keys
-
-        member _.Values = (baseDic:>IDictionary<'K,'V>).Values
-
-        member _.Add(k, v) = baseDic.Add(k, v)
-
-        member _.ContainsKey k = baseDic.ContainsKey k
-
-        member _.TryGetValue(k, r ) = baseDic.TryGetValue(k, ref r)
-
-        member _.Remove(k) = baseDic.Remove(k)
-
     interface IReadOnlyCollection<KeyValuePair<'K,'V>> with
         member _.Count = baseDic.Count
 
-    interface IReadOnlyDictionary<'K,'V> with
-        member _.Item
-            with get k = dGet baseDic defaultOfKeyFun k
 
-        member _.Keys = (baseDic:>IReadOnlyDictionary<'K,'V>).Keys
 
-        member _.Values = (baseDic:>IReadOnlyDictionary<'K,'V>).Values
+    // don't add IDictionary because of TryGetValue might return might return a no Value while get would.
+    // this si not consistent with the IDictionary interface
 
-        member _.ContainsKey k = baseDic.ContainsKey k
+    // interface IDictionary<'K,'V> with
+    //     member _.Item
+    //         with get k   = dGet baseDic defaultOfKeyFun k
+    //         and  set k v = set' baseDic k v
 
-        member _.TryGetValue(k, r ) = baseDic.TryGetValue(k, ref r)
-    *)
+    //     //member _.GetValue(k) = dGet baseDic defaultOfKeyFun k
+
+    //     member _.Keys = (baseDic:>IDictionary<'K,'V>).Keys
+
+    //     member _.Values = (baseDic:>IDictionary<'K,'V>).Values
+
+    //     member _.Add(k, v) = set' baseDic k v
+
+    //     member _.ContainsKey k = baseDic.ContainsKey k
+
+    //     member _.TryGetValue(k, r ) = baseDic.TryGetValue(k, ref r)
+
+    //     member _.Remove(k) = baseDic.Remove(k)
+
+
+    // interface IReadOnlyDictionary<'K,'V> with
+    //     member _.Item
+    //         with get k = dGet baseDic defaultOfKeyFun k
+
+    //     member _.Keys = (baseDic:>IReadOnlyDictionary<'K,'V>).Keys
+
+    //     member _.Values = (baseDic:>IReadOnlyDictionary<'K,'V>).Values
+
+    //     member _.ContainsKey k = baseDic.ContainsKey k
+
+    //     member _.TryGetValue(k, r ) = baseDic.TryGetValue(k, ref r)
+
 
     // TODO add these too?
 
