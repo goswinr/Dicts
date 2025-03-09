@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2025-03-09
 ### Added
-#### Several new function in a Dict module:
+Several new function in a `Dict` module:
 - memoize - Caches results of a function in a Dictionary
 - get - Gets value at key from IDictionary with better error messages
 - set - Sets value at key in an IDictionary
@@ -53,7 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added more tests
 
 
-[Unreleased]: https://github.com/goswinr/Dicts/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/goswinr/Dicts/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/goswinr/Dicts/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/goswinr/Dicts/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/goswinr/Dicts/compare/0.1.0...0.2.1
 [0.1.0]: https://github.com/goswinr/Dicts/releases/tag/0.1.0
