@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.4.0] - 2025-03-09
+### Added
+#### Several new function in a Dict module:
+- memoize - Caches results of a function in a Dictionary
+- get - Gets value at key from IDictionary with better error messages
+- set - Sets value at key in an IDictionary
+- add - Sets value at key in an IDictionary (alias for set)
+- tryGet - Tries to get a value from an IDictionary
+- create - Creates a Dict from sequence of key-value pairs
+- setIfKeyAbsent - Sets value only if key doesn't exist yet
+- addIfKeyAbsent - Sets value only if key doesn't exist yet (alias for setIfKeyAbsent)
+- getOrSetDefault - Gets value or sets default using function if key doesn't exist
+- getOrSetDefaultValue - Gets value or sets provided default value if key doesn't exist
+- tryPop - Tries to get value and remove key-value pair from dictionary
+- pop - Gets value and removes key-value pair from dictionary
+- items - Returns sequence of key-value tuples
+- values - Returns sequence of values
+- keys - Returns sequence of keys
+- iter - Iterates over keys and values of a Dict
+- map - Maps over keys and values of a Dict
+
+
 ## [0.3.0] - 2025-02-22
 ### Fixed
 - fixed interfaces to be compatible with Fable JS & TS

@@ -586,7 +586,9 @@ let tests  =
         let expected = set [("A",1); ("B",2)]
         Expect.equal pairs expected "ReadOnly collection should have same content"
 
-    // IDictionary interface is removed from DefaultDict
+    // IDictionary interface is removed from DefaultDict becaus the semantics don't fit
+    // don't add IDictionary because of TryGetValue might return might no Value while get would.
+    // this is not consistent with the IDictionary interface
 
     // testCase "iDictionary DefDict - Get item" <| fun _ ->
     //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
@@ -642,6 +644,243 @@ let tests  =
     //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
     //     let success, _ = b.TryGetValue("missing")
     //     Expect.isFalse success "TryGetValue should return true even for missing key"
+
+
+
+
+
+    // ---------------------------------------------------------
+    // Dict Module Tests:
+    // ---------------------------------------------------------
+
+    testCase "Dict.memoize - caches function results" <| fun _ ->
+        let callCount = ref 0
+        let expensiveFunc x =
+            incr callCount
+            x * 2
+
+        let memoizedFunc = Dict.memoize expensiveFunc
+
+        // First call should execute the function
+        let result1 = memoizedFunc 5
+        Expect.equal result1 10 "Function should return correct result"
+        Expect.equal !callCount 1 "Function should be called once"
+
+        // Second call with same input should use cached result
+        let result2 = memoizedFunc 5
+        Expect.equal result2 10 "Function should return correct result"
+        Expect.equal !callCount 1 "Function should not be called again"
+
+        // Call with different input should execute function again
+        let result3 = memoizedFunc 7
+        Expect.equal result3 14 "Function should return correct result"
+        Expect.equal !callCount 2 "Function should be called for new input"
+
+
+    testCase "Dict.memoize - null" <| fun _ ->
+        let unitf () = 5
+        let memoizedFunc = Dict.memoize unitf
+        let result = memoizedFunc ()
+        Expect.equal result 5 "Function should return correct result"
+
+        let nullF (_x:obj) = 6
+        let memoizedFunc = Dict.memoize nullF
+        let result = memoizedFunc null
+        Expect.equal result 6 "Function should return correct result"
+
+        let noneF (_x:Option<int>) = 7
+        let memoizedFunc = Dict.memoize noneF
+        let result = memoizedFunc None
+        Expect.equal result 7 "Function should return correct result"
+
+
+    testCase "Dict.get - retrieves value for existing key" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["test"] <- 42
+
+        let result = Dict.get "test" dict
+        Expect.equal result 42 "Should retrieve correct value"
+
+    testCase "Dict.get - throws for non-existent key" <| fun _ ->
+        let dict = Dict<string, int>()
+        Expect.throws (fun () -> Dict.get "missing" dict |> ignore)
+            "Should throw KeyNotFoundException"
+
+    testCase "Dict.set - sets value for key" <| fun _ ->
+        let dict = Dict<string, int>()
+        Dict.set "test" 42 dict
+
+        Expect.equal dict.["test"] 42 "Should set correct value"
+
+    testCase "Dict.tryGet - returns Some for existing key" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["test"] <- 42
+
+        let result = Dict.tryGet "test" dict
+        Expect.equal result (Some 42) "Should return Some with correct value"
+
+    testCase "Dict.tryGet - returns None for non-existent key" <| fun _ ->
+        let dict = Dict<string, int>()
+
+        let result = Dict.tryGet "missing" dict
+        Expect.equal result None "Should return None"
+
+    testCase "Dict.create - creates dictionary from key-value pairs" <| fun _ ->
+        let pairs = [("a", 1); ("b", 2); ("c", 3)]
+        let dict = Dict.create pairs
+
+        Expect.equal dict.Count 3 "Dictionary should have correct count"
+        Expect.equal dict.["a"] 1 "Dictionary should contain correct values"
+        Expect.equal dict.["b"] 2 "Dictionary should contain correct values"
+        Expect.equal dict.["c"] 3 "Dictionary should contain correct values"
+
+    testCase "Dict.setIfKeyAbsent - adds when key doesn't exist" <| fun _ ->
+        let dict = Dict<string, int>()
+
+        let result = Dict.setIfKeyAbsent "test" 42 dict
+        Expect.isTrue result "Should return true when key doesn't exist"
+        Expect.equal dict.["test"] 42 "Should set the value"
+
+    testCase "Dict.setIfKeyAbsent - doesn't add when key exists" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["test"] <- 42
+
+        let result = Dict.setIfKeyAbsent "test" 84 dict
+        Expect.isFalse result "Should return false when key exists"
+        Expect.equal dict.["test"] 42 "Should not change the value"
+
+    testCase "Dict.addIfKeyAbsent - adds when key doesn't exist" <| fun _ ->
+        let dict = Dict<string, int>()
+
+        let result = Dict.addIfKeyAbsent "test" 42 dict
+        Expect.isTrue result "Should return true when key doesn't exist"
+        Expect.equal dict.["test"] 42 "Should add the value"
+
+    testCase "Dict.addIfKeyAbsent - doesn't add when key exists" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["test"] <- 42
+
+        let result = Dict.addIfKeyAbsent "test" 84 dict
+        Expect.isFalse result "Should return false when key exists"
+        Expect.equal dict.["test"] 42 "Should not change the value"
+
+    testCase "Dict.getOrSetDefault - returns existing value for existing key" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["test"] <- 42
+
+        let result = Dict.getOrSetDefault (fun _ -> 99) "test" dict
+        Expect.equal result 42 "Should return existing value"
+        Expect.equal dict.["test"] 42 "Should not change existing value"
+
+    testCase "Dict.getOrSetDefault - sets default for missing key" <| fun _ ->
+        let dict = Dict<string, int>()
+
+        let result = Dict.getOrSetDefault (fun _k -> 4) "test" dict
+        Expect.equal result 4 "Should return default value based on key"
+        Expect.equal dict.["test"] 4 "Should set default value in dictionary"
+
+    testCase "Dict.getOrSetDefaultValue - returns existing value for existing key" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["test"] <- 42
+
+        let result = Dict.getOrSetDefaultValue 99 "test" dict
+        Expect.equal result 42 "Should return existing value"
+        Expect.equal dict.["test"] 42 "Should not change existing value"
+
+    testCase "Dict.getOrSetDefaultValue - sets default for missing key" <| fun _ ->
+        let dict = Dict<string, int>()
+
+        let result = Dict.getOrSetDefaultValue 99 "test" dict
+        Expect.equal result 99 "Should return default value"
+        Expect.equal dict.["test"] 99 "Should set default value in dictionary"
+
+    testCase "Dict.tryPop - returns Some and removes for existing key" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["test"] <- 42
+
+        let result = Dict.tryPop "test" dict
+        Expect.equal result (Some 42) "Should return Some with value"
+        Expect.isFalse (dict.ContainsKey "test") "Should remove key from dictionary"
+
+    testCase "Dict.tryPop - returns None for non-existent key" <| fun _ ->
+        let dict = Dict<string, int>()
+
+        let result = Dict.tryPop "missing" dict
+        Expect.equal result None "Should return None for missing key"
+
+    testCase "Dict.pop - returns value and removes for existing key" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["test"] <- 42
+
+        let result = Dict.pop "test" dict
+        Expect.equal result 42 "Should return value"
+        Expect.isFalse (dict.ContainsKey "test") "Should remove key from dictionary"
+
+    testCase "Dict.pop - throws for non-existent key" <| fun _ ->
+        let dict = Dict<string, int>()
+
+        Expect.throws (fun () -> Dict.pop "missing" dict |> ignore)
+            "Should throw KeyNotFoundException"
+
+    testCase "Dict.items - returns sequence of key-value pairs" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["a"] <- 1
+        dict.["b"] <- 2
+
+        let items = Dict.items dict |> Seq.toList |> List.sortBy fst
+        Expect.equal items [("a", 1); ("b", 2)] "Should return correct key-value pairs"
+
+    testCase "Dict.values - returns sequence of values" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["a"] <- 1
+        dict.["b"] <- 2
+
+        let values = Dict.values dict |> Seq.toList |> List.sort
+        Expect.equal values [1; 2] "Should return correct values"
+
+    testCase "Dict.keys - returns sequence of keys" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["a"] <- 1
+        dict.["b"] <- 2
+
+        let keys = Dict.keys dict |> Seq.toList |> List.sort
+        Expect.equal keys ["a"; "b"] "Should return correct keys"
+
+    testCase "Dict.iter - iterates over dictionary" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["a"] <- 1
+        dict.["b"] <- 2
+
+        let result = ref []
+        Dict.iter (fun k v -> result := (k, v) :: !result) dict
+        let sorted = !result |> List.sortBy fst
+
+        Expect.equal sorted [("a", 1); ("b", 2)] "Should iterate over all key-value pairs"
+
+    testCase "Dict.map - maps dictionary to sequence" <| fun _ ->
+        let dict = Dict<string, int>()
+        dict.["a"] <- 1
+        dict.["b"] <- 2
+
+        let result = Dict.map (fun k v -> k + string v) dict |> Seq.toList |> List.sort
+        Expect.equal result ["a1"; "b2"] "Should map key-value pairs correctly"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   ]

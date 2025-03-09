@@ -277,8 +277,8 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
 
 
 
-    // don't add IDictionary because of TryGetValue might return might return a no Value while get would.
-    // this si not consistent with the IDictionary interface
+    // don't add IDictionary because of TryGetValue might return might no Value while get would.
+    // this is not consistent with the IDictionary interface
 
     // interface IDictionary<'K,'V> with
     //     member _.Item
