@@ -14,7 +14,7 @@ module internal DictUtil =
 
 
     /// the internal get function, that throws a nice exception if the key is not found
-    let inline get' (dic:Dictionary<'K,'V>) key  =
+    let inline get' key  (dic:Dictionary<'K,'V>) =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.get: key is null "
         | _ ->
@@ -26,12 +26,12 @@ module internal DictUtil =
             KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items" key dic dic.Count
 
     /// the internal set function, that throws an exception if the key is null
-    let inline set' (dic:Dictionary<'K,'V>) key value =
+    let inline set' key value (dic:Dictionary<'K,'V>) =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise  "Dict.set key is null for value %A" value
         | _ -> dic.[key] <- value
 
-    let inline toString (dic:Dictionary<'K,'V>) (k:string)  (v:string) =
+    let inline toString (k:string) (v:string) (dic:Dictionary<'K,'V>) =
         if dic.Count = 0 then
             $"empty Dict<{k},{v}>"
         elif dic.Count = 1 then
