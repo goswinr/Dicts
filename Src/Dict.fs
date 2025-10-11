@@ -104,11 +104,11 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         Dict(dic)
 
         /// Set value for given key, same as the static <c>Dict.Add(key, value)</c>
-    static member set (dd:Dict<'K,'V>) key value =
+    static member set (key:'K) (value:'V) (dd:Dict<'K,'V>) =
         dd.Set key value
 
     /// Get value for given key.
-    static member get (dd:Dict<'K,'V>) key =
+    static member get key (dd:Dict<'K,'V>) =
         dd.Get key
 
     /// Access the underlying Collections.Generic.Dictionary<'K,'V>.
@@ -119,16 +119,16 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// For Index operator .[i]: get or set the value for given key
     /// Throws a nice exception if the key is not found.
     member _.Item
-        with get k   = get' dic k
-        and  set k v = set' dic k v
+        with get k   = get' k dic
+        and  set k v = set' k v dic
 
     /// Get value for given key
     member _.Get key =
-        get' dic key
+        get' key dic
 
     /// Set value for given key, same as the static <c>Dict.add key value</c>
     member _.Set key value =
-        set' dic key value
+        set' key value dic
 
 
     /// Set value only if key does not exist yet.
@@ -235,7 +235,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         let k = typeof<'K>.Name
         let v = typeof<'V>.Name
         #endif
-        toString dic k v
+        toString k v dic
 
 
     /// A string representation of the Dict including the count of entries and the first 5 entries.
@@ -247,7 +247,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     #endif
         let b = Text.StringBuilder()
         let c = dic.Count
-        let st = toString dic (typeof<'K>.Name) (typeof<'V>.Name)
+        let st = toString (typeof<'K>.Name) (typeof<'V>.Name) dic
         b.Append st |> ignore
         if c > 0  then b.AppendLine ":"  |> ignore
         for KeyValue(k, v) in dic  |> Seq.truncate 5 do // Add sorting ? print 3 lines??
@@ -266,7 +266,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     #endif
         let b = Text.StringBuilder()
         let c = dic.Count
-        let st = toString dic (typeof<'K>.Name) (typeof<'V>.Name)
+        let st = toString (typeof<'K>.Name) (typeof<'V>.Name) dic
         b.Append st |> ignore
         if c > 0  && entriesToPrint > 0 then b.AppendLine ":"  |> ignore
         for KeyValue(k, v) in dic |> Seq.truncate (max 0 entriesToPrint) do // Add sorting ? print 3 lines??
@@ -308,7 +308,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     // -------------------------------------methods:-------------------------------
 
     /// Add the specified key and value to the Dict.
-    member _.Add(key, value) = set' dic key value //dic.Add(key, value)
+    member _.Add(key:'K, value:'V) = set' key value dic
 
     /// Removes all keys and values from the Dict
     member _.Clear() = dic.Clear()
@@ -358,7 +358,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     //     member _.SyncRoot= (dic:>Collections.ICollection).SyncRoot
 
     interface ICollection<KeyValuePair<'K,'V>> with
-        member _.Add(x) = set' dic x.Key x.Value
+        member _.Add(x) = set' x.Key x.Value dic
 
         member _.Clear() = dic.Clear()
 
@@ -375,8 +375,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     interface IDictionary<'K,'V> with
         member _.Item
-            with get k   = get' dic k
-            and  set k v = set' dic k v // dic.[k] <- v
+            with get k   = get' k dic
+            and  set k v = set' k v dic // dic.[k] <- v
 
         member _.Keys = (dic:>IDictionary<'K,'V>).Keys
 
@@ -399,7 +399,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     interface IReadOnlyDictionary<'K,'V> with
         member _.Item
-            with get k = get' dic k
+            with get k = get' k dic
 
         member _.Keys = (dic:>IReadOnlyDictionary<'K,'V>).Keys
 
