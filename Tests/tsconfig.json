@@ -4,6 +4,15 @@
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
+    // Generate d.ts files
+    // "declarationDir": "./_ts", // where to put the _ts files
+    "declaration": true,
+
+    // This compiler run should
+    // only output d.ts files
+    "emitDeclarationOnly": true,
+    "allowImportingTsExtensions": true, // seems needed from fable5-alpha17, needs emitDeclarationOnly=true
+
     /* Projects */
     // "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
     // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
