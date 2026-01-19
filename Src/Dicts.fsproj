@@ -52,7 +52,7 @@
     <ChangelogFile>../CHANGELOG.md</ChangelogFile>
   </PropertyGroup>
   <ItemGroup>
-     <PackageReference Update="FSharp.Core" Version="6.0.7" />
+     <PackageReference Update="FSharp.Core" Version="10.0.102" />
     <PackageReference Include="Fable.Core" Version="4.3.0" Condition="$(DefineConstants.Contains('FABLE_COMPILER'))" />  <!-- see https://github.com/thoth-org/Thoth.Json.Net/issues/59 it needs the fable compiler flag: - -test:MSBuildCracker -->
 
     <PackageReference Include="Ionide.KeepAChangelog.Tasks" Version="0.1.8" PrivateAssets="all" />
