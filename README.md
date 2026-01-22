@@ -29,7 +29,7 @@ Otherwise when a function fails on invalid input it will throw a descriptive exc
 I was always annoyed that a KeyNotFoundExceptions does not include the actual bad key nor a pretty printed dictionary.
 This library fixes that in `iDictionary.Get`, `iDictionary.Set` and other item access functions.
 
-### Example
+## Example
 
 ```fsharp
 #r "nuget: Dicts"
@@ -41,12 +41,12 @@ incr dd.["A"]   // now it exists and will be incremented to 101
 dd.["A"].Value  = 101 // true
 ```
 
-### Full API Documentation
+## Full API Documentation
 
 [goswinr.github.io/Dicts](https://goswinr.github.io/Dicts/reference/dicts.html)
 
 
-### Tests
+## Tests
 All Tests run in both javascript and dotnet.
 Successful Fable compilation to typescript is verified too.
 Go to the tests folder:
@@ -67,10 +67,10 @@ for JS testing with Fable.Mocha and TS verification:
 npm test
 ```
 
-### License
+## License
 [MIT](https://raw.githubusercontent.com/goswinr/Dicts/main/LICENSE.txt)
 
-### Changelog
+## Changelog
 see [CHANGELOG.md](https://github.com/goswinr/Dicts/blob/main/CHANGELOG.md)
 
 
