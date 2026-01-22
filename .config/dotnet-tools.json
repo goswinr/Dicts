@@ -3,18 +3,18 @@
   "isRoot": true,
   "tools": {
     "fable": {
-      "version": "5.0.0-alpha.17",
+      "version": "5.0.0-alpha.22",
       "commands": [
         "fable"
       ],
-      "rollForward": false
+      "rollForward": true
     },
     "fsdocs-tool": {
       "version": "21.0.0",
       "commands": [
         "fsdocs"
       ],
-      "rollForward": false
+      "rollForward": true
     }
   }
 }
