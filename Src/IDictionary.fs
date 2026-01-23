@@ -8,11 +8,11 @@ open System.Collections.Generic
 module internal ExtensionsExceptions =
     type ArgumentNullException with
         /// Raise ArgumentNullException with F# printf string formatting
-        static member Raise msg = Printf.kprintf (fun s -> raise (ArgumentNullException(s))) msg
+        static member Raise msg : 'T = Printf.kprintf (fun s -> raise (ArgumentNullException(s))) msg
 
     type KeyNotFoundException with
         /// Raise KeyNotFoundException with F# printf string formatting
-        static member Raise msg = Printf.kprintf (fun s -> raise (KeyNotFoundException(s))) msg
+        static member Raise msg : 'T = Printf.kprintf (fun s -> raise (KeyNotFoundException(s))) msg
 
 open ExtensionsExceptions
 
@@ -22,7 +22,7 @@ module ExtensionsIDictionary =
 
 
     /// The string representation of the Dict including the count of entries.
-    let inline internal toString(dic: IDictionary<'K,'V>) =
+    let inline internal toString(dic: IDictionary<'K,'V>) : string =
         let d =
             let fn = dic.GetType().Name
             let start = fn.IndexOf '`'
@@ -44,14 +44,14 @@ module ExtensionsIDictionary =
 
         /// Set/add value at key, with nicer error messages.
         /// Same as <c>Dicts.addValue key value</c>
-        member d.SetValue k v =
+        member d.SetValue k v : unit =
             // this cant be called just .Set because
             // there would be a clash in member overloading a curried function with Dicts type that is also a IDictionary ??
             try d.[k] <- v
             with _  -> KeyNotFoundException.Raise "Dicts: IDictionary.SetValue key value ;failed for key '%A' in %A of %d items (for value: '%A')" k d d.Count v
 
         /// Get value at key, with nicer error messages.
-        member d.GetValue k  =
+        member d.GetValue k : 'V =
             // try d.[k]
             // with _ -> KeyNotFoundException.Raise "Dicts: IDictionary.GetValue(key) failed to find key %A in %A of %d items" k d d.Count
             // don't do it like this, because get on a defaultDict should set a missing value, TryGetValue does not for defaultDict
@@ -61,7 +61,7 @@ module ExtensionsIDictionary =
 
 
         /// Get a value and remove it from Dictionary, like *.pop() in Python.
-        member d.Pop k  =
+        member d.Pop k : 'V =
             let ok, v = d.TryGetValue(k)
             if ok then
                 d.Remove k |>ignore
@@ -71,7 +71,7 @@ module ExtensionsIDictionary =
 
         /// Try to get a value and remove it from Dictionary, like *.pop() in Python.
         /// Returns None if key is not found.
-        member d.TryPop k  =
+        member d.TryPop k : 'V option =
             let ok, v = d.TryGetValue(k)
             if ok then
                 d.Remove k |>ignore
@@ -98,9 +98,9 @@ module ExtensionsIDictionary =
 
         /// A string representation of the IDictionary including the count of entries and the first 5 entries.
         #if FABLE_COMPILER
-        member inline this.AsString =  // inline needed for Fable reflection
+        member inline this.AsString : string =  // inline needed for Fable reflection
         #else
-        member this.AsString =  // on .NET inline fails because it's using internal DefaultDictUtil
+        member this.AsString : string =  // on .NET inline fails because it's using internal DefaultDictUtil
         #endif
             let b = Text.StringBuilder()
             let c = this.Count
@@ -115,9 +115,9 @@ module ExtensionsIDictionary =
         /// A string representation of the IDictionary including the count of entries
         /// and the specified amount of entries.
         #if FABLE_COMPILER
-        member inline this.ToString(entriesToPrint) =  // inline needed for Fable reflection
+        member inline this.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
         #else
-        member this.ToString(entriesToPrint) = // on .NET inline fails because it's using internal DefaultDictUtil
+        member this.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
         #endif
             let b = Text.StringBuilder()
             let c = this.Count

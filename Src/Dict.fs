@@ -14,7 +14,7 @@ module internal DictUtil =
 
 
     /// the internal get function, that throws a nice exception if the key is not found
-    let inline get' key  (dic:Dictionary<'K,'V>) =
+    let inline get' key  (dic:Dictionary<'K,'V>) : 'V =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.get: key is null "
         | _ ->
@@ -26,12 +26,12 @@ module internal DictUtil =
             KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items" key dic dic.Count
 
     /// the internal set function, that throws an exception if the key is null
-    let inline set' key value (dic:Dictionary<'K,'V>) =
+    let inline set' key value (dic:Dictionary<'K,'V>) : unit =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise  "Dict.set key is null for value %A" value
         | _ -> dic.[key] <- value
 
-    let inline toString (k:string) (v:string) (dic:Dictionary<'K,'V>) =
+    let inline toString (k:string) (v:string) (dic:Dictionary<'K,'V>) : string =
         if dic.Count = 0 then
             $"empty Dict<{k},{v}>"
         elif dic.Count = 1 then
@@ -92,28 +92,28 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     #endif
 
     /// Constructs a new Dict by using the supplied Dictionary<'K,'V>  directly, without any copying of items
-    static member createDirectly (dic:Dictionary<'K,'V> ) =
+    static member createDirectly (dic:Dictionary<'K,'V> ) : Dict<'K,'V> =
         if isNull dic then ArgumentNullException.Raise "Dictionary in Dict.createDirectly is null"
         Dict(dic)
 
     /// Constructs a new Dict from a sequence of key-value tuples.
-    static member create (pairs:seq<'K * 'V>) =
+    static member create (pairs:seq<'K * 'V>) : Dict<'K,'V> =
         let dic = Dictionary()
         for k, v in pairs do
             dic.Add(k, v)
         Dict(dic)
 
         /// Set value for given key, same as the static <c>Dict.Add(key, value)</c>
-    static member set (key:'K) (value:'V) (dd:Dict<'K,'V>) =
+    static member set (key:'K) (value:'V) (dd:Dict<'K,'V>) : unit =
         dd.Set key value
 
     /// Get value for given key.
-    static member get key (dd:Dict<'K,'V>) =
+    static member get key (dd:Dict<'K,'V>) : 'V =
         dd.Get key
 
     /// Access the underlying Collections.Generic.Dictionary<'K,'V>.
     /// ATTENTION! This is not even a shallow copy, mutating it will also change this instance of Dict!
-    member _.InternalDictionary =
+    member _.InternalDictionary : Dictionary<'K,'V> =
         dic
 
     /// For Index operator .[i]: get or set the value for given key
@@ -123,18 +123,18 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         and  set k v = set' k v dic
 
     /// Get value for given key
-    member _.Get key =
+    member _.Get key : 'V =
         get' key dic
 
     /// Set value for given key, same as the static <c>Dict.add key value</c>
-    member _.Set key value =
+    member _.Set key value : unit =
         set' key value dic
 
 
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case.
     /// Same as <c>Dict.AddIfKeyAbsent key value</c>
-    member _.SetIfKeyAbsent (key:'K) (value:'V) =
+    member _.SetIfKeyAbsent (key:'K) (value:'V) : bool =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.SetIfKeyAbsent key is null "
         | _ ->
@@ -147,7 +147,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case.
     /// Same as <c>Dict.SetIfKeyAbsent key value</c>
-    member _.AddIfKeyAbsent  (key:'K) (value:'V) =
+    member _.AddIfKeyAbsent  (key:'K) (value:'V) : bool =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.AddIfKeyAbsent key is null "
         | _ ->
@@ -159,7 +159,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// If the key ist not present calls the default function, set it as value at the key and return the value.
     /// This function is an alternative to the DefaultDic type. Use it if you need to provide a custom implementation of the default function depending on the key.
-    member _.GetOrSetDefault (getDefault:'K -> 'V) (key:'K)   =
+    member _.GetOrSetDefault (getDefault:'K -> 'V) (key:'K) : 'V =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.GetOrSetDefault key is null "
         | _ ->
@@ -171,7 +171,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 v
 
     /// If the key ist not present set it as value at the key and return the value.
-    member _.GetOrSetDefaultValue (defaultValue: 'V) (key:'K)   =
+    member _.GetOrSetDefaultValue (defaultValue: 'V) (key:'K) : 'V =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.GetOrSetDefaultValue key is null "
         | _ ->
@@ -184,7 +184,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// Get a value and remove key and value it from Dict.
     /// Will fail if key does not exist
-    member _.Pop(key:'K) =
+    member _.Pop(key:'K) : 'V =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.Pop(key) key is null"
         | _ ->
@@ -198,7 +198,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// Try to get a value and remove key and value it from Dict.
     /// Returns None if key is not found.
     /// Returns Some value if key is found.
-    member _.TryPop(key:'K) =
+    member _.TryPop(key:'K) : 'V option =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.TryPop(key) key is null"
         | _ ->
@@ -210,7 +210,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 None
 
     /// Returns a (lazy) sequence of key and value tuples
-    member _.Items =
+    member _.Items : seq<'K * 'V> =
         seq { for kvp in dic -> kvp.Key, kvp.Value}
 
     /// Returns a (lazy) sequence of values
@@ -223,7 +223,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// Determines whether the Dict does not contains the specified key.
     /// not(dic.ContainsKey(key))
-    member _.DoesNotContainKey(key) = not(dic.ContainsKey(key))
+    member _.DoesNotContainKey(key) : bool = not(dic.ContainsKey(key))
 
 
     /// The string representation of the Dict including the count of entries.
@@ -241,9 +241,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// A string representation of the Dict including the count of entries and the first 5 entries.
     /// When used in Fable this member is inlined for reflection to work.
     #if FABLE_COMPILER
-    member inline _.AsString =  // inline needed for Fable reflection
+    member inline _.AsString : string =  // inline needed for Fable reflection
     #else
-    member _.AsString =  // on .NET inline fails because it's using internal DefaultDictUtil
+    member _.AsString : string =  // on .NET inline fails because it's using internal DefaultDictUtil
     #endif
         let b = Text.StringBuilder()
         let c = dic.Count
@@ -260,9 +260,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// and the specified amount of entries.
     /// /// When used in Fable this member is inlined for reflection to work.
     #if FABLE_COMPILER
-    member inline _.ToString(entriesToPrint) =  // inline needed for Fable reflection
+    member inline _.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
     #else
-    member _.ToString(entriesToPrint) = // on .NET inline fails because it's using internal DefaultDictUtil
+    member _.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
     #endif
         let b = Text.StringBuilder()
         let c = dic.Count
@@ -289,39 +289,39 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
 
     /// Gets the number of key/value pairs contained in the Dict
-    member _.Count  = dic.Count
+    member _.Count : int = dic.Count
 
     /// Gets a collection containing the keys in the Dict
     /// same as on System.Collections.Generic.Dict<'K,'V>
-    member _.Keys = dic.Keys
+    member _.Keys : Dictionary<'K,'V>.KeyCollection = dic.Keys
 
     /// Gets a collection containing the values in the Dict
     /// same as on System.Collections.Generic.Dict<'K,'V>
-    member _.Values = dic.Values
+    member _.Values : Dictionary<'K,'V>.ValueCollection = dic.Values
 
     /// Tests if the Dict is Empty.
-    member _.IsEmpty = dic.Count = 0
+    member _.IsEmpty : bool = dic.Count = 0
 
     /// Tests if the Dict is NOT Empty.
-    member _.IsNotEmpty = dic.Count > 0
+    member _.IsNotEmpty : bool = dic.Count > 0
 
     // -------------------------------------methods:-------------------------------
 
     /// Add the specified key and value to the Dict.
-    member _.Add(key:'K, value:'V) = set' key value dic
+    member _.Add(key:'K, value:'V) : unit = set' key value dic
 
     /// Removes all keys and values from the Dict
-    member _.Clear() = dic.Clear()
+    member _.Clear() : unit = dic.Clear()
 
     /// Determines whether the Dict contains the specified key.
-    member _.ContainsKey(key) = dic.ContainsKey(key)
+    member _.ContainsKey(key) : bool = dic.ContainsKey(key)
 
     /// Determines whether the Dict contains a specific value.
-    member _.ContainsValue(value) = dic.ContainsValue(value)
+    member _.ContainsValue(value) : bool = dic.ContainsValue(value)
 
     /// Removes the value with the specified key from the Dict.
     /// See also .Pop(key) method that return the contained value.
-    member _.Remove(key) = dic.Remove(key)
+    member _.Remove(key) : bool = dic.Remove(key)
 
     /// <summary>Lookup an element in the Dict, assigning it to <c>refValue</c> if the element is in the Dict and return true. Otherwise returning <c>false</c> .</summary>
     /// <param name="key">The input key.</param>
@@ -335,16 +335,16 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
 
     /// Returns an enumerator that iterates through the Dict.
-    member _.GetEnumerator() = dic.GetEnumerator()
+    member _.GetEnumerator() : Dictionary<'K,'V>.Enumerator = dic.GetEnumerator()
 
     //---------------------------------------interfaces:-------------------------------------
     // TODO dic XML doc str
 
     interface IEnumerable<KeyValuePair<'K ,'V>> with
-        member _.GetEnumerator() = (dic:>IDictionary<'K,'V>).GetEnumerator()
+        member _.GetEnumerator() : IEnumerator<KeyValuePair<'K,'V>> = (dic:>IDictionary<'K,'V>).GetEnumerator()
 
     interface Collections.IEnumerable with // Non generic needed too ?
-        member __.GetEnumerator() = dic.GetEnumerator():> System.Collections.IEnumerator
+        member __.GetEnumerator() : Collections.IEnumerator = dic.GetEnumerator():> System.Collections.IEnumerator
 
 
     // interface Collections.ICollection with // Non generic needed too ? // would yield invalid signatures in Fable Typescript target
@@ -358,19 +358,19 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     //     member _.SyncRoot= (dic:>Collections.ICollection).SyncRoot
 
     interface ICollection<KeyValuePair<'K,'V>> with
-        member _.Add(x) = set' x.Key x.Value dic
+        member _.Add(x) : unit = set' x.Key x.Value dic
 
-        member _.Clear() = dic.Clear()
+        member _.Clear() : unit = dic.Clear()
 
-        member _.Remove kvp = dic.Remove(kvp.Key) // (dic:>ICollection<KeyValuePair<'K,'V>>).Remove kvp
+        member _.Remove kvp : bool = dic.Remove(kvp.Key) // (dic:>ICollection<KeyValuePair<'K,'V>>).Remove kvp
 
-        member _.Contains kvp =  dic.ContainsKey kvp.Key  // (dic:>ICollection<KeyValuePair<'K,'V>>).Contains kvp
+        member _.Contains kvp : bool =  dic.ContainsKey kvp.Key  // (dic:>ICollection<KeyValuePair<'K,'V>>).Contains kvp
 
-        member _.CopyTo(arr, i) = (dic:>ICollection<KeyValuePair<'K,'V>>).CopyTo(arr, i)
+        member _.CopyTo(arr, i) : unit = (dic:>ICollection<KeyValuePair<'K,'V>>).CopyTo(arr, i)
 
-        member _.IsReadOnly = false
+        member _.IsReadOnly : bool = false
 
-        member _.Count = dic.Count
+        member _.Count : int = dic.Count
 
 
     interface IDictionary<'K,'V> with
@@ -382,9 +382,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
         member _.Values = (dic:>IDictionary<'K,'V>).Values
 
-        member _.Add(k, v) = dic.Add(k, v)
+        member _.Add(k, v) : unit = dic.Add(k, v)
 
-        member _.ContainsKey k = dic.ContainsKey k
+        member _.ContainsKey k : bool = dic.ContainsKey k
 
         member _.TryGetValue(key:'K , [<Runtime.InteropServices.Out>] refValue : byref<'V>) : bool =
             let mutable out = Unchecked.defaultof<'V>
@@ -392,10 +392,10 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
             refValue <- out
             found
 
-        member _.Remove(key) = dic.Remove(key)
+        member _.Remove(key) : bool = dic.Remove(key)
 
     interface IReadOnlyCollection<KeyValuePair<'K,'V>> with
-        member _.Count = dic.Count
+        member _.Count : int = dic.Count
 
     interface IReadOnlyDictionary<'K,'V> with
         member _.Item
@@ -405,7 +405,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
         member _.Values = (dic:>IReadOnlyDictionary<'K,'V>).Values
 
-        member _.ContainsKey(key) = dic.ContainsKey(key)
+        member _.ContainsKey(key) : bool = dic.ContainsKey(key)
 
         member _.TryGetValue(key:'K , [<Runtime.InteropServices.Out>] refValue : byref<'V>) : bool =
             let mutable out = Unchecked.defaultof<'V>

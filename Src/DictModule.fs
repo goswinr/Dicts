@@ -36,13 +36,13 @@ module Dict =
 
     /// Set value at key in a IDictionary
     /// just d.[k]<-v
-    let set (key:'Key) (value:'Value) (dic:IDictionary<'Key,'Value>) =
+    let set (key:'Key) (value:'Value) (dic:IDictionary<'Key,'Value>) : unit =
         dic.[key] <- value
 
 
     /// Set value at key in a IDictionary
     /// just d.[k]<-v
-    let add (key:'Key) (value:'Value) (dic:IDictionary<'Key,'Value>) =
+    let add (key:'Key) (value:'Value) (dic:IDictionary<'Key,'Value>) : unit =
         dic.[key] <- value
 
     /// Tries to get a value from a IDictionary
@@ -61,7 +61,7 @@ module Dict =
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
     /// Same as <c>Dict.addIfKeyAbsent key value dic</c>
-    let setIfKeyAbsent  (key:'Key) (value:'Value)  (dic:IDictionary<'Key,'Value>) =
+    let setIfKeyAbsent  (key:'Key) (value:'Value)  (dic:IDictionary<'Key,'Value>) : bool =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise $"Dict.setIfKeyAbsent key is null, value: {value}"
         | _ ->
@@ -74,7 +74,7 @@ module Dict =
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
     /// Same as <c>Dict.setIfKeyAbsent key value dic</c>
-    let addIfKeyAbsent  (key:'Key) (value:'Value)  (dic:IDictionary<'Key,'Value>) =
+    let addIfKeyAbsent  (key:'Key) (value:'Value)  (dic:IDictionary<'Key,'Value>) : bool =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise $"Dict.addIfKeyAbsent key is null, value: {value}"
         | _ ->
@@ -86,7 +86,7 @@ module Dict =
 
     /// If the key ist not present calls the default function, set it as value at the key and return the value.
     /// This function is an alternative to the DefaultDict type. Use it if you need to provide a custom implementation of the default function depending on the key.
-    let getOrSetDefault (getDefault:'Key -> 'Value) (key:'Key)  (dic:IDictionary<'Key,'Value>)   =
+    let getOrSetDefault (getDefault:'Key -> 'Value) (key:'Key)  (dic:IDictionary<'Key,'Value>) : 'Value =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.getOrSetDefault key is null, value"
         | _ ->
@@ -98,7 +98,7 @@ module Dict =
                 v
 
     /// If the key ist not present set it as value at the key and return the value.
-    let getOrSetDefaultValue (defaultValue: 'Value) (key:'Key)  (dic:IDictionary<'Key,'Value>)   =
+    let getOrSetDefaultValue (defaultValue: 'Value) (key:'Key)  (dic:IDictionary<'Key,'Value>) : 'Value =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise $"Dict.getOrSetDefaultValue key is null, value"
         | _ ->
@@ -111,7 +111,7 @@ module Dict =
 
     /// Tries to  get a value and remove key and value it from dictionary, like *.pop() in Python.
     /// Will return None if key does not exist
-    let tryPop(key:'Key)  (dic:IDictionary<'Key,'Value>) =
+    let tryPop(key:'Key)  (dic:IDictionary<'Key,'Value>) : 'Value option =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.pop(key) key is null"
         | _ ->
@@ -125,7 +125,7 @@ module Dict =
 
     /// Get a value and remove key and value it from dictionary, like *.pop() in Python.
     /// Will fail if key does not exist
-    let pop(key:'Key)  (dic:IDictionary<'Key,'Value>) =
+    let pop(key:'Key)  (dic:IDictionary<'Key,'Value>) : 'Value =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.pop(key) key is null"
         | _ ->
