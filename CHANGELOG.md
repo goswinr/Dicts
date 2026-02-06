@@ -64,8 +64,4 @@ Several new function in a `Dict` module:
 [0.2.1]: https://github.com/goswinr/Dicts/compare/0.1.0...0.2.1
 [0.1.0]: https://github.com/goswinr/Dicts/releases/tag/0.1.0
 
-<!--
-use to get tag dates:
-git log --tags --simplify-by-decoration --pretty="format:%ci %d"
--->
 
