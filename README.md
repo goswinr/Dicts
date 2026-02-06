@@ -29,16 +29,176 @@ Otherwise when a function fails on invalid input it will throw a descriptive exc
 I was always annoyed that a KeyNotFoundExceptions does not include the actual bad key nor a pretty printed dictionary.
 This library fixes that in `iDictionary.Get`, `iDictionary.Set` and other item access functions.
 
-## Example
+## Examples
 
+All examples assume:
 ```fsharp
 #r "nuget: Dicts"
 open Dicts
+```
 
-let dd = DefaultDict<string,int>(fun _ -> ref 99)
-incr dd.["A"]   // since dd.["A"] does not exist it will be created with the default value 99, and then incremented  to 100
-incr dd.["A"]   // now it exists and will be incremented to 101
-dd.["A"].Value  = 101 // true
+### Dict — Better error messages
+
+`Dict<'K,'V>` is a thin wrapper around `Dictionary<'K,'V>` that gives descriptive exceptions when a key is missing, including the key, item count, and a pretty-printed dictionary.
+
+```fsharp
+// Create from key-value pairs
+let d = Dict.create [ "a", 1; "b", 2; "c", 3 ]
+
+d.["a"]          // 1
+d.Get "b"        // 2
+d.Set "d" 4      // adds or updates key "d"
+d.Count          // 4
+
+// Nicer error messages than System.Collections.Generic.Dictionary:
+d.["z"]          // throws KeyNotFoundException:
+                 // "Dict.get failed to find key "z" in Dict<...> of 4 items"
+
+// Check for keys
+d.ContainsKey "a"       // true
+d.DoesNotContainKey "z" // true
+
+// Use IsEmpty / IsNotEmpty
+d.IsEmpty       // false
+d.IsNotEmpty    // true
+```
+
+### Dict — Pop and TryPop (Python-like)
+
+```fsharp
+let d = Dict.create [ "x", 10; "y", 20 ]
+
+d.Pop "x"       // 10  (key "x" is removed from d)
+d.Count          // 1
+
+d.TryPop "y"     // Some 20  (key "y" is removed)
+d.TryPop "y"     // None     (already removed, no exception)
+```
+
+### Dict — Conditional set and defaults
+
+```fsharp
+let d = Dict.create [ "a", 1 ]
+
+// Only sets if key is absent, returns true if it was set
+d.SetIfKeyAbsent "a" 99  // false  (key "a" exists, value stays 1)
+d.SetIfKeyAbsent "b" 42  // true   (key "b" is now 42)
+
+// Get existing value, or create and store a default
+d.GetOrSetDefaultValue 0 "c"   // 0  (key "c" is now set to 0)
+d.GetOrSetDefaultValue 0 "a"   // 1  (key "a" already exists)
+
+// Default from a function that receives the key
+d.GetOrSetDefault (fun k -> k.Length) "hello"  // 5
+```
+
+### DefaultDict — Auto-creating missing keys
+
+`DefaultDict<'K,'V>` calls a default function whenever a missing key is accessed.
+This is inspired by Python's `defaultdict`.
+
+```fsharp
+// Count word occurrences using a mutable ref cell
+let counter = DefaultDict<string, int ref>(fun _ -> ref 0)
+for word in ["hi"; "world"; "hi"; "hi"] do
+    incr counter.[word]
+
+counter.["hi"].Value     // 3
+counter.["world"].Value  // 1
+
+// Group items by key
+let groups = DefaultDict<string, ResizeArray<int>>(fun _ -> ResizeArray())
+groups.["evens"].Add 2
+groups.["odds"].Add  1
+groups.["evens"].Add 4
+
+groups.["evens"] |> Seq.toList  // [2; 4]
+groups.["odds"]  |> Seq.toList  // [1]
+```
+
+**Important:** Accessing a missing key with `Get` or the indexer `.[key]` **creates** it.
+Use `TryGetValue` or `ContainsKey` to check without creating:
+```fsharp
+let dd = DefaultDict<string, int>(fun _ -> 0)
+dd.ContainsKey "x"         // false  (does not create "x")
+let ok, _ = dd.TryGetValue "x"  // ok = false  (does not create "x")
+dd.["x"]                   // 0  (now "x" IS created with the default)
+dd.ContainsKey "x"         // true
+```
+
+### Dict module — Functional-style operations
+
+The `Dict` module provides functions that work on any `IDictionary<'K,'V>`, including plain `Dictionary` and `Dict`.
+
+```fsharp
+let d = Dict.create [ "a", 1; "b", 2; "c", 3 ]
+
+// Functional get / set / tryGet
+Dict.get "a" d            // 1
+Dict.set "d" 4 d          // sets key "d" to 4
+Dict.tryGet "z" d         // None
+Dict.tryGet "a" d         // Some 1
+
+// Pop and tryPop
+Dict.pop "d" d             // 4  (removes key "d")
+Dict.tryPop "d" d          // None  (already removed)
+
+// Conditional set
+Dict.setIfKeyAbsent "a" 99 d  // false  (key "a" exists)
+Dict.setIfKeyAbsent "e" 5 d   // true   (key "e" is now 5)
+
+// Get or create a default
+Dict.getOrSetDefaultValue 0 "f" d   // 0  (key "f" is now 0)
+
+// Iteration
+Dict.keys   d |> Seq.toList   // ["a"; "b"; "c"; "e"; "f"]
+Dict.values d |> Seq.toList   // [1; 2; 3; 5; 0]
+Dict.items  d |> Seq.toList   // [("a",1); ("b",2); ("c",3); ("e",5); ("f",0)]
+
+Dict.iter (fun k v -> printfn "%s = %d" k v) d
+Dict.map  (fun k v -> $"{k}:{v}") d |> Seq.toList
+```
+
+### Dict.memoize — Cache function results
+
+```fsharp
+let expensiveComputation = Dict.memoize (fun n ->
+    printfn "computing %d..." n
+    n * n
+)
+
+expensiveComputation 5   // prints "computing 5...", returns 25
+expensiveComputation 5   // returns 25 immediately, no print
+```
+
+### IDictionary extensions
+
+Extension methods available on any `IDictionary<'K,'V>` (including `Dictionary<'K,'V>`):
+```fsharp
+open Dicts.ExtensionsIDictionary
+
+let d = System.Collections.Generic.Dictionary<string,int>()
+d.["x"] <- 10; d.["y"] <- 20; d.["z"] <- 30
+
+d.GetValue "x"           // 10  (with descriptive error on missing key)
+d.SetValue "w" 40        // adds key "w"
+d.Pop "w"                // 40  (removes key "w")
+d.TryPop "w"             // None
+d.Items      |> Seq.toList  // seq of (key, value) tuples
+d.KeysSeq    |> Seq.toList  // seq of keys
+d.ValuesSeq  |> Seq.toList  // seq of values
+d.DoesNotContainKey "w"  // true
+```
+
+### Pretty printing
+
+All types provide readable string representations:
+```fsharp
+let d = Dict.create [ "name", "Alice"; "city", "Zurich" ]
+
+d.ToString()    // "Dict<String,String> with 2 items"
+d.AsString      // "Dict<String,String> with 2 items:\n  name : Alice\n  city : Zurich\n"
+d.ToString(1)   // prints only the first entry
 ```
 
 ## Full API Documentation
