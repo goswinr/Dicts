@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2025-03-09
 ### Added
-Several new function in a `Dict` module:
 - memoize - Caches results of a function in a Dictionary
 - get - Gets value at key from IDictionary with better error messages
 - set - Sets value at key in an IDictionary
