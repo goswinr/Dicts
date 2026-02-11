@@ -18,7 +18,7 @@ dotnet restore
 
 # Generate documentation
 dotnet tool restore
-dotnet fsdocs build --properties Configuration=Release --input Docs --output DocsGenerated
+dotnet fsdocs build --clean --strict --properties Configuration=Release --input Docs --output DocsGenerated
 ```
 
 ## Testing

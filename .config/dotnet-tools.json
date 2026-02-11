@@ -14,7 +14,7 @@
       "commands": [
         "fsdocs"
       ],
-      "rollForward": true
+      "rollForward": false
     }
   }
 }
