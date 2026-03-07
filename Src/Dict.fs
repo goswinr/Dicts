@@ -4,7 +4,7 @@ open System
 open System.Collections.Generic
 open ExtensionsExceptions
 
-// #if FABLE_COMPILER
+// #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
 // open Fable.Core.JsInterop // to work around https://github.com/fable-compiler/Fable/issues/3914
 // #endif
 
@@ -40,7 +40,7 @@ module internal DictUtil =
             $"Dict<{k},{v}> with {dic.Count} items"
 
 
-    #if FABLE_COMPILER
+    #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     /// otherwise IDictionary<_,_> ContainsKey is not available in Fable
     type IJSMap<'Key,'Value> =
         abstract has : 'Key -> bool
@@ -64,7 +64,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     // just using inheritance from Dictionary would not work because  the dict.Item method is sealed and can't have an override.
 
 
-    // #if FABLE_COMPILER
+    // #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     // do
     //     emitJsStatement () "this.push = ((kv) => {this.dic.set(kv[0], kv[1])});" //  temp fix for https://github.com/fable-compiler/Fable/issues/3914
     //     emitJsStatement () "this.clear = (() => {this.dic.clear()});"
@@ -80,7 +80,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     new (iEqualityComparer:IEqualityComparer<'K>) =
         Dict(new Dictionary<'K,'V>(iEqualityComparer))
 
-    #if FABLE_COMPILER
+    #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     // use an interface so that the members don't get mangled by Fable
     interface IJSMap<'K,'V> with // otherwise IDictionary is not available in Fable
         member _.has(x:'K) = dic.ContainsKey x
@@ -228,7 +228,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// The string representation of the Dict including the count of entries.
     override _.ToString() =
-        #if FABLE_COMPILER
+        #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
         let k = "'K"
         let v = "'V"
         #else
@@ -240,7 +240,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     /// A string representation of the Dict including the count of entries and the first 5 entries.
     /// When used in Fable this member is inlined for reflection to work.
-    #if FABLE_COMPILER
+    #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     member inline _.AsString : string =  // inline needed for Fable reflection
     #else
     member _.AsString : string =  // on .NET inline fails because it's using internal DefaultDictUtil
@@ -259,7 +259,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// A string representation of the Dict including the count of entries
     /// and the specified amount of entries.
     /// /// When used in Fable this member is inlined for reflection to work.
-    #if FABLE_COMPILER
+    #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     member inline _.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
     #else
     member _.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
@@ -281,7 +281,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     // -------------------- properties:  --------------------------------------
 
-    // #if FABLE_COMPILER
+    // #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     // #else
     // /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the Dict.
     // member _.Comparer with get() = baseDic.Comparer

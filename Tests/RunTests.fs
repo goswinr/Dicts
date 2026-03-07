@@ -2,7 +2,7 @@ namespace Tests
 
 module Main =
 
-    #if FABLE_COMPILER
+    #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
         open Fable.Mocha
 
         TestList.tests

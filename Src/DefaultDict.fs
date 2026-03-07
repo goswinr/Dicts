@@ -134,7 +134,7 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
 
     /// The string representation of the DefaultDict including the count of entries.
     override _.ToString() =
-        #if FABLE_COMPILER
+        #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
         let k = "'K"
         let v = "'V"
         #else
@@ -145,7 +145,7 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
 
     /// A string representation of the DefaultDict including the count of entries and the first 5 entries.
     /// When used in Fable this member is inlined for reflection to work.
-    #if FABLE_COMPILER
+    #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     member inline _.AsString : string =  // inline needed for Fable reflection
     #else
     member _.AsString : string =  // on .NET inline fails because it's using internal DefaultDictUtil
@@ -164,7 +164,7 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
     /// A string representation of the DefaultDict including the count of entries
     /// and the specified amount of entries.
     /// When used in Fable this member is inlined for reflection to work.
-    #if FABLE_COMPILER
+    #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     member inline _.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
     #else
     member _.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
@@ -194,7 +194,7 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
 
     // -------------------- properties: --------------------------------------
 
-    // #if FABLE_COMPILER
+    // #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     // #else
     // /// Gets the IEqualityComparer<T> that is used to determine equality of keys for the DefaultDict.
     // member _.Comparer with get() = baseDic.Comparer
