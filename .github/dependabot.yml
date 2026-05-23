@@ -5,12 +5,16 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
 
   # Update to newer NuGet dependencies
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
 
     # https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/manage-your-dependency-security/controlling-dependencies-updated#allowing-specific-dependencies-to-be-updated
     allow:
@@ -18,6 +22,8 @@ updates:
       - dependency-type: "all"
     ignore:
       - dependency-name: "FSharp.Core"
+    cooldown:
+      default-days: 7
 
 
 
@@ -26,3 +32,5 @@ updates:
     directory: "/Tests/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
