@@ -228,7 +228,7 @@ npm test
 ```
 
 ## License
-[MIT](https://raw.githubusercontent.com/goswinr/Dicts/main/LICENSE.txt)
+[MIT](https://raw.githubusercontent.com/goswinr/Dicts/main/LICENSE.md)
 
 ## Changelog
 see [CHANGELOG.md](https://github.com/goswinr/Dicts/blob/main/CHANGELOG.md)
