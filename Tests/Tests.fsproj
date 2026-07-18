@@ -8,7 +8,7 @@
 
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Fable.Core" Version="5.1.0" />
+    <PackageReference Include="Fable.Core" Version="5.2.0" />
     <PackageReference Include="Fable.Mocha" Version="2.17.0" />
     <PackageReference Include="Expecto" Version="11.1.0" />
     <PackageReference Include="FSharp.Core" Version="10.0.100" /><!-- `Include` syntax for dependabot -->
