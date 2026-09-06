@@ -58,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added more tests
 
 
-[Unreleased]: https://github.com/goswinr/Dicts/compare/0.5.0...HEAD
+[0.5.1]: https://github.com/goswinr/Dicts/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/goswinr/Dicts/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/goswinr/Dicts/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/goswinr/Dicts/compare/0.2.1...0.3.0
