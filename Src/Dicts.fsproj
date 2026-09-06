@@ -61,7 +61,8 @@
   <ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="" />
     <None Include="../Docs/img/logo128.png" Pack="true" PackagePath="" /> <!--PackagePath = "" makes the file available to nuget pack tool-->
-    <Content Include="*.fsproj; **/*.fs; **/*.fsi" PackagePath="fable/" />
+    <!--so that it can be used with Fable. Non-recursive so the generated obj files are not packed.-->
+    <Content Include="*.fsproj; *.fs; *.fsi" PackagePath="fable/" />
 
     <Compile Include="IDictionary.fs" />
     <Compile Include="Dict.fs" />
