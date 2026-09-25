@@ -26,14 +26,15 @@ dotnet fsdocs build --clean --strict --properties Configuration=Release --input 
 Tests must pass on **both** .NET and JavaScript - they are not interchangeable:
 
 ```bash
-# .NET tests (Expecto)
+# .NET tests (Scriptorium)
 cd Tests && dotnet run
 
-# JavaScript tests (Fable.Mocha) - requires npm install first
+# JavaScript tests (Scriptorium via Fable) - requires npm ci first
 cd Tests && npm test
 ```
 
-The JavaScript tests transpile F# to TypeScript via Fable, then run with Mocha.
+Tests are written with Scriptorium (`Scriptorium.Quill` for `testList`/`test`, `Scriptorium.Nib` for `assertThat`), the same code runs on both targets.
+`npm test` transpiles the tests to JavaScript via Fable and runs them with `dotnet fable --runScript`, then verifies that `Src` compiles to TypeScript and type checks with `tsc`.
 
 ## Architecture
 

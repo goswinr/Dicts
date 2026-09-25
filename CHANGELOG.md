@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- Tests now run on [Scriptorium](https://fable-hub.github.io/Scriptorium/guides/getting-started/) (`Scriptorium.Quill` and `Scriptorium.Nib`) on .NET and JavaScript, replacing Expecto on .NET and Fable.Mocha plus the `mocha` npm package on JavaScript.
+- The JavaScript tests are run by `dotnet fable --runScript` instead of `mocha`, so `Tests/package.json` has no runtime test dependency left.
+
 ## [0.5.1] - 2026-09-07
 ### Fixed
 - Packaging: the Fable content glob is no longer recursive, so the package no longer ships generated obj AssemblyInfo files, only the real source files.
@@ -58,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added more tests
 
 
+[Unreleased]: https://github.com/goswinr/Dicts/compare/0.5.1...HEAD
 [0.5.1]: https://github.com/goswinr/Dicts/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/goswinr/Dicts/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/goswinr/Dicts/compare/0.3.0...0.4.0

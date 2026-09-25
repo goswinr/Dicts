@@ -3,11 +3,8 @@ module TestList
 open Dicts
 open System.Collections.Generic
 
-#if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
-open Fable.Mocha
-#else
-open Expecto
-#endif
+open Scriptorium.Nib.Assertion
+open type Scriptorium.Quill.Test
 
 open System
 open ExtensionsIDictionary
@@ -16,203 +13,230 @@ open ExtensionsIDictionary
 
 
 let tests  =
-  testList "Module.fs Tests" [
+  testList ("Module.fs Tests", [
 
     // ---------------------------------------------------------
     // IDictionary:
     // ---------------------------------------------------------
 
 
-    testCase "iDic-Items" <| fun _ ->
+    test ("iDic-Items", fun _ ->
         let b = Dictionary()  :> IDictionary<string, int>
         b.["A"] <- 1
         b.["B"] <- 2
         let items = b.Items |> Seq.toList
-        Expect.equal items [("A", 1); ("B", 2)] "Items returns the key-value pairs"
+        assertThat items (tag "Items returns the key-value pairs" >> isEqualTo [("A", 1); ("B", 2)])
+    )
 
 
-    testCase "iDic-Get" <| fun _ ->
+    test ("iDic-Get", fun _ ->
         let b = Dictionary() :> IDictionary<string, int>
         b.["A"] <- 1
         let result = b.GetValue "A"
-        Expect.equal result 1 "Get returns the value of key A"
+        assertThat result (tag "Get returns the value of key A" >> isEqualTo 1)
+    )
 
 
-    testCase "iDic-Pop" <| fun _ ->
+    test ("iDic-Pop", fun _ ->
         let b = Dictionary() :> IDictionary<string, int>
         b.["A"] <- 1
         let popped  = b.Pop "A"
         let result = b.DoesNotContainKey "A" && popped = 1
-        Expect.isTrue result "Pop removed key A"
+        assertThat result (tag "Pop removed key A" >> isTrue)
+    )
 
 
     // ---------------------------------------------------------
     // Dict:
     // ---------------------------------------------------------
 
-    testCase "Empty" <| fun _ ->
+    test ("Empty", fun _ ->
         let b = Dict()
         let result = b.IsEmpty
-        Expect.isTrue result "Empty returns true for empty dictionary"
+        assertThat result (tag "Empty returns true for empty dictionary" >> isTrue)
+    )
 
 
-    testCase "Pop" <| fun _ ->
+    test ("Pop", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let popped  = b.Pop "A"
         let result = b.DoesNotContainKey "A" && popped = 1
-        Expect.isTrue result "Pop removed key A"
+        assertThat result (tag "Pop removed key A" >> isTrue)
+    )
 
 
-    testCase "Item" <| fun _ ->
+    test ("Item", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let result = b.Item "A"
-        Expect.equal result 1 "Item returns value of key A"
+        assertThat result (tag "Item returns value of key A" >> isEqualTo 1)
+    )
 
 
-    testCase "Item fails" <| fun _ ->
+    test ("Item fails", fun _ ->
         let b = Dict()
         b.["A"] <- 1
-        Expect.throws (fun () -> b.Get "B" |> ignore ) "Item throws exception when key does not exist"
+        assertThat (fun () -> b.Get "B" |> ignore ) (tag "Item throws exception when key does not exist" >> throws)
+    )
 
-    testCase "Add fails" <| fun _ ->
+    test ("Add fails", fun _ ->
         let b = Dict<string,int>()
-        Expect.throws (fun () ->b.Set null 1 ) "Add throws exception when key does not exist"
+        assertThat (fun () ->b.Set null 1 ) (tag "Add throws exception when key does not exist" >> throws)
+    )
 
 
-    testCase "Remove" <| fun _ ->
+    test ("Remove", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let removed  = b.Remove "A"
         let result = b.DoesNotContainKey "A"
-        Expect.isTrue (result&&removed) "Remove deletes key A"
+        assertThat (result&&removed) (tag "Remove deletes key A" >> isTrue)
+    )
 
-    testCase "Remove2" <| fun _ ->
+    test ("Remove2", fun _ ->
         let b = Dict()
         // b.["A"] <- 1
         let removed  = b.Remove "A"
         let result = b.DoesNotContainKey "A"
-        Expect.isTrue (result&& not removed) "Remove missing key A"
+        assertThat (result&& not removed) (tag "Remove missing key A" >> isTrue)
+    )
 
 
-    testCase "Clear" <| fun _ ->
+    test ("Clear", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         b.["B"] <- 2
         b.Clear()
         let resultA = b.DoesNotContainKey "A"
         let resultB = b.DoesNotContainKey "B"
-        Expect.isTrue resultA "Clear removes key A"
-        Expect.isTrue resultB "Clear removes key B"
+        assertThat resultA (tag "Clear removes key A" >> isTrue)
+        assertThat resultB (tag "Clear removes key B" >> isTrue)
+    )
 
-    testCase "ContainsKey" <| fun _ ->
+    test ("ContainsKey", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let result = b.ContainsKey "A"
-        Expect.isTrue result "ContainsKey returns true for existing key"
+        assertThat result (tag "ContainsKey returns true for existing key" >> isTrue)
+    )
 
-    testCase "Count" <| fun _ ->
+    test ("Count", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         b.["B"] <- 2
         let result = b.Count
-        Expect.equal result 2 "Count returns the number of key-value pairs"
+        assertThat result (tag "Count returns the number of key-value pairs" >> isEqualTo 2)
+    )
 
-    testCase "Keys" <| fun _ ->
+    test ("Keys", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         b.["B"] <- 2
         let keys = b.Keys |> Seq.toList
-        Expect.equal keys ["A"; "B"] "Keys returns the keys"
+        assertThat keys (tag "Keys returns the keys" >> isEqualTo ["A"; "B"])
+    )
 
 
-    testCase "Values" <| fun _ ->
+    test ("Values", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         b.["B"] <- 2
         let values = b.Values |> Seq.toList
-        Expect.equal values [1; 2] "Values returns the values"
+        assertThat values (tag "Values returns the values" >> isEqualTo [1; 2])
+    )
 
 
-    testCase "SetIfKeyAbsent - key does not exist" <| fun _ ->
+    test ("SetIfKeyAbsent - key does not exist", fun _ ->
         let b = Dict()
         let result = b.SetIfKeyAbsent "A" 1
-        Expect.isTrue result "SetIfKeyAbsent should return true when key does not exist"
-        Expect.equal (b.Get "A") 1 "SetIfKeyAbsent should set the value when key does not exist"
+        assertThat result (tag "SetIfKeyAbsent should return true when key does not exist" >> isTrue)
+        assertThat (b.Get "A") (tag "SetIfKeyAbsent should set the value when key does not exist" >> isEqualTo 1)
+    )
 
-    testCase "SetIfKeyAbsent - key exists" <| fun _ ->
+    test ("SetIfKeyAbsent - key exists", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let result = b.SetIfKeyAbsent "A" 2
-        Expect.isFalse result "SetIfKeyAbsent should return false when key exists"
-        Expect.equal (b.Get "A") 1 "SetIfKeyAbsent should not change the value when key exists"
+        assertThat result (tag "SetIfKeyAbsent should return false when key exists" >> isFalse)
+        assertThat (b.Get "A") (tag "SetIfKeyAbsent should not change the value when key exists" >> isEqualTo 1)
+    )
 
-    testCase "AddIfKeyAbsent - key does not exist" <| fun _ ->
+    test ("AddIfKeyAbsent - key does not exist", fun _ ->
         let b = Dict()
         let result = b.AddIfKeyAbsent "A" 1
-        Expect.isTrue result "AddIfKeyAbsent should return true when key does not exist"
-        Expect.equal (b.Get "A") 1 "AddIfKeyAbsent should set the value when key does not exist"
+        assertThat result (tag "AddIfKeyAbsent should return true when key does not exist" >> isTrue)
+        assertThat (b.Get "A") (tag "AddIfKeyAbsent should set the value when key does not exist" >> isEqualTo 1)
+    )
 
-    testCase "AddIfKeyAbsent - key exists" <| fun _ ->
+    test ("AddIfKeyAbsent - key exists", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let result = b.AddIfKeyAbsent "A" 2
-        Expect.isFalse result "AddIfKeyAbsent should return false when key exists"
-        Expect.equal (b.Get "A") 1 "AddIfKeyAbsent should not change the value when key exists"
+        assertThat result (tag "AddIfKeyAbsent should return false when key exists" >> isFalse)
+        assertThat (b.Get "A") (tag "AddIfKeyAbsent should not change the value when key exists" >> isEqualTo 1)
+    )
 
-    testCase "GetOrSetDefault - key does not exist" <| fun _ ->
+    test ("GetOrSetDefault - key does not exist", fun _ ->
         let b = Dict()
         let result = b.GetOrSetDefault (fun _ -> 1) "A"
-        Expect.equal result 1 "GetOrSetDefault should return the default value when key does not exist"
-        Expect.equal (b.Get "A") 1 "GetOrSetDefault should set the default value when key does not exist"
+        assertThat result (tag "GetOrSetDefault should return the default value when key does not exist" >> isEqualTo 1)
+        assertThat (b.Get "A") (tag "GetOrSetDefault should set the default value when key does not exist" >> isEqualTo 1)
+    )
 
-    testCase "GetOrSetDefault - key exists" <| fun _ ->
+    test ("GetOrSetDefault - key exists", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let result = b.GetOrSetDefault (fun _ -> 2) "A"
-        Expect.equal result 1 "GetOrSetDefault should return the existing value when key exists"
-        Expect.equal (b.Get "A") 1 "GetOrSetDefault should not change the value when key exists"
+        assertThat result (tag "GetOrSetDefault should return the existing value when key exists" >> isEqualTo 1)
+        assertThat (b.Get "A") (tag "GetOrSetDefault should not change the value when key exists" >> isEqualTo 1)
+    )
 
-    testCase "GetOrSetDefaultValue - key does not exist" <| fun _ ->
+    test ("GetOrSetDefaultValue - key does not exist", fun _ ->
         let b = Dict()
         let result = b.GetOrSetDefaultValue 1 "A"
-        Expect.equal result 1 "GetOrSetDefaultValue should return the default value when key does not exist"
-        Expect.equal (b.Get "A") 1 "GetOrSetDefaultValue should set the default value when key does not exist"
+        assertThat result (tag "GetOrSetDefaultValue should return the default value when key does not exist" >> isEqualTo 1)
+        assertThat (b.Get "A") (tag "GetOrSetDefaultValue should set the default value when key does not exist" >> isEqualTo 1)
+    )
 
-    testCase "GetOrSetDefaultValue - key exists" <| fun _ ->
+    test ("GetOrSetDefaultValue - key exists", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let result = b.GetOrSetDefaultValue 2 "A"
-        Expect.equal result 1 "GetOrSetDefaultValue should return the existing value when key exists"
-        Expect.equal (b.Get "A") 1 "GetOrSetDefaultValue should not change the value when key exists"
+        assertThat result (tag "GetOrSetDefaultValue should return the existing value when key exists" >> isEqualTo 1)
+        assertThat (b.Get "A") (tag "GetOrSetDefaultValue should not change the value when key exists" >> isEqualTo 1)
+    )
 
-    testCase "TryGetValue" <| fun _ ->
+    test ("TryGetValue", fun _ ->
         let b = Dict()
         b.["A"] <- 1
         let ok, value = b.TryGetValue "A"
-        Expect.isTrue ok "TryGetValue should return true when the key exists"
-        Expect.equal value 1 "TryGetValue should return the value when the key exists"
+        assertThat ok (tag "TryGetValue should return true when the key exists" >> isTrue)
+        assertThat value (tag "TryGetValue should return the value when the key exists" >> isEqualTo 1)
+    )
 
 
-    testCase "TryGetValue - key does not exist" <| fun _ ->
+    test ("TryGetValue - key does not exist", fun _ ->
         let b = Dict()
         let ok, value = b.TryGetValue "A"
-        Expect.isFalse ok "TryGetValue should return false when the key does not exist"
-        Expect.equal value 0 "TryGetValue should return the default value when the key does not exist"
+        assertThat ok (tag "TryGetValue should return false when the key does not exist" >> isFalse)
+        assertThat value (tag "TryGetValue should return the default value when the key does not exist" >> isEqualTo 0)
+    )
 
-    testCase "AsString - empty dictionary" <| fun _ ->
+    test ("AsString - empty dictionary", fun _ ->
         let b = Dict<string, int>()
         let result = b.AsString
-        Expect.equal result "empty Dict<String,Int32>" "AsString should return the correct string for an empty dictionary"
+        assertThat result (tag "AsString should return the correct string for an empty dictionary" >> isEqualTo "empty Dict<String,Int32>")
+    )
 
-    testCase "AsString - single item" <| fun _ ->
+    test ("AsString - single item", fun _ ->
         let b = Dict<string, int>()
         b.["A"] <- 1
         let result = b.AsString.Replace("\r\n", "\n").Replace("\n", "$")
-        Expect.equal result "Dict<String,Int32> with 1 item:$  A : 1$" "AsString should return the correct string for a dictionary with one item"
+        assertThat result (tag "AsString should return the correct string for a dictionary with one item" >> isEqualTo "Dict<String,Int32> with 1 item:$  A : 1$")
+    )
 
-    testCase "AsString - multiple items" <| fun _ ->
+    test ("AsString - multiple items", fun _ ->
         let b = Dict<string, int>()
         b.["A"] <- 1
         b.["B"] <- 2
@@ -221,17 +245,19 @@ let tests  =
         b.["E"] <- 5
         b.["F"] <- 6
         let result = b.AsString.Replace("\r\n", "\n").Replace("\n", "$")
-        Expect.equal result "Dict<String,Int32> with 6 items:$  A : 1$  B : 2$  C : 3$  D : 4$  E : 5$  ...$" "AsString should return the correct string for a dictionary with multiple items"
+        assertThat result (tag "AsString should return the correct string for a dictionary with multiple items" >> isEqualTo "Dict<String,Int32> with 6 items:$  A : 1$  B : 2$  C : 3$  D : 4$  E : 5$  ...$")
+    )
 
 
-    // testCase "iEqualityComparer" <| fun _ ->
+    // test ("iEqualityComparer", fun _ ->
     //     let comparer = StringComparer.OrdinalIgnoreCase // not supported in Fable
     //     let b = Dict<string, int>(comparer)
     //     b.["A"] <- 1
     //     let result = b.ContainsKey "a"
-    //     Expect.isTrue result "iEqualityComparer should allow case-insensitive key lookup"
+    //     assertThat result (tag "iEqualityComparer should allow case-insensitive key lookup" >> isTrue)
+    // )
 
-    testCase "iEqualityComparer with object expression" <| fun _ ->
+    test ("iEqualityComparer with object expression", fun _ ->
         let comparer =
             { new IEqualityComparer<string> with
                 member _.Equals(x, y) = x.ToLowerInvariant() = y.ToLowerInvariant()
@@ -239,154 +265,177 @@ let tests  =
         let b = Dict<string, int>(comparer)
         b.["A"] <- 1
         let result = b.ContainsKey "a"
-        Expect.isTrue result "iEqualityComparer should allow case-insensitive key lookup with object expression"
+        assertThat result (tag "iEqualityComparer should allow case-insensitive key lookup with object expression" >> isTrue)
+    )
 
 
 
-    testCase "KV-Add" <| fun _ ->
+    test ("KV-Add", fun _ ->
         let b = Dict<string, int>()
         let kvp = KeyValuePair("A", 1)
         let iColl = (b :> ICollection<KeyValuePair<string, int>>)
         iColl.Add(kvp)
-        Expect.equal (b.Get "A") 1 "Add should add the key-value pair to the dictionary"
+        assertThat (b.Get "A") (tag "Add should add the key-value pair to the dictionary" >> isEqualTo 1)
+    )
 
-    testCase "KV-Clear" <| fun _ ->
+    test ("KV-Clear", fun _ ->
         let b = Dict<string, int>()
         b.Add("A", 1)
         (b :> ICollection<KeyValuePair<string, int>>).Clear()
-        Expect.isFalse (b.ContainsKey "A") "Clear should remove all key-value pairs from the dictionary"
+        assertThat (b.ContainsKey "A") (tag "Clear should remove all key-value pairs from the dictionary" >> isFalse)
+    )
 
 
     // TODO still fails: https://fable.io/repl/#?code=PYBwpgdgBAygngZwC5gLYDoDCwA2OwDGSAlsBAugOKRgBOxBAUKJFAGICGARvlsLWHQApBAEkIKWqEaN8SKABMoAXigARBiTIdacADzEJAGkNIAfAAoAlLLDyCKxVABcZqKOx5CWiHoDSYHAAahw4AK5gAAocxLQGxlCmZmaMCugA2gCMALpQegC0UAAMMrbyAqjAAG5gnjgWANZVzgHBoRHRsfFIJhJmRooKzhpEpBA6+qa95laqjFALiQBmg3wSMeStUE3oWwBke6vpO625qjsh4WBQSAAWrPOLT08KaQBKaNXXJ4GPz1BgHAIMB-f6LJahYGgxhoYhIEQwJAcFCoSDyaxQABEFS+4kiOA4BGuqiWYQgozIjSqRgIRjAAEcrABvARIMK0aA4mp1Kk0qwAXwA3JjQWCoKU5Nsqo5WpcOjFaBZMgMijZJVywAo-EFHAR0B9KjUqTYQPQJEtoAASTGy9pRBVQADuHAQUA1QygLM+NS1QX5IvV3s1akc7yDSpNZqQFqg1q2CFuwDCOCUXGuAHMyGABlwwvJiK6CBxoGm3UGlBBgI7nJ73Wp-UA&html=DwCwLgtgNgfAsAKAAQqaApgQwCb2ag4CdMTJcMABwFp0BHAVwEsA3AXgCIBhAewDsw6AdQAqAT0roOSAMb9BAzoIAeYAPThoAbhkhMAJwDOJNgzAAzagA4OeQhqy5EhAEY9sYu6mBq3HvD6asEA&css=Q
 
-    testCase "KV-Remove" <| fun _ ->
+    test ("KV-Remove", fun _ ->
         let b = Dict<string, int>()
         b.Add("A", 1)
         let result = (b :> ICollection<KeyValuePair<string, int>>).Remove(KeyValuePair("A", 1))
-        Expect.isTrue result "Remove should return true when the key-value pair is removed"
-        Expect.isFalse (b.ContainsKey "A") "Remove should remove the key-value pair from the dictionary"
+        assertThat result (tag "Remove should return true when the key-value pair is removed" >> isTrue)
+        assertThat (b.ContainsKey "A") (tag "Remove should remove the key-value pair from the dictionary" >> isFalse)
+    )
 
-    testCase "KV-Contains" <| fun _ ->
+    test ("KV-Contains", fun _ ->
         let b = Dict<string, int>()
         b.Add("A", 1)
         let result = (b :> ICollection<KeyValuePair<string, int>>).Contains(KeyValuePair("A", 1))
-        Expect.isTrue result "Contains should return true when the key-value pair is in the dictionary"
+        assertThat result (tag "Contains should return true when the key-value pair is in the dictionary" >> isTrue)
+    )
 
-    testCase "KV-CopyTo" <| fun _ ->
+    test ("KV-CopyTo", fun _ ->
         let b = Dict<string, int>()
         b.Add("A", 1)
         let arr = Array.zeroCreate<KeyValuePair<string, int>> 1
         (b :> ICollection<KeyValuePair<string, int>>).CopyTo(arr, 0)
-        Expect.equal arr.[0] (KeyValuePair("A", 1)) "CopyTo should copy the key-value pairs to the array"
+        assertThat arr.[0] (tag "CopyTo should copy the key-value pairs to the array" >> isEqualTo (KeyValuePair("A", 1)))
+    )
 
-    testCase "KV-IsReadOnly" <| fun _ ->
+    test ("KV-IsReadOnly", fun _ ->
         let b = Dict<string, int>()
         let result = (b :> ICollection<KeyValuePair<string, int>>).IsReadOnly
-        Expect.isFalse result "IsReadOnly should return false"
+        assertThat result (tag "IsReadOnly should return false" >> isFalse)
+    )
 
-    testCase "KV-Count" <| fun _ ->
+    test ("KV-Count", fun _ ->
         let b = Dict<string, int>()
         b.Add("A", 1)
         let result = (b :> ICollection<KeyValuePair<string, int>>).Count
-        Expect.equal result 1 "Count should return the number of key-value pairs in the dictionary"
+        assertThat result (tag "Count should return the number of key-value pairs in the dictionary" >> isEqualTo 1)
+    )
 
 
-    testCase "iDictionary - Add" <| fun _ ->
+    test ("iDictionary - Add", fun _ ->
         let b = Dict<string,int>() :> IDictionary<string,int>
         b.Add("A", 1)
         let hasKey = b.ContainsKey("A")
-        Expect.isTrue hasKey "IDictionary Add should add key-value pair"
+        assertThat hasKey (tag "IDictionary Add should add key-value pair" >> isTrue)
+    )
 
-    testCase "iDictionary - Remove" <| fun _ ->
+    test ("iDictionary - Remove", fun _ ->
         let b = Dict<string,int>() :> IDictionary<string,int>
         b.Add("A", 1)
         b.Remove("A") |> ignore
         let removed = not (b.ContainsKey("A"))
-        Expect.isTrue removed "IDictionary Remove should remove key"
+        assertThat removed (tag "IDictionary Remove should remove key" >> isTrue)
+    )
 
-    testCase "iDictionary - Clear" <| fun _ ->
+    test ("iDictionary - Clear", fun _ ->
         let b = Dict<string,int>() :> IDictionary<string,int>
         b.Add("A", 1)
         b.Add("B", 2)
         b.Clear()
         let cleared = b.Count = 0
-        Expect.isTrue cleared "IDictionary Clear should remove all items"
+        assertThat cleared (tag "IDictionary Clear should remove all items" >> isTrue)
+    )
 
-    testCase "iDictionary - Keys" <| fun _ ->
+    test ("iDictionary - Keys", fun _ ->
         let b = Dict<string,int>() :> IDictionary<string,int>
         b.Add("A", 1)
         b.Add("B", 2)
         let keys = b.Keys |> Seq.toList
-        Expect.equal keys ["A"; "B"] "IDictionary Keys should return all keys"
+        assertThat keys (tag "IDictionary Keys should return all keys" >> isEqualTo ["A"; "B"])
+    )
 
-    testCase "iDictionary - Values" <| fun _ ->
+    test ("iDictionary - Values", fun _ ->
         let b = Dict<string,int>() :> IDictionary<string,int>
         b.Add("A", 1)
         b.Add("B", 2)
         let values = b.Values |> Seq.toList
-        Expect.equal values [1; 2] "IDictionary Values should return all values"
+        assertThat values (tag "IDictionary Values should return all values" >> isEqualTo [1; 2])
+    )
 
-    testCase "iDictionary - TryGetValue exists" <| fun _ ->
+    test ("iDictionary - TryGetValue exists", fun _ ->
         let b = Dict<string,int>() :> IDictionary<string,int>
         b.Add("A", 1)
         let success, value = b.TryGetValue("A")
-        Expect.isTrue success "TryGetValue should return true for existing key"
-        Expect.equal value 1 "TryGetValue should return correct value"
+        assertThat success (tag "TryGetValue should return true for existing key" >> isTrue)
+        assertThat value (tag "TryGetValue should return correct value" >> isEqualTo 1)
+    )
 
-    testCase "iDictionary - TryGetValue missing" <| fun _ ->
+    test ("iDictionary - TryGetValue missing", fun _ ->
         let b = Dict<string,int>() :> IDictionary<string,int>
         let success, value = b.TryGetValue("missing")
-        Expect.isFalse success "TryGetValue should return false for missing key"
-        Expect.equal value 0 "TryGetValue should return default value"
+        assertThat success (tag "TryGetValue should return false for missing key" >> isFalse)
+        assertThat value (tag "TryGetValue should return default value" >> isEqualTo 0)
+    )
 
-    testCase "Remove - key does not exist" <| fun _ ->
+    test ("Remove - key does not exist", fun _ ->
         let b = Dict<string,int>()
         let result = b.Remove "NonExistentKey"
-        Expect.isFalse result "Remove should return false when key does not exist"
+        assertThat result (tag "Remove should return false when key does not exist" >> isFalse)
+    )
 
-    testCase "Remove - key exists" <| fun _ ->
+    test ("Remove - key exists", fun _ ->
         let b = Dict<string,int>()
         b.["A"] <- 1
         let result = b.Remove "A"
-        Expect.isTrue result "Remove should return true when key exists"
-        Expect.isFalse (b.ContainsKey "A") "Remove should remove the key"
+        assertThat result (tag "Remove should return true when key exists" >> isTrue)
+        assertThat (b.ContainsKey "A") (tag "Remove should remove the key" >> isFalse)
+    )
 
-    testCase "Remove - multiple keys" <| fun _ ->
+    test ("Remove - multiple keys", fun _ ->
         let b = Dict<string,int>()
         b.["A"] <- 1
         b.["B"] <- 2
         b.["C"] <- 3
         let result1 = b.Remove "A"
         let result2 = b.Remove "B"
-        Expect.isTrue (result1 && result2) "Remove should return true for existing keys"
-        Expect.equal b.Count 1 "Remove should decrease count accordingly"
+        assertThat (result1 && result2) (tag "Remove should return true for existing keys" >> isTrue)
+        assertThat b.Count (tag "Remove should decrease count accordingly" >> isEqualTo 1)
+    )
 
-    testCase "Get - key exists" <| fun _ ->
+    test ("Get - key exists", fun _ ->
         let b = Dict<string,int>()
         b.["A"] <- 1
         let result = b["A" ]
-        Expect.equal result 1 "Get should return value for existing key"
+        assertThat result (tag "Get should return value for existing key" >> isEqualTo 1)
+    )
 
-    testCase "Get - key does not exist" <| fun _ ->
+    test ("Get - key does not exist", fun _ ->
         let b = Dict<string,int>()
-        Expect.throws (fun () -> b.Get "A" |> ignore) "Get should throw for missing key"
+        assertThat (fun () -> b.Get "A" |> ignore) (tag "Get should throw for missing key" >> throws)
+    )
 
-    testCase "Set - add new key" <| fun _ ->
+    test ("Set - add new key", fun _ ->
         let b = Dict<string,int>()
         b.Set "A" 1
         let result = b["A" ]
-        Expect.equal result 1 "Set should add new key-value pair"
+        assertThat result (tag "Set should add new key-value pair" >> isEqualTo 1)
+    )
 
-    testCase "Set - update existing key" <| fun _ ->
+    test ("Set - update existing key", fun _ ->
         let b = Dict<string,int>()
         b.["A"] <- 1
         b.Set "A" 2
         let result = b.Get "A"
-        Expect.equal result 2 "Set should update value for existing key"
+        assertThat result (tag "Set should update value for existing key" >> isEqualTo 2)
+    )
 
-    testCase "Set - null key" <| fun _ ->
+    test ("Set - null key", fun _ ->
         let b = Dict<string,int>()
-        Expect.throws (fun () -> b[null ] <- 1) "Set should throw for null key"
+        assertThat (fun () -> b[null ] <- 1) (tag "Set should throw for null key" >> throws)
+    )
 
 
 
@@ -404,246 +453,281 @@ let tests  =
     // ---------------------------------------------------------
     // ---------------------------------------------------------
 
-    testCase "DefaultDict" <| fun _ ->
+    test ("DefaultDict", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         let result = b.Get "A"
-        Expect.equal result 0 "DefaultDict should return the default value when the key does not exist"
+        assertThat result (tag "DefaultDict should return the default value when the key does not exist" >> isEqualTo 0)
+    )
 
-    testCase "DefaultDict - key exists" <| fun _ ->
+    test ("DefaultDict - key exists", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         b.["A"] <- 1
         let result = b.Get "A"
-        Expect.equal result 1 "DefaultDict should return the existing value when the key exists"
+        assertThat result (tag "DefaultDict should return the existing value when the key exists" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict - default value incr" <| fun _ ->
+    test ("DefaultDict - default value incr", fun _ ->
         let b = DefaultDict(fun _ -> ref 0)
         incr (b.["A"])
-        Expect.equal b.["A"].Value  1 "DefaultDict should return the default value when the key does not exist"
+        assertThat b.["A"].Value (tag "DefaultDict should return the default value when the key does not exist" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict - key exists - default value" <| fun _ ->
+    test ("DefaultDict - key exists - default value", fun _ ->
         let b = DefaultDict(fun _ -> ref 0)
         b.["A"] <- ref 1
         incr (b.Get "A")
-        Expect.equal b.["A"].Value  2 "DefaultDict should return the existing value when the key exists"
+        assertThat b.["A"].Value (tag "DefaultDict should return the existing value when the key exists" >> isEqualTo 2)
+    )
 
-    testCase "DefaultDict - default value - ref" <| fun _ ->
+    test ("DefaultDict - default value - ref", fun _ ->
         let b = DefaultDict(fun _ -> ref 0)
         incr (b.Get "A")
-        Expect.equal b.["A"].Value  1 "DefaultDict should return the default value when the key does not exist"
+        assertThat b.["A"].Value (tag "DefaultDict should return the default value when the key does not exist" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict - Pop" <| fun _ ->
+    test ("DefaultDict - Pop", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         b.["A"] <- 1
         let popped  = b.Pop "A"
         let result = b.DoesNotContainKey "A" && popped = 1
-        Expect.isTrue result "Pop removed key A"
+        assertThat result (tag "Pop removed key A" >> isTrue)
+    )
 
 
-    testCase "DefaultDict - default value" <| fun _ ->
+    test ("DefaultDict - default value", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             let result = b.Get "A"
-            Expect.equal result 0 "DefaultDict should return the default value when the key does not exist"
+            assertThat result (tag "DefaultDict should return the default value when the key does not exist" >> isEqualTo 0)
+    )
 
-    testCase "DefaultDict - set value" <| fun _ ->
+    test ("DefaultDict - set value", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             let result = b.Get "A"
-            Expect.equal result 1 "DefaultDict should allow setting a value for a key"
+            assertThat result (tag "DefaultDict should allow setting a value for a key" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict - remove key" <| fun _ ->
+    test ("DefaultDict - remove key", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             b.Remove "A" |> ignore
             let result = b.ContainsKey "A"
-            Expect.isFalse result "DefaultDict should remove the key"
+            assertThat result (tag "DefaultDict should remove the key" >> isFalse)
+    )
 
-    testCase "DefaultDict - clear" <| fun _ ->
+    test ("DefaultDict - clear", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             b.["B"] <- 2
             b.Clear()
             let resultA = b.ContainsKey "A"
             let resultB = b.ContainsKey "B"
-            Expect.isFalse resultA "DefaultDict should clear all keys"
-            Expect.isFalse resultB "DefaultDict should clear all keys"
+            assertThat resultA (tag "DefaultDict should clear all keys" >> isFalse)
+            assertThat resultB (tag "DefaultDict should clear all keys" >> isFalse)
+    )
 
-    testCase "DefaultDict - contains key" <| fun _ ->
+    test ("DefaultDict - contains key", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             let result = b.ContainsKey "A"
-            Expect.isTrue result "DefaultDict should return true for existing key"
+            assertThat result (tag "DefaultDict should return true for existing key" >> isTrue)
+    )
 
-    testCase "DefaultDict - count" <| fun _ ->
+    test ("DefaultDict - count", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             b.["B"] <- 2
             let result = b.Count
-            Expect.equal result 2 "DefaultDict should return the number of key-value pairs"
+            assertThat result (tag "DefaultDict should return the number of key-value pairs" >> isEqualTo 2)
+    )
 
-    testCase "DefaultDict - keys" <| fun _ ->
+    test ("DefaultDict - keys", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             b.["B"] <- 2
             let keys = b.Keys |> Seq.toList
-            Expect.equal keys ["A"; "B"] "DefaultDict should return the keys"
+            assertThat keys (tag "DefaultDict should return the keys" >> isEqualTo ["A"; "B"])
+    )
 
-    testCase "DefaultDict - values" <| fun _ ->
+    test ("DefaultDict - values", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             b.["B"] <- 2
             let values = b.Values |> Seq.toList
-            Expect.equal values [1; 2] "DefaultDict should return the values"
+            assertThat values (tag "DefaultDict should return the values" >> isEqualTo [1; 2])
+    )
 
-    testCase "DefaultDict - pop key" <| fun _ ->
+    test ("DefaultDict - pop key", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             let value = b.Pop "A"
-            Expect.equal value 1 "DefaultDict should return the value when popping a key"
+            assertThat value (tag "DefaultDict should return the value when popping a key" >> isEqualTo 1)
             let result = b.ContainsKey "A"
-            Expect.isFalse result "DefaultDict should remove the key when popping"
+            assertThat result (tag "DefaultDict should remove the key when popping" >> isFalse)
+    )
 
-    testCase "DefaultDict - AsString" <| fun _ ->
+    test ("DefaultDict - AsString", fun _ ->
             let b = DefaultDict(fun _ -> 0)
             b.["A"] <- 1
             b.["B"] <- 2
             let result = b.AsString.Replace("\r\n", "\n").Replace("\n", "$")
-            Expect.equal result "DefaultDict<String,Int32> with 2 items:$  A : 1$  B : 2$" "DefaultDict should return the correct string representation with items"
+            assertThat result (tag "DefaultDict should return the correct string representation with items" >> isEqualTo "DefaultDict<String,Int32> with 2 items:$  A : 1$  B : 2$")
+    )
 
-    testCase "DefaultDict - KV-Add" <| fun _ ->
+    test ("DefaultDict - KV-Add", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         let kvp = KeyValuePair("A", 1)
         let iColl = (b :> ICollection<KeyValuePair<string, int>>)
         iColl.Add(kvp)
-        Expect.equal (b.Get "A") 1 "Add should add the key-value pair to the dictionary"
+        assertThat (b.Get "A") (tag "Add should add the key-value pair to the dictionary" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict - KV-Clear" <| fun _ ->
+    test ("DefaultDict - KV-Clear", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         b.Add("A", 1)
         (b :> ICollection<KeyValuePair<string, int>>).Clear()
-        Expect.isFalse (b.ContainsKey "A") "Clear should remove all key-value pairs"
+        assertThat (b.ContainsKey "A") (tag "Clear should remove all key-value pairs" >> isFalse)
+    )
 
-    testCase "DefaultDict - KV-Remove" <| fun _ ->
+    test ("DefaultDict - KV-Remove", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         b.Add("A", 1)
         let result = (b :> ICollection<KeyValuePair<string, int>>).Remove(KeyValuePair("A", 1))
-        Expect.isTrue result "Remove should return true when pair removed"
-        Expect.isFalse (b.ContainsKey "A") "Remove should remove the key-value pair"
+        assertThat result (tag "Remove should return true when pair removed" >> isTrue)
+        assertThat (b.ContainsKey "A") (tag "Remove should remove the key-value pair" >> isFalse)
+    )
 
-    testCase "DefaultDict - KV-Contains" <| fun _ ->
+    test ("DefaultDict - KV-Contains", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         b.Add("A", 1)
         let result = (b :> ICollection<KeyValuePair<string, int>>).Contains(KeyValuePair("A", 1))
-        Expect.isTrue result "Contains should return true for existing pair"
+        assertThat result (tag "Contains should return true for existing pair" >> isTrue)
+    )
 
-    testCase "DefaultDict - KV-CopyTo" <| fun _ ->
+    test ("DefaultDict - KV-CopyTo", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         b.Add("A", 1)
         let arr = Array.zeroCreate<KeyValuePair<string, int>> 1
         (b :> ICollection<KeyValuePair<string, int>>).CopyTo(arr, 0)
-        Expect.equal arr.[0] (KeyValuePair("A", 1)) "CopyTo should copy pairs to array"
+        assertThat arr.[0] (tag "CopyTo should copy pairs to array" >> isEqualTo (KeyValuePair("A", 1)))
+    )
 
-    testCase "DefaultDict - KV-IsReadOnly" <| fun _ ->
+    test ("DefaultDict - KV-IsReadOnly", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         let result = (b :> ICollection<KeyValuePair<string, int>>).IsReadOnly
-        Expect.isFalse result "IsReadOnly should return false"
+        assertThat result (tag "IsReadOnly should return false" >> isFalse)
+    )
 
-    testCase "DefaultDict - KV-Count" <| fun _ ->
+    test ("DefaultDict - KV-Count", fun _ ->
         let b = DefaultDict(fun _ -> 0)
         b.Add("A", 1)
         let result = (b :> ICollection<KeyValuePair<string, int>>).Count
-        Expect.equal result 1 "Count should return number of pairs"
+        assertThat result (tag "Count should return number of pairs" >> isEqualTo 1)
+    )
 
-    testCase "Dict ReadOnly collection" <| fun _ ->
+    test ("Dict ReadOnly collection", fun _ ->
         let b = Dict<string,int>()
         b.["A"] <- 1
         b.["B"] <- 2
         let ro = b//.AsReadOnly() is not supported by Fable
         let result = ro :> IReadOnlyCollection<KeyValuePair<string,int>>
-        Expect.equal result.Count 2 "ReadOnly collection count should match original"
+        assertThat result.Count (tag "ReadOnly collection count should match original" >> isEqualTo 2)
+    )
 
-    testCase "Dict ReadOnly collection content" <| fun _ ->
+    test ("Dict ReadOnly collection content", fun _ ->
         let b = Dict<string,int>()
         b.["A"] <- 1
         b.["B"] <- 2
         let ro = b//.AsReadOnly() is not supported by Fable
         let pairs = ro |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Set.ofSeq
         let expected = set [("A",1); ("B",2)]
-        Expect.equal pairs expected "ReadOnly collection should have same content"
+        assertThat pairs (tag "ReadOnly collection should have same content" >> isEqualTo expected)
+    )
 
-    testCase "DefaultDict ReadOnly collection" <| fun _ ->
+    test ("DefaultDict ReadOnly collection", fun _ ->
         let b = DefaultDict(fun _ -> 8)
         b.["A"] <- 1
         b.["B"] <- 2
         let result = b :> IReadOnlyCollection<KeyValuePair<string,int>>
-        Expect.equal result.Count 2 "ReadOnly collection count should match original"
+        assertThat result.Count (tag "ReadOnly collection count should match original" >> isEqualTo 2)
+    )
 
-    testCase "DefaultDict ReadOnly collection content" <| fun _ ->
+    test ("DefaultDict ReadOnly collection content", fun _ ->
         let b = DefaultDict(fun _ -> 8)
         b.["A"] <- 1
         b.["B"] <- 2
         let ro = b
         let pairs = ro |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Set.ofSeq
         let expected = set [("A",1); ("B",2)]
-        Expect.equal pairs expected "ReadOnly collection should have same content"
+        assertThat pairs (tag "ReadOnly collection should have same content" >> isEqualTo expected)
+    )
 
     // IDictionary interface is removed from DefaultDict becaus the semantics don't fit
     // don't add IDictionary because of TryGetValue might return might no Value while get would.
     // this is not consistent with the IDictionary interface
 
-    // testCase "iDictionary DefDict - Get item" <| fun _ ->
+    // test ("iDictionary DefDict - Get item", fun _ ->
     //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
     //     let d = b.["A"]
     //     let hasKey = b.ContainsKey("A")
-    //     Expect.isTrue (hasKey && d=0) "IDictionary Get should add key-value pair"
+    //     assertThat (hasKey && d=0) (tag "IDictionary Get should add key-value pair" >> isTrue)
+    // )
 
-    // testCase "iDictionary DefDict - Get method" <| fun _ ->
+    // test ("iDictionary DefDict - Get method", fun _ ->
     //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
     //     let d = b.Get "A"
     //     let hasKey = b.ContainsKey("A")
-    //     Expect.isTrue (hasKey && d=0) "IDictionary Get should add key-value pair"
+    //     assertThat (hasKey && d=0) (tag "IDictionary Get should add key-value pair" >> isTrue)
+    // )
 
 
-    // testCase "iDictionary DefDict - Add" <| fun _ ->
+    // test ("iDictionary DefDict - Add", fun _ ->
     //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
     //     b.Add("A", 1)
     //     let hasKey = b.ContainsKey("A")
-    //     Expect.isTrue hasKey "IDictionary Add should add key-value pair"
+    //     assertThat hasKey (tag "IDictionary Add should add key-value pair" >> isTrue)
+    // )
 
-    // testCase "iDictionary DefDict - Remove" <| fun _ ->
+    // test ("iDictionary DefDict - Remove", fun _ ->
     //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
     //     b.Add("A", 1)
     //     b.Remove("A") |> ignore
     //     let removed = not (b.ContainsKey("A"))
-    //     Expect.isTrue removed "IDictionary Remove should remove key"
+    //     assertThat removed (tag "IDictionary Remove should remove key" >> isTrue)
+    // )
 
-    // testCase "iDictionary DefDict - Clear" <| fun _ ->
+    // test ("iDictionary DefDict - Clear", fun _ ->
     //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
     //     b.Add("A", 1)
     //     b.Add("B", 2)
     //     b.Clear()
     //     let cleared = b.Count = 0
-    //     Expect.isTrue cleared "IDictionary Clear should remove all items"
+    //     assertThat cleared (tag "IDictionary Clear should remove all items" >> isTrue)
+    // )
 
-    // testCase "iDictionary DefDict - TryGetValue exists for add" <| fun _ ->
+    // test ("iDictionary DefDict - TryGetValue exists for add", fun _ ->
     //     let b = DefaultDict(fun _ -> 3) :> IDictionary<string,int>
     //     b.Add("A", 8)
     //     let success, value = b.TryGetValue("A")
-    //     Expect.isTrue success "TryGetValue should return true for existing key"
-    //     Expect.equal value 8 "TryGetValue should return correct value"
+    //     assertThat success (tag "TryGetValue should return true for existing key" >> isTrue)
+    //     assertThat value (tag "TryGetValue should return correct value" >> isEqualTo 8)
+    // )
 
-    // testCase "iDictionary DefDict - TryGetValue exists for <- " <| fun _ ->
+    // test ("iDictionary DefDict - TryGetValue exists for <- ", fun _ ->
     //     let dd = DefaultDict(fun _ -> 3)
     //     dd["A"] <- 8
     //     let b = dd :> IDictionary<string,int>
     //     let success, value = b.TryGetValue("A")
-    //     Expect.isTrue success "TryGetValue should return true for existing key"
-    //     Expect.equal value 8 "TryGetValue should return correct value"
+    //     assertThat success (tag "TryGetValue should return true for existing key" >> isTrue)
+    //     assertThat value (tag "TryGetValue should return correct value" >> isEqualTo 8)
+    // )
 
 
-    // testCase "iDictionary DefDict - TryGetValue missing" <| fun _ ->
+    // test ("iDictionary DefDict - TryGetValue missing", fun _ ->
     //     let b = DefaultDict(fun _ -> 0) :> IDictionary<string,int>
     //     let success, _ = b.TryGetValue("missing")
-    //     Expect.isFalse success "TryGetValue should return true even for missing key"
+    //     assertThat success (tag "TryGetValue should return true even for missing key" >> isFalse)
+    // )
 
 
 
@@ -653,7 +737,7 @@ let tests  =
     // Dict Module Tests:
     // ---------------------------------------------------------
 
-    testCase "Dict.memoize - caches function results" <| fun _ ->
+    test ("Dict.memoize - caches function results", fun _ ->
         let callCount = ref 0
         let expensiveFunc x =
             incr callCount
@@ -663,190 +747,211 @@ let tests  =
 
         // First call should execute the function
         let result1 = memoizedFunc 5
-        Expect.equal result1 10 "Function should return correct result"
-        Expect.equal !callCount 1 "Function should be called once"
+        assertThat result1 (tag "Function should return correct result" >> isEqualTo 10)
+        assertThat !callCount (tag "Function should be called once" >> isEqualTo 1)
 
         // Second call with same input should use cached result
         let result2 = memoizedFunc 5
-        Expect.equal result2 10 "Function should return correct result"
-        Expect.equal !callCount 1 "Function should not be called again"
+        assertThat result2 (tag "Function should return correct result" >> isEqualTo 10)
+        assertThat !callCount (tag "Function should not be called again" >> isEqualTo 1)
 
         // Call with different input should execute function again
         let result3 = memoizedFunc 7
-        Expect.equal result3 14 "Function should return correct result"
-        Expect.equal !callCount 2 "Function should be called for new input"
+        assertThat result3 (tag "Function should return correct result" >> isEqualTo 14)
+        assertThat !callCount (tag "Function should be called for new input" >> isEqualTo 2)
+    )
 
 
-    testCase "Dict.memoize - null" <| fun _ ->
+    test ("Dict.memoize - null", fun _ ->
         let unitf () = 5
         let memoizedFunc = Dict.memoize unitf
         let result = memoizedFunc ()
-        Expect.equal result 5 "Function should return correct result"
+        assertThat result (tag "Function should return correct result" >> isEqualTo 5)
 
         let nullF (_x:obj) = 6
         let memoizedFunc = Dict.memoize nullF
         let result = memoizedFunc null
-        Expect.equal result 6 "Function should return correct result"
+        assertThat result (tag "Function should return correct result" >> isEqualTo 6)
 
         let noneF (_x:Option<int>) = 7
         let memoizedFunc = Dict.memoize noneF
         let result = memoizedFunc None
-        Expect.equal result 7 "Function should return correct result"
+        assertThat result (tag "Function should return correct result" >> isEqualTo 7)
+    )
 
 
-    testCase "Dict.get - retrieves value for existing key" <| fun _ ->
+    test ("Dict.get - retrieves value for existing key", fun _ ->
         let dict = Dict<string, int>()
         dict.["test"] <- 42
 
         let result = Dict.get "test" dict
-        Expect.equal result 42 "Should retrieve correct value"
+        assertThat result (tag "Should retrieve correct value" >> isEqualTo 42)
+    )
 
-    testCase "Dict.get - throws for non-existent key" <| fun _ ->
+    test ("Dict.get - throws for non-existent key", fun _ ->
         let dict = Dict<string, int>()
-        Expect.throws (fun () -> Dict.get "missing" dict |> ignore)
-            "Should throw KeyNotFoundException"
+        assertThat (fun () -> Dict.get "missing" dict |> ignore) (tag "Should throw KeyNotFoundException" >> throws)
+    )
 
-    testCase "Dict.set - sets value for key" <| fun _ ->
+    test ("Dict.set - sets value for key", fun _ ->
         let dict = Dict<string, int>()
         Dict.set "test" 42 dict
 
-        Expect.equal dict.["test"] 42 "Should set correct value"
+        assertThat dict.["test"] (tag "Should set correct value" >> isEqualTo 42)
+    )
 
-    testCase "Dict.tryGet - returns Some for existing key" <| fun _ ->
+    test ("Dict.tryGet - returns Some for existing key", fun _ ->
         let dict = Dict<string, int>()
         dict.["test"] <- 42
 
         let result = Dict.tryGet "test" dict
-        Expect.equal result (Some 42) "Should return Some with correct value"
+        assertThat result (tag "Should return Some with correct value" >> isEqualTo (Some 42))
+    )
 
-    testCase "Dict.tryGet - returns None for non-existent key" <| fun _ ->
+    test ("Dict.tryGet - returns None for non-existent key", fun _ ->
         let dict = Dict<string, int>()
 
         let result = Dict.tryGet "missing" dict
-        Expect.equal result None "Should return None"
+        assertThat result (tag "Should return None" >> isEqualTo None)
+    )
 
-    testCase "Dict.create - creates dictionary from key-value pairs" <| fun _ ->
+    test ("Dict.create - creates dictionary from key-value pairs", fun _ ->
         let pairs = [("a", 1); ("b", 2); ("c", 3)]
         let dict = Dict.create pairs
 
-        Expect.equal dict.Count 3 "Dictionary should have correct count"
-        Expect.equal dict.["a"] 1 "Dictionary should contain correct values"
-        Expect.equal dict.["b"] 2 "Dictionary should contain correct values"
-        Expect.equal dict.["c"] 3 "Dictionary should contain correct values"
+        assertThat dict.Count (tag "Dictionary should have correct count" >> isEqualTo 3)
+        assertThat dict.["a"] (tag "Dictionary should contain correct values" >> isEqualTo 1)
+        assertThat dict.["b"] (tag "Dictionary should contain correct values" >> isEqualTo 2)
+        assertThat dict.["c"] (tag "Dictionary should contain correct values" >> isEqualTo 3)
+    )
 
-    testCase "Dict.setIfKeyAbsent - adds when key doesn't exist" <| fun _ ->
+    test ("Dict.setIfKeyAbsent - adds when key doesn't exist", fun _ ->
         let dict = Dict<string, int>()
 
         let result = Dict.setIfKeyAbsent "test" 42 dict
-        Expect.isTrue result "Should return true when key doesn't exist"
-        Expect.equal dict.["test"] 42 "Should set the value"
+        assertThat result (tag "Should return true when key doesn't exist" >> isTrue)
+        assertThat dict.["test"] (tag "Should set the value" >> isEqualTo 42)
+    )
 
-    testCase "Dict.setIfKeyAbsent - doesn't add when key exists" <| fun _ ->
+    test ("Dict.setIfKeyAbsent - doesn't add when key exists", fun _ ->
         let dict = Dict<string, int>()
         dict.["test"] <- 42
 
         let result = Dict.setIfKeyAbsent "test" 84 dict
-        Expect.isFalse result "Should return false when key exists"
-        Expect.equal dict.["test"] 42 "Should not change the value"
+        assertThat result (tag "Should return false when key exists" >> isFalse)
+        assertThat dict.["test"] (tag "Should not change the value" >> isEqualTo 42)
+    )
 
-    testCase "Dict.addIfKeyAbsent - adds when key doesn't exist" <| fun _ ->
+    test ("Dict.addIfKeyAbsent - adds when key doesn't exist", fun _ ->
         let dict = Dict<string, int>()
 
         let result = Dict.addIfKeyAbsent "test" 42 dict
-        Expect.isTrue result "Should return true when key doesn't exist"
-        Expect.equal dict.["test"] 42 "Should add the value"
+        assertThat result (tag "Should return true when key doesn't exist" >> isTrue)
+        assertThat dict.["test"] (tag "Should add the value" >> isEqualTo 42)
+    )
 
-    testCase "Dict.addIfKeyAbsent - doesn't add when key exists" <| fun _ ->
+    test ("Dict.addIfKeyAbsent - doesn't add when key exists", fun _ ->
         let dict = Dict<string, int>()
         dict.["test"] <- 42
 
         let result = Dict.addIfKeyAbsent "test" 84 dict
-        Expect.isFalse result "Should return false when key exists"
-        Expect.equal dict.["test"] 42 "Should not change the value"
+        assertThat result (tag "Should return false when key exists" >> isFalse)
+        assertThat dict.["test"] (tag "Should not change the value" >> isEqualTo 42)
+    )
 
-    testCase "Dict.getOrSetDefault - returns existing value for existing key" <| fun _ ->
+    test ("Dict.getOrSetDefault - returns existing value for existing key", fun _ ->
         let dict = Dict<string, int>()
         dict.["test"] <- 42
 
         let result = Dict.getOrSetDefault (fun _ -> 99) "test" dict
-        Expect.equal result 42 "Should return existing value"
-        Expect.equal dict.["test"] 42 "Should not change existing value"
+        assertThat result (tag "Should return existing value" >> isEqualTo 42)
+        assertThat dict.["test"] (tag "Should not change existing value" >> isEqualTo 42)
+    )
 
-    testCase "Dict.getOrSetDefault - sets default for missing key" <| fun _ ->
+    test ("Dict.getOrSetDefault - sets default for missing key", fun _ ->
         let dict = Dict<string, int>()
 
         let result = Dict.getOrSetDefault (fun _k -> 4) "test" dict
-        Expect.equal result 4 "Should return default value based on key"
-        Expect.equal dict.["test"] 4 "Should set default value in dictionary"
+        assertThat result (tag "Should return default value based on key" >> isEqualTo 4)
+        assertThat dict.["test"] (tag "Should set default value in dictionary" >> isEqualTo 4)
+    )
 
-    testCase "Dict.getOrSetDefaultValue - returns existing value for existing key" <| fun _ ->
+    test ("Dict.getOrSetDefaultValue - returns existing value for existing key", fun _ ->
         let dict = Dict<string, int>()
         dict.["test"] <- 42
 
         let result = Dict.getOrSetDefaultValue 99 "test" dict
-        Expect.equal result 42 "Should return existing value"
-        Expect.equal dict.["test"] 42 "Should not change existing value"
+        assertThat result (tag "Should return existing value" >> isEqualTo 42)
+        assertThat dict.["test"] (tag "Should not change existing value" >> isEqualTo 42)
+    )
 
-    testCase "Dict.getOrSetDefaultValue - sets default for missing key" <| fun _ ->
+    test ("Dict.getOrSetDefaultValue - sets default for missing key", fun _ ->
         let dict = Dict<string, int>()
 
         let result = Dict.getOrSetDefaultValue 99 "test" dict
-        Expect.equal result 99 "Should return default value"
-        Expect.equal dict.["test"] 99 "Should set default value in dictionary"
+        assertThat result (tag "Should return default value" >> isEqualTo 99)
+        assertThat dict.["test"] (tag "Should set default value in dictionary" >> isEqualTo 99)
+    )
 
-    testCase "Dict.tryPop - returns Some and removes for existing key" <| fun _ ->
+    test ("Dict.tryPop - returns Some and removes for existing key", fun _ ->
         let dict = Dict<string, int>()
         dict.["test"] <- 42
 
         let result = Dict.tryPop "test" dict
-        Expect.equal result (Some 42) "Should return Some with value"
-        Expect.isFalse (dict.ContainsKey "test") "Should remove key from dictionary"
+        assertThat result (tag "Should return Some with value" >> isEqualTo (Some 42))
+        assertThat (dict.ContainsKey "test") (tag "Should remove key from dictionary" >> isFalse)
+    )
 
-    testCase "Dict.tryPop - returns None for non-existent key" <| fun _ ->
+    test ("Dict.tryPop - returns None for non-existent key", fun _ ->
         let dict = Dict<string, int>()
 
         let result = Dict.tryPop "missing" dict
-        Expect.equal result None "Should return None for missing key"
+        assertThat result (tag "Should return None for missing key" >> isEqualTo None)
+    )
 
-    testCase "Dict.pop - returns value and removes for existing key" <| fun _ ->
+    test ("Dict.pop - returns value and removes for existing key", fun _ ->
         let dict = Dict<string, int>()
         dict.["test"] <- 42
 
         let result = Dict.pop "test" dict
-        Expect.equal result 42 "Should return value"
-        Expect.isFalse (dict.ContainsKey "test") "Should remove key from dictionary"
+        assertThat result (tag "Should return value" >> isEqualTo 42)
+        assertThat (dict.ContainsKey "test") (tag "Should remove key from dictionary" >> isFalse)
+    )
 
-    testCase "Dict.pop - throws for non-existent key" <| fun _ ->
+    test ("Dict.pop - throws for non-existent key", fun _ ->
         let dict = Dict<string, int>()
 
-        Expect.throws (fun () -> Dict.pop "missing" dict |> ignore)
-            "Should throw KeyNotFoundException"
+        assertThat (fun () -> Dict.pop "missing" dict |> ignore) (tag "Should throw KeyNotFoundException" >> throws)
+    )
 
-    testCase "Dict.items - returns sequence of key-value pairs" <| fun _ ->
+    test ("Dict.items - returns sequence of key-value pairs", fun _ ->
         let dict = Dict<string, int>()
         dict.["a"] <- 1
         dict.["b"] <- 2
 
         let items = Dict.items dict |> Seq.toList |> List.sortBy fst
-        Expect.equal items [("a", 1); ("b", 2)] "Should return correct key-value pairs"
+        assertThat items (tag "Should return correct key-value pairs" >> isEqualTo [("a", 1); ("b", 2)])
+    )
 
-    testCase "Dict.values - returns sequence of values" <| fun _ ->
+    test ("Dict.values - returns sequence of values", fun _ ->
         let dict = Dict<string, int>()
         dict.["a"] <- 1
         dict.["b"] <- 2
 
         let values = Dict.values dict |> Seq.toList |> List.sort
-        Expect.equal values [1; 2] "Should return correct values"
+        assertThat values (tag "Should return correct values" >> isEqualTo [1; 2])
+    )
 
-    testCase "Dict.keys - returns sequence of keys" <| fun _ ->
+    test ("Dict.keys - returns sequence of keys", fun _ ->
         let dict = Dict<string, int>()
         dict.["a"] <- 1
         dict.["b"] <- 2
 
         let keys = Dict.keys dict |> Seq.toList |> List.sort
-        Expect.equal keys ["a"; "b"] "Should return correct keys"
+        assertThat keys (tag "Should return correct keys" >> isEqualTo ["a"; "b"])
+    )
 
-    testCase "Dict.iter - iterates over dictionary" <| fun _ ->
+    test ("Dict.iter - iterates over dictionary", fun _ ->
         let dict = Dict<string, int>()
         dict.["a"] <- 1
         dict.["b"] <- 2
@@ -855,15 +960,17 @@ let tests  =
         Dict.iter (fun k v -> result := (k, v) :: !result) dict
         let sorted = !result |> List.sortBy fst
 
-        Expect.equal sorted [("a", 1); ("b", 2)] "Should iterate over all key-value pairs"
+        assertThat sorted (tag "Should iterate over all key-value pairs" >> isEqualTo [("a", 1); ("b", 2)])
+    )
 
-    testCase "Dict.map - maps dictionary to sequence" <| fun _ ->
+    test ("Dict.map - maps dictionary to sequence", fun _ ->
         let dict = Dict<string, int>()
         dict.["a"] <- 1
         dict.["b"] <- 2
 
         let result = Dict.map (fun k v -> k + string v) dict |> Seq.toList |> List.sort
-        Expect.equal result ["a1"; "b2"] "Should map key-value pairs correctly"
+        assertThat result (tag "Should map key-value pairs correctly" >> isEqualTo ["a1"; "b2"])
+    )
 
 
     // =============================================================
@@ -876,970 +983,1118 @@ let tests  =
     // Dict - Core operations (routed through IJSMap in Fable)
     // ---------------------------------------------------------
 
-    testCase "Dict-Fable - Get on empty dict throws" <| fun _ ->
+    test ("Dict-Fable - Get on empty dict throws", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.Get "anything" |> ignore) "Get on empty dict should throw"
+        assertThat (fun () -> d.Get "anything" |> ignore) (tag "Get on empty dict should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - Set and Get with int keys (value type)" <| fun _ ->
+    test ("Dict-Fable - Set and Get with int keys (value type)", fun _ ->
         let d = Dict<int, string>()
         d.Set 1 "one"
         d.Set 2 "two"
         d.Set 3 "three"
-        Expect.equal (d.Get 1) "one" "Int key 1"
-        Expect.equal (d.Get 2) "two" "Int key 2"
-        Expect.equal (d.Get 3) "three" "Int key 3"
+        assertThat (d.Get 1) (tag "Int key 1" >> isEqualTo "one")
+        assertThat (d.Get 2) (tag "Int key 2" >> isEqualTo "two")
+        assertThat (d.Get 3) (tag "Int key 3" >> isEqualTo "three")
+    )
 
-    testCase "Dict-Fable - Set and Get with float keys (value type)" <| fun _ ->
+    test ("Dict-Fable - Set and Get with float keys (value type)", fun _ ->
         let d = Dict<float, string>()
         d.Set 1.5 "a"
         d.Set 2.5 "b"
-        Expect.equal (d.Get 1.5) "a" "Float key 1.5"
-        Expect.equal (d.Get 2.5) "b" "Float key 2.5"
+        assertThat (d.Get 1.5) (tag "Float key 1.5" >> isEqualTo "a")
+        assertThat (d.Get 2.5) (tag "Float key 2.5" >> isEqualTo "b")
+    )
 
-    testCase "Dict-Fable - Set and Get with bool keys (value type)" <| fun _ ->
+    test ("Dict-Fable - Set and Get with bool keys (value type)", fun _ ->
         let d = Dict<bool, string>()
         d.Set true "yes"
         d.Set false "no"
-        Expect.equal (d.Get true) "yes" "Bool key true"
-        Expect.equal (d.Get false) "no" "Bool key false"
-        Expect.equal d.Count 2 "Should have 2 entries"
+        assertThat (d.Get true) (tag "Bool key true" >> isEqualTo "yes")
+        assertThat (d.Get false) (tag "Bool key false" >> isEqualTo "no")
+        assertThat d.Count (tag "Should have 2 entries" >> isEqualTo 2)
+    )
 
-    testCase "Dict-Fable - Set and Get with tuple keys" <| fun _ ->
+    test ("Dict-Fable - Set and Get with tuple keys", fun _ ->
         let d = Dict<(int * string), float>()
         d.Set (1, "a") 10.0
         d.Set (2, "b") 20.0
-        Expect.equal (d.Get (1, "a")) 10.0 "Tuple key (1,a)"
-        Expect.equal (d.Get (2, "b")) 20.0 "Tuple key (2,b)"
+        assertThat (d.Get (1, "a")) (tag "Tuple key (1,a)" >> isEqualTo 10.0)
+        assertThat (d.Get (2, "b")) (tag "Tuple key (2,b)" >> isEqualTo 20.0)
+    )
 
-    testCase "Dict-Fable - Set overwrites existing value" <| fun _ ->
+    test ("Dict-Fable - Set overwrites existing value", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "A" 2
-        Expect.equal (d.Get "A") 2 "Set should overwrite"
-        Expect.equal d.Count 1 "Count should still be 1"
+        assertThat (d.Get "A") (tag "Set should overwrite" >> isEqualTo 2)
+        assertThat d.Count (tag "Count should still be 1" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - Item indexer set overwrites" <| fun _ ->
+    test ("Dict-Fable - Item indexer set overwrites", fun _ ->
         let d = Dict<string, int>()
         d.["X"] <- 10
         d.["X"] <- 20
-        Expect.equal d.["X"] 20 "Item indexer should overwrite"
-        Expect.equal d.Count 1 "Count should still be 1"
+        assertThat d.["X"] (tag "Item indexer should overwrite" >> isEqualTo 20)
+        assertThat d.Count (tag "Count should still be 1" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - null key throws on Set" <| fun _ ->
+    test ("Dict-Fable - null key throws on Set", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.Set null 1) "Set null key should throw"
+        assertThat (fun () -> d.Set null 1) (tag "Set null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on Get" <| fun _ ->
+    test ("Dict-Fable - null key throws on Get", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.Get null |> ignore) "Get null key should throw"
+        assertThat (fun () -> d.Get null |> ignore) (tag "Get null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on Item get" <| fun _ ->
+    test ("Dict-Fable - null key throws on Item get", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.[null] |> ignore) "Item get null key should throw"
+        assertThat (fun () -> d.[null] |> ignore) (tag "Item get null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on Item set" <| fun _ ->
+    test ("Dict-Fable - null key throws on Item set", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.[null] <- 1) "Item set null key should throw"
+        assertThat (fun () -> d.[null] <- 1) (tag "Item set null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on Pop" <| fun _ ->
+    test ("Dict-Fable - null key throws on Pop", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.Pop null |> ignore) "Pop null key should throw"
+        assertThat (fun () -> d.Pop null |> ignore) (tag "Pop null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on TryPop" <| fun _ ->
+    test ("Dict-Fable - null key throws on TryPop", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.TryPop null |> ignore) "TryPop null key should throw"
+        assertThat (fun () -> d.TryPop null |> ignore) (tag "TryPop null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on SetIfKeyAbsent" <| fun _ ->
+    test ("Dict-Fable - null key throws on SetIfKeyAbsent", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.SetIfKeyAbsent null 1 |> ignore) "SetIfKeyAbsent null key should throw"
+        assertThat (fun () -> d.SetIfKeyAbsent null 1 |> ignore) (tag "SetIfKeyAbsent null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on AddIfKeyAbsent" <| fun _ ->
+    test ("Dict-Fable - null key throws on AddIfKeyAbsent", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.AddIfKeyAbsent null 1 |> ignore) "AddIfKeyAbsent null key should throw"
+        assertThat (fun () -> d.AddIfKeyAbsent null 1 |> ignore) (tag "AddIfKeyAbsent null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on GetOrSetDefault" <| fun _ ->
+    test ("Dict-Fable - null key throws on GetOrSetDefault", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.GetOrSetDefault (fun _ -> 0) null |> ignore) "GetOrSetDefault null key should throw"
+        assertThat (fun () -> d.GetOrSetDefault (fun _ -> 0) null |> ignore) (tag "GetOrSetDefault null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - null key throws on GetOrSetDefaultValue" <| fun _ ->
+    test ("Dict-Fable - null key throws on GetOrSetDefaultValue", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.GetOrSetDefaultValue 0 null |> ignore) "GetOrSetDefaultValue null key should throw"
+        assertThat (fun () -> d.GetOrSetDefaultValue 0 null |> ignore) (tag "GetOrSetDefaultValue null key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - ContainsKey on empty" <| fun _ ->
+    test ("Dict-Fable - ContainsKey on empty", fun _ ->
         let d = Dict<string, int>()
-        Expect.isFalse (d.ContainsKey "A") "Empty dict should not contain any key"
+        assertThat (d.ContainsKey "A") (tag "Empty dict should not contain any key" >> isFalse)
+    )
 
-    testCase "Dict-Fable - ContainsKey after Set" <| fun _ ->
+    test ("Dict-Fable - ContainsKey after Set", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
-        Expect.isTrue (d.ContainsKey "A") "Should contain key after Set"
-        Expect.isFalse (d.ContainsKey "B") "Should not contain absent key"
+        assertThat (d.ContainsKey "A") (tag "Should contain key after Set" >> isTrue)
+        assertThat (d.ContainsKey "B") (tag "Should not contain absent key" >> isFalse)
+    )
 
-    testCase "Dict-Fable - DoesNotContainKey" <| fun _ ->
+    test ("Dict-Fable - DoesNotContainKey", fun _ ->
         let d = Dict<string, int>()
-        Expect.isTrue (d.DoesNotContainKey "A") "Empty dict DoesNotContainKey"
+        assertThat (d.DoesNotContainKey "A") (tag "Empty dict DoesNotContainKey" >> isTrue)
         d.Set "A" 1
-        Expect.isFalse (d.DoesNotContainKey "A") "Should not say DoesNotContainKey for present key"
+        assertThat (d.DoesNotContainKey "A") (tag "Should not say DoesNotContainKey for present key" >> isFalse)
+    )
 
-    testCase "Dict-Fable - Remove returns false for missing key" <| fun _ ->
+    test ("Dict-Fable - Remove returns false for missing key", fun _ ->
         let d = Dict<string, int>()
-        Expect.isFalse (d.Remove "missing") "Remove missing key returns false"
+        assertThat (d.Remove "missing") (tag "Remove missing key returns false" >> isFalse)
+    )
 
-    testCase "Dict-Fable - Remove returns true and removes key" <| fun _ ->
+    test ("Dict-Fable - Remove returns true and removes key", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         let removed = d.Remove "A"
-        Expect.isTrue removed "Remove existing key returns true"
-        Expect.isFalse (d.ContainsKey "A") "Key should be gone after Remove"
-        Expect.equal d.Count 0 "Count should be 0 after removing only key"
+        assertThat removed (tag "Remove existing key returns true" >> isTrue)
+        assertThat (d.ContainsKey "A") (tag "Key should be gone after Remove" >> isFalse)
+        assertThat d.Count (tag "Count should be 0 after removing only key" >> isEqualTo 0)
+    )
 
-    testCase "Dict-Fable - Pop existing key" <| fun _ ->
+    test ("Dict-Fable - Pop existing key", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 42
         let v = d.Pop "A"
-        Expect.equal v 42 "Pop should return value"
-        Expect.isFalse (d.ContainsKey "A") "Pop should remove key"
+        assertThat v (tag "Pop should return value" >> isEqualTo 42)
+        assertThat (d.ContainsKey "A") (tag "Pop should remove key" >> isFalse)
+    )
 
-    testCase "Dict-Fable - Pop missing key throws" <| fun _ ->
+    test ("Dict-Fable - Pop missing key throws", fun _ ->
         let d = Dict<string, int>()
-        Expect.throws (fun () -> d.Pop "missing" |> ignore) "Pop missing key should throw"
+        assertThat (fun () -> d.Pop "missing" |> ignore) (tag "Pop missing key should throw" >> throws)
+    )
 
-    testCase "Dict-Fable - TryPop existing key" <| fun _ ->
+    test ("Dict-Fable - TryPop existing key", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 42
         let v = d.TryPop "A"
-        Expect.equal v (Some 42) "TryPop existing key returns Some"
-        Expect.isFalse (d.ContainsKey "A") "TryPop should remove key"
+        assertThat v (tag "TryPop existing key returns Some" >> isEqualTo (Some 42))
+        assertThat (d.ContainsKey "A") (tag "TryPop should remove key" >> isFalse)
+    )
 
-    testCase "Dict-Fable - TryPop missing key returns None" <| fun _ ->
+    test ("Dict-Fable - TryPop missing key returns None", fun _ ->
         let d = Dict<string, int>()
         let v = d.TryPop "missing"
-        Expect.equal v None "TryPop missing key returns None"
+        assertThat v (tag "TryPop missing key returns None" >> isEqualTo None)
+    )
 
-    testCase "Dict-Fable - Clear on empty dict" <| fun _ ->
+    test ("Dict-Fable - Clear on empty dict", fun _ ->
         let d = Dict<string, int>()
         d.Clear()
-        Expect.equal d.Count 0 "Clear on empty dict should work"
+        assertThat d.Count (tag "Clear on empty dict should work" >> isEqualTo 0)
+    )
 
-    testCase "Dict-Fable - Clear removes all entries" <| fun _ ->
+    test ("Dict-Fable - Clear removes all entries", fun _ ->
         let d = Dict<string, int>()
         for i in 1..100 do
             d.Set (string i) i
-        Expect.equal d.Count 100 "Should have 100 entries"
+        assertThat d.Count (tag "Should have 100 entries" >> isEqualTo 100)
         d.Clear()
-        Expect.equal d.Count 0 "Clear should remove all entries"
-        Expect.isTrue d.IsEmpty "Should be empty after Clear"
+        assertThat d.Count (tag "Clear should remove all entries" >> isEqualTo 0)
+        assertThat d.IsEmpty (tag "Should be empty after Clear" >> isTrue)
+    )
 
-    testCase "Dict-Fable - IsEmpty and IsNotEmpty" <| fun _ ->
+    test ("Dict-Fable - IsEmpty and IsNotEmpty", fun _ ->
         let d = Dict<string, int>()
-        Expect.isTrue d.IsEmpty "New dict is empty"
-        Expect.isFalse d.IsNotEmpty "New dict is not not-empty"
+        assertThat d.IsEmpty (tag "New dict is empty" >> isTrue)
+        assertThat d.IsNotEmpty (tag "New dict is not not-empty" >> isFalse)
         d.Set "A" 1
-        Expect.isFalse d.IsEmpty "Dict with entry is not empty"
-        Expect.isTrue d.IsNotEmpty "Dict with entry is not-empty"
+        assertThat d.IsEmpty (tag "Dict with entry is not empty" >> isFalse)
+        assertThat d.IsNotEmpty (tag "Dict with entry is not-empty" >> isTrue)
+    )
 
-    testCase "Dict-Fable - Count tracks additions and removals" <| fun _ ->
+    test ("Dict-Fable - Count tracks additions and removals", fun _ ->
         let d = Dict<string, int>()
-        Expect.equal d.Count 0 "Initial count is 0"
+        assertThat d.Count (tag "Initial count is 0" >> isEqualTo 0)
         d.Set "A" 1
-        Expect.equal d.Count 1 "Count after 1 add"
+        assertThat d.Count (tag "Count after 1 add" >> isEqualTo 1)
         d.Set "B" 2
-        Expect.equal d.Count 2 "Count after 2 adds"
+        assertThat d.Count (tag "Count after 2 adds" >> isEqualTo 2)
         d.Set "A" 99  // overwrite, no new key
-        Expect.equal d.Count 2 "Count after overwrite stays same"
+        assertThat d.Count (tag "Count after overwrite stays same" >> isEqualTo 2)
         d.Remove "A" |> ignore
-        Expect.equal d.Count 1 "Count after remove"
+        assertThat d.Count (tag "Count after remove" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - Keys returns all keys" <| fun _ ->
+    test ("Dict-Fable - Keys returns all keys", fun _ ->
         let d = Dict<string, int>()
         d.Set "X" 1
         d.Set "Y" 2
         d.Set "Z" 3
         let keys = d.Keys |> Seq.toList |> List.sort
-        Expect.equal keys ["X"; "Y"; "Z"] "Keys should return all keys"
+        assertThat keys (tag "Keys should return all keys" >> isEqualTo ["X"; "Y"; "Z"])
+    )
 
-    testCase "Dict-Fable - Values returns all values" <| fun _ ->
+    test ("Dict-Fable - Values returns all values", fun _ ->
         let d = Dict<string, int>()
         d.Set "X" 10
         d.Set "Y" 20
         let values = d.Values |> Seq.toList |> List.sort
-        Expect.equal values [10; 20] "Values should return all values"
+        assertThat values (tag "Values should return all values" >> isEqualTo [10; 20])
+    )
 
-    testCase "Dict-Fable - Items returns tuples" <| fun _ ->
+    test ("Dict-Fable - Items returns tuples", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "B" 2
         let items = d.Items |> Seq.toList |> List.sortBy fst
-        Expect.equal items [("A", 1); ("B", 2)] "Items should return key-value tuples"
+        assertThat items (tag "Items should return key-value tuples" >> isEqualTo [("A", 1); ("B", 2)])
+    )
 
-    testCase "Dict-Fable - TryGetValue existing" <| fun _ ->
+    test ("Dict-Fable - TryGetValue existing", fun _ ->
         let d = Dict<string, int>()
         d.Set "K" 99
         let ok, v = d.TryGetValue "K"
-        Expect.isTrue ok "TryGetValue should return true for existing key"
-        Expect.equal v 99 "TryGetValue should return correct value"
+        assertThat ok (tag "TryGetValue should return true for existing key" >> isTrue)
+        assertThat v (tag "TryGetValue should return correct value" >> isEqualTo 99)
+    )
 
-    testCase "Dict-Fable - TryGetValue missing" <| fun _ ->
+    test ("Dict-Fable - TryGetValue missing", fun _ ->
         let d = Dict<string, int>()
         let ok, v = d.TryGetValue "missing"
-        Expect.isFalse ok "TryGetValue should return false for missing key"
-        Expect.equal v 0 "TryGetValue should return default int value"
+        assertThat ok (tag "TryGetValue should return false for missing key" >> isFalse)
+        assertThat v (tag "TryGetValue should return default int value" >> isEqualTo 0)
+    )
 
-    testCase "Dict-Fable - TryGetValue missing string value" <| fun _ ->
+    test ("Dict-Fable - TryGetValue missing string value", fun _ ->
         let d = Dict<int, string>()
         let ok, v = d.TryGetValue 42
-        Expect.isFalse ok "TryGetValue should return false for missing key"
-        Expect.equal v null "TryGetValue should return null for missing string value"
+        assertThat ok (tag "TryGetValue should return false for missing key" >> isFalse)
+        assertThat v (tag "TryGetValue should return null for missing string value" >> isEqualTo null)
+    )
 
-    testCase "Dict-Fable - null string value is allowed" <| fun _ ->
+    test ("Dict-Fable - null string value is allowed", fun _ ->
         let d = Dict<string, string>()
         d.Set "key" null
-        Expect.equal (d.Get "key") null "Null string value should be stored and retrieved"
-        Expect.isTrue (d.ContainsKey "key") "Key with null value should exist"
+        assertThat (d.Get "key") (tag "Null string value should be stored and retrieved" >> isEqualTo null)
+        assertThat (d.ContainsKey "key") (tag "Key with null value should exist" >> isTrue)
+    )
 
-    testCase "Dict-Fable - empty string key" <| fun _ ->
+    test ("Dict-Fable - empty string key", fun _ ->
         let d = Dict<string, int>()
         d.Set "" 42
-        Expect.equal (d.Get "") 42 "Empty string key should work"
-        Expect.isTrue (d.ContainsKey "") "Empty string key should be found"
+        assertThat (d.Get "") (tag "Empty string key should work" >> isEqualTo 42)
+        assertThat (d.ContainsKey "") (tag "Empty string key should be found" >> isTrue)
+    )
 
-    testCase "Dict-Fable - many entries" <| fun _ ->
+    test ("Dict-Fable - many entries", fun _ ->
         let d = Dict<int, int>()
         for i in 0..999 do
             d.Set i (i * i)
-        Expect.equal d.Count 1000 "Should have 1000 entries"
-        Expect.equal (d.Get 0) 0 "First entry"
-        Expect.equal (d.Get 999) (999 * 999) "Last entry"
-        Expect.equal (d.Get 500) (500 * 500) "Middle entry"
+        assertThat d.Count (tag "Should have 1000 entries" >> isEqualTo 1000)
+        assertThat (d.Get 0) (tag "First entry" >> isEqualTo 0)
+        assertThat (d.Get 999) (tag "Last entry" >> isEqualTo (999 * 999))
+        assertThat (d.Get 500) (tag "Middle entry" >> isEqualTo (500 * 500))
+    )
 
-    testCase "Dict-Fable - duplicate Add via indexer" <| fun _ ->
+    test ("Dict-Fable - duplicate Add via indexer", fun _ ->
         let d = Dict<string, int>()
         d.["A"] <- 1
         d.["A"] <- 2
-        Expect.equal d.["A"] 2 "Second set should win"
-        Expect.equal d.Count 1 "No duplicate keys"
+        assertThat d.["A"] (tag "Second set should win" >> isEqualTo 2)
+        assertThat d.Count (tag "No duplicate keys" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - Add method on duplicate key throws" <| fun _ ->
+    test ("Dict-Fable - Add method on duplicate key throws", fun _ ->
         let d = Dict<string, int>()
         d.Add("A", 1)
         // Add via IDictionary should throw on duplicate
         let iDict = d :> IDictionary<string, int>
-        Expect.throws (fun () -> iDict.Add("A", 2)) "IDictionary.Add should throw on duplicate key"
+        assertThat (fun () -> iDict.Add("A", 2)) (tag "IDictionary.Add should throw on duplicate key" >> throws)
+    )
 
-    testCase "Dict-Fable - enumerate empty dict" <| fun _ ->
+    test ("Dict-Fable - enumerate empty dict", fun _ ->
         let d = Dict<string, int>()
         let items = d |> Seq.toList
-        Expect.equal items [] "Enumerating empty dict should yield empty list"
+        assertThat items (tag "Enumerating empty dict should yield empty list" >> isEqualTo [])
+    )
 
-    testCase "Dict-Fable - enumerate dict" <| fun _ ->
+    test ("Dict-Fable - enumerate dict", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "B" 2
         let items = d |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Seq.toList |> List.sortBy fst
-        Expect.equal items [("A", 1); ("B", 2)] "Enumerating dict should yield all entries"
+        assertThat items (tag "Enumerating dict should yield all entries" >> isEqualTo [("A", 1); ("B", 2)])
+    )
 
-    testCase "Dict-Fable - ContainsValue" <| fun _ ->
+    test ("Dict-Fable - ContainsValue", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 42
-        Expect.isTrue (d.ContainsValue 42) "ContainsValue should find existing value"
-        Expect.isFalse (d.ContainsValue 99) "ContainsValue should not find missing value"
+        assertThat (d.ContainsValue 42) (tag "ContainsValue should find existing value" >> isTrue)
+        assertThat (d.ContainsValue 99) (tag "ContainsValue should not find missing value" >> isFalse)
+    )
 
-    testCase "Dict-Fable - KeysSeq and ValuesSeq" <| fun _ ->
+    test ("Dict-Fable - KeysSeq and ValuesSeq", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "B" 2
         let ks = d.KeysSeq |> Seq.toList |> List.sort
         let vs = d.ValuesSeq |> Seq.toList |> List.sort
-        Expect.equal ks ["A"; "B"] "KeysSeq should return all keys"
-        Expect.equal vs [1; 2] "ValuesSeq should return all values"
+        assertThat ks (tag "KeysSeq should return all keys" >> isEqualTo ["A"; "B"])
+        assertThat vs (tag "ValuesSeq should return all values" >> isEqualTo [1; 2])
+    )
 
-    testCase "Dict-Fable - SetIfKeyAbsent on empty" <| fun _ ->
+    test ("Dict-Fable - SetIfKeyAbsent on empty", fun _ ->
         let d = Dict<string, int>()
         let r = d.SetIfKeyAbsent "A" 1
-        Expect.isTrue r "Should return true on empty dict"
-        Expect.equal (d.Get "A") 1 "Value should be set"
+        assertThat r (tag "Should return true on empty dict" >> isTrue)
+        assertThat (d.Get "A") (tag "Value should be set" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - SetIfKeyAbsent does not overwrite" <| fun _ ->
+    test ("Dict-Fable - SetIfKeyAbsent does not overwrite", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         let r = d.SetIfKeyAbsent "A" 2
-        Expect.isFalse r "Should return false when key exists"
-        Expect.equal (d.Get "A") 1 "Original value should be preserved"
+        assertThat r (tag "Should return false when key exists" >> isFalse)
+        assertThat (d.Get "A") (tag "Original value should be preserved" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - GetOrSetDefault creates and returns default" <| fun _ ->
+    test ("Dict-Fable - GetOrSetDefault creates and returns default", fun _ ->
         let d = Dict<string, int>()
         let v = d.GetOrSetDefault (fun k -> k.Length) "hello"
-        Expect.equal v 5 "Default function should use the key"
-        Expect.equal (d.Get "hello") 5 "Value should be stored"
+        assertThat v (tag "Default function should use the key" >> isEqualTo 5)
+        assertThat (d.Get "hello") (tag "Value should be stored" >> isEqualTo 5)
+    )
 
-    testCase "Dict-Fable - GetOrSetDefault does not overwrite existing" <| fun _ ->
+    test ("Dict-Fable - GetOrSetDefault does not overwrite existing", fun _ ->
         let d = Dict<string, int>()
         d.Set "hello" 42
         let v = d.GetOrSetDefault (fun k -> k.Length) "hello"
-        Expect.equal v 42 "Should return existing value"
+        assertThat v (tag "Should return existing value" >> isEqualTo 42)
+    )
 
-    testCase "Dict-Fable - GetOrSetDefaultValue creates value" <| fun _ ->
+    test ("Dict-Fable - GetOrSetDefaultValue creates value", fun _ ->
         let d = Dict<string, int>()
         let v = d.GetOrSetDefaultValue 99 "key"
-        Expect.equal v 99 "Should return default value"
-        Expect.equal (d.Get "key") 99 "Should be stored"
+        assertThat v (tag "Should return default value" >> isEqualTo 99)
+        assertThat (d.Get "key") (tag "Should be stored" >> isEqualTo 99)
+    )
 
-    testCase "Dict-Fable - reference type values" <| fun _ ->
+    test ("Dict-Fable - reference type values", fun _ ->
         let d = Dict<string, int list>()
         d.Set "A" [1; 2; 3]
         d.Set "B" []
-        Expect.equal (d.Get "A") [1; 2; 3] "List value should be stored"
-        Expect.equal (d.Get "B") [] "Empty list value should be stored"
+        assertThat (d.Get "A") (tag "List value should be stored" >> isEqualTo [1; 2; 3])
+        assertThat (d.Get "B") (tag "Empty list value should be stored" >> isEqualTo [])
+    )
 
-    testCase "Dict-Fable - create from pairs" <| fun _ ->
+    test ("Dict-Fable - create from pairs", fun _ ->
         let d = Dict.create [("a", 1); ("b", 2); ("c", 3)]
-        Expect.equal d.Count 3 "Should have 3 items"
-        Expect.equal (d.Get "a") 1 "Value a"
-        Expect.equal (d.Get "b") 2 "Value b"
-        Expect.equal (d.Get "c") 3 "Value c"
+        assertThat d.Count (tag "Should have 3 items" >> isEqualTo 3)
+        assertThat (d.Get "a") (tag "Value a" >> isEqualTo 1)
+        assertThat (d.Get "b") (tag "Value b" >> isEqualTo 2)
+        assertThat (d.Get "c") (tag "Value c" >> isEqualTo 3)
+    )
 
-    testCase "Dict-Fable - create from empty list" <| fun _ ->
+    test ("Dict-Fable - create from empty list", fun _ ->
         let d = Dict.create []
-        Expect.equal d.Count 0 "Should be empty"
-        Expect.isTrue d.IsEmpty "Should be empty"
+        assertThat d.Count (tag "Should be empty" >> isEqualTo 0)
+        assertThat d.IsEmpty (tag "Should be empty" >> isTrue)
+    )
 
     // ---------------------------------------------------------
     // Dict - AsString / ToString (FABLE_COMPILER branching)
     // ---------------------------------------------------------
 
-    testCase "Dict-Fable - AsString empty" <| fun _ ->
+    test ("Dict-Fable - AsString empty", fun _ ->
         let d = Dict<string, int>()
         let s = d.AsString
-        Expect.isTrue (s.Contains "Dict") "AsString should contain Dict"
-        Expect.isTrue (s.Contains "0" || s.Contains "empty") "AsString on empty should indicate empty"
+        assertThat (s.Contains "Dict") (tag "AsString should contain Dict" >> isTrue)
+        assertThat (s.Contains "0" || s.Contains "empty") (tag "AsString on empty should indicate empty" >> isTrue)
+    )
 
-    testCase "Dict-Fable - AsString with items" <| fun _ ->
+    test ("Dict-Fable - AsString with items", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         let s = d.AsString
-        Expect.isTrue (s.Contains "A") "AsString should contain key"
-        Expect.isTrue (s.Contains "1") "AsString should contain value"
+        assertThat (s.Contains "A") (tag "AsString should contain key" >> isTrue)
+        assertThat (s.Contains "1") (tag "AsString should contain value" >> isTrue)
+    )
 
-    testCase "Dict-Fable - AsString with more than 5 items shows ellipsis" <| fun _ ->
+    test ("Dict-Fable - AsString with more than 5 items shows ellipsis", fun _ ->
         let d = Dict<string, int>()
         for i in 1..7 do
             d.Set (string (char (64 + i))) i
         let s = d.AsString
-        Expect.isTrue (s.Contains "...") "AsString with >5 items should show ellipsis"
+        assertThat (s.Contains "...") (tag "AsString with >5 items should show ellipsis" >> isTrue)
+    )
 
-    testCase "Dict-Fable - AsString with exactly 5 items no ellipsis" <| fun _ ->
+    test ("Dict-Fable - AsString with exactly 5 items no ellipsis", fun _ ->
         let d = Dict<string, int>()
         for i in 1..5 do
             d.Set (string (char (64 + i))) i
         let s = d.AsString
-        Expect.isFalse (s.Contains "...") "AsString with exactly 5 items should not show ellipsis"
+        assertThat (s.Contains "...") (tag "AsString with exactly 5 items should not show ellipsis" >> isFalse)
+    )
 
-    testCase "Dict-Fable - ToString() empty" <| fun _ ->
+    test ("Dict-Fable - ToString() empty", fun _ ->
         let d = Dict<string, int>()
         let s = d.ToString()
-        Expect.isTrue (s.Contains "Dict") "ToString should contain Dict"
-        Expect.isTrue (s.Contains "empty") "ToString on empty should say empty"
+        assertThat (s.Contains "Dict") (tag "ToString should contain Dict" >> isTrue)
+        assertThat (s.Contains "empty") (tag "ToString on empty should say empty" >> isTrue)
+    )
 
-    testCase "Dict-Fable - ToString() with items" <| fun _ ->
+    test ("Dict-Fable - ToString() with items", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "B" 2
         let s = d.ToString()
-        Expect.isTrue (s.Contains "2") "ToString should show count"
+        assertThat (s.Contains "2") (tag "ToString should show count" >> isTrue)
+    )
 
-    testCase "Dict-Fable - ToString(n) with 0 entries to print" <| fun _ ->
+    test ("Dict-Fable - ToString(n) with 0 entries to print", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         let s = d.ToString(0)
-        Expect.isTrue (s.Contains "Dict") "ToString(0) should contain Dict"
-        Expect.isFalse (s.Contains "A : 1") "ToString(0) should not show entries"
+        assertThat (s.Contains "Dict") (tag "ToString(0) should contain Dict" >> isTrue)
+        assertThat (s.Contains "A : 1") (tag "ToString(0) should not show entries" >> isFalse)
+    )
 
-    testCase "Dict-Fable - ToString(n) with limited entries" <| fun _ ->
+    test ("Dict-Fable - ToString(n) with limited entries", fun _ ->
         let d = Dict<string, int>()
         for i in 1..10 do
             d.Set (string (char (64 + i))) i
         let s = d.ToString(3)
-        Expect.isTrue (s.Contains "...") "ToString(3) with 10 items should show ellipsis"
+        assertThat (s.Contains "...") (tag "ToString(3) with 10 items should show ellipsis" >> isTrue)
+    )
 
     // ---------------------------------------------------------
     // Dict - ICollection interface (routed differently in Fable)
     // ---------------------------------------------------------
 
-    testCase "Dict-Fable - ICollection Add and Count" <| fun _ ->
+    test ("Dict-Fable - ICollection Add and Count", fun _ ->
         let d = Dict<string, int>()
         let coll = d :> ICollection<KeyValuePair<string, int>>
         coll.Add(KeyValuePair("A", 1))
         coll.Add(KeyValuePair("B", 2))
-        Expect.equal coll.Count 2 "ICollection count should match"
+        assertThat coll.Count (tag "ICollection count should match" >> isEqualTo 2)
+    )
 
-    testCase "Dict-Fable - ICollection Contains" <| fun _ ->
+    test ("Dict-Fable - ICollection Contains", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         let coll = d :> ICollection<KeyValuePair<string, int>>
-        Expect.isTrue (coll.Contains(KeyValuePair("A", 1))) "ICollection should contain existing pair"
+        assertThat (coll.Contains(KeyValuePair("A", 1))) (tag "ICollection should contain existing pair" >> isTrue)
         // Contains checks key only in this implementation
-        Expect.isTrue (coll.Contains(KeyValuePair("A", 999))) "ICollection Contains checks key only"
+        assertThat (coll.Contains(KeyValuePair("A", 999))) (tag "ICollection Contains checks key only" >> isTrue)
+    )
 
-    testCase "Dict-Fable - ICollection Remove" <| fun _ ->
+    test ("Dict-Fable - ICollection Remove", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         let coll = d :> ICollection<KeyValuePair<string, int>>
         let removed = coll.Remove(KeyValuePair("A", 1))
-        Expect.isTrue removed "ICollection Remove should return true"
-        Expect.equal d.Count 0 "Count should be 0 after remove"
+        assertThat removed (tag "ICollection Remove should return true" >> isTrue)
+        assertThat d.Count (tag "Count should be 0 after remove" >> isEqualTo 0)
+    )
 
-    testCase "Dict-Fable - ICollection Clear" <| fun _ ->
+    test ("Dict-Fable - ICollection Clear", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "B" 2
         let coll = d :> ICollection<KeyValuePair<string, int>>
         coll.Clear()
-        Expect.equal d.Count 0 "Clear via ICollection should remove all"
+        assertThat d.Count (tag "Clear via ICollection should remove all" >> isEqualTo 0)
+    )
 
-    testCase "Dict-Fable - ICollection IsReadOnly" <| fun _ ->
+    test ("Dict-Fable - ICollection IsReadOnly", fun _ ->
         let d = Dict<string, int>()
         let coll = d :> ICollection<KeyValuePair<string, int>>
-        Expect.isFalse coll.IsReadOnly "IsReadOnly should be false"
+        assertThat coll.IsReadOnly (tag "IsReadOnly should be false" >> isFalse)
+    )
 
     // ---------------------------------------------------------
     // Dict - IDictionary interface
     // ---------------------------------------------------------
 
-    testCase "Dict-Fable - IDictionary Item get and set" <| fun _ ->
+    test ("Dict-Fable - IDictionary Item get and set", fun _ ->
         let d = Dict<string, int>() :> IDictionary<string, int>
         d.["A"] <- 1
-        Expect.equal d.["A"] 1 "IDictionary indexer should work"
+        assertThat d.["A"] (tag "IDictionary indexer should work" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - IDictionary TryGetValue existing" <| fun _ ->
+    test ("Dict-Fable - IDictionary TryGetValue existing", fun _ ->
         let d = Dict<string, int>() :> IDictionary<string, int>
         d.Add("A", 1)
         let ok, v = d.TryGetValue "A"
-        Expect.isTrue ok "TryGetValue should succeed"
-        Expect.equal v 1 "TryGetValue should return value"
+        assertThat ok (tag "TryGetValue should succeed" >> isTrue)
+        assertThat v (tag "TryGetValue should return value" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - IDictionary TryGetValue missing" <| fun _ ->
+    test ("Dict-Fable - IDictionary TryGetValue missing", fun _ ->
         let d = Dict<string, int>() :> IDictionary<string, int>
         let ok, _ = d.TryGetValue "missing"
-        Expect.isFalse ok "TryGetValue should fail for missing key"
+        assertThat ok (tag "TryGetValue should fail for missing key" >> isFalse)
+    )
 
     // ---------------------------------------------------------
     // Dict - IReadOnlyDictionary interface
     // ---------------------------------------------------------
 
-    testCase "Dict-Fable - IReadOnlyDictionary Item" <| fun _ ->
+    test ("Dict-Fable - IReadOnlyDictionary Item", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         let rod = d :> IReadOnlyDictionary<string, int>
-        Expect.equal rod.["A"] 1 "IReadOnlyDictionary indexer should work"
+        assertThat rod.["A"] (tag "IReadOnlyDictionary indexer should work" >> isEqualTo 1)
+    )
 
-    testCase "Dict-Fable - IReadOnlyDictionary ContainsKey" <| fun _ ->
+    test ("Dict-Fable - IReadOnlyDictionary ContainsKey", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         let rod = d :> IReadOnlyDictionary<string, int>
-        Expect.isTrue (rod.ContainsKey "A") "Should contain key"
-        Expect.isFalse (rod.ContainsKey "B") "Should not contain missing key"
+        assertThat (rod.ContainsKey "A") (tag "Should contain key" >> isTrue)
+        assertThat (rod.ContainsKey "B") (tag "Should not contain missing key" >> isFalse)
+    )
 
-    testCase "Dict-Fable - IReadOnlyDictionary Count" <| fun _ ->
+    test ("Dict-Fable - IReadOnlyDictionary Count", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "B" 2
         let rod = d :> IReadOnlyDictionary<string, int>
-        Expect.equal rod.Count 2 "IReadOnlyDictionary count should match"
+        assertThat rod.Count (tag "IReadOnlyDictionary count should match" >> isEqualTo 2)
+    )
 
-    testCase "Dict-Fable - IReadOnlyDictionary Keys and Values" <| fun _ ->
+    test ("Dict-Fable - IReadOnlyDictionary Keys and Values", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "B" 2
         let rod = d :> IReadOnlyDictionary<string, int>
         let keys = rod.Keys |> Seq.toList |> List.sort
         let values = rod.Values |> Seq.toList |> List.sort
-        Expect.equal keys ["A"; "B"] "Keys via IReadOnlyDictionary"
-        Expect.equal values [1; 2] "Values via IReadOnlyDictionary"
+        assertThat keys (tag "Keys via IReadOnlyDictionary" >> isEqualTo ["A"; "B"])
+        assertThat values (tag "Values via IReadOnlyDictionary" >> isEqualTo [1; 2])
+    )
 
     // =============================================================
     // DefaultDict - Fable/JS parity tests
     // =============================================================
 
-    testCase "DefaultDict-Fable - Get on missing key creates default" <| fun _ ->
+    test ("DefaultDict-Fable - Get on missing key creates default", fun _ ->
         let d = DefaultDict(fun _ -> 42)
         let v = d.Get "missing"
-        Expect.equal v 42 "Should return default value"
-        Expect.isTrue (d.ContainsKey "missing") "Key should be created"
-        Expect.equal d.Count 1 "Count should be 1"
+        assertThat v (tag "Should return default value" >> isEqualTo 42)
+        assertThat (d.ContainsKey "missing") (tag "Key should be created" >> isTrue)
+        assertThat d.Count (tag "Count should be 1" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict-Fable - Get with key-dependent default" <| fun _ ->
+    test ("DefaultDict-Fable - Get with key-dependent default", fun _ ->
         let d = DefaultDict(fun k -> String.length k)
         let v1 = d.Get "hi"
         let v2 = d.Get "hello"
-        Expect.equal v1 2 "Default for 'hi'"
-        Expect.equal v2 5 "Default for 'hello'"
+        assertThat v1 (tag "Default for 'hi'" >> isEqualTo 2)
+        assertThat v2 (tag "Default for 'hello'" >> isEqualTo 5)
+    )
 
-    testCase "DefaultDict-Fable - Item indexer creates default" <| fun _ ->
+    test ("DefaultDict-Fable - Item indexer creates default", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         let v = d.["new_key"]
-        Expect.equal v 0 "Indexer should return default"
-        Expect.isTrue (d.ContainsKey "new_key") "Key should exist after indexer access"
+        assertThat v (tag "Indexer should return default" >> isEqualTo 0)
+        assertThat (d.ContainsKey "new_key") (tag "Key should exist after indexer access" >> isTrue)
+    )
 
-    testCase "DefaultDict-Fable - Item indexer set" <| fun _ ->
+    test ("DefaultDict-Fable - Item indexer set", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.["A"] <- 99
-        Expect.equal d.["A"] 99 "Indexer set should store value"
+        assertThat d.["A"] (tag "Indexer set should store value" >> isEqualTo 99)
+    )
 
-    testCase "DefaultDict-Fable - Item indexer set overwrites" <| fun _ ->
+    test ("DefaultDict-Fable - Item indexer set overwrites", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.["A"] <- 1
         d.["A"] <- 2
-        Expect.equal d.["A"] 2 "Indexer set should overwrite"
-        Expect.equal d.Count 1 "No duplicate keys"
+        assertThat d.["A"] (tag "Indexer set should overwrite" >> isEqualTo 2)
+        assertThat d.Count (tag "No duplicate keys" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict-Fable - Set and Get with int keys" <| fun _ ->
+    test ("DefaultDict-Fable - Set and Get with int keys", fun _ ->
         let d = DefaultDict(fun _ -> "default")
         d.Set 1 "one"
         d.Set 2 "two"
-        Expect.equal (d.Get 1) "one" "Int key 1"
-        Expect.equal (d.Get 2) "two" "Int key 2"
-        Expect.equal (d.Get 3) "default" "Missing int key gets default"
+        assertThat (d.Get 1) (tag "Int key 1" >> isEqualTo "one")
+        assertThat (d.Get 2) (tag "Int key 2" >> isEqualTo "two")
+        assertThat (d.Get 3) (tag "Missing int key gets default" >> isEqualTo "default")
+    )
 
-    testCase "DefaultDict-Fable - null key throws on Get" <| fun _ ->
+    test ("DefaultDict-Fable - null key throws on Get", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.throws (fun () -> d.Get null |> ignore) "Get null key should throw"
+        assertThat (fun () -> d.Get null |> ignore) (tag "Get null key should throw" >> throws)
+    )
 
-    testCase "DefaultDict-Fable - null key throws on Set" <| fun _ ->
+    test ("DefaultDict-Fable - null key throws on Set", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.throws (fun () -> d.Set null 1) "Set null key should throw"
+        assertThat (fun () -> d.Set null 1) (tag "Set null key should throw" >> throws)
+    )
 
-    testCase "DefaultDict-Fable - null key throws on Item get" <| fun _ ->
+    test ("DefaultDict-Fable - null key throws on Item get", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.throws (fun () -> d.[null] |> ignore) "Item get null key should throw"
+        assertThat (fun () -> d.[null] |> ignore) (tag "Item get null key should throw" >> throws)
+    )
 
-    testCase "DefaultDict-Fable - null key throws on Item set" <| fun _ ->
+    test ("DefaultDict-Fable - null key throws on Item set", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.throws (fun () -> d.[null] <- 1) "Item set null key should throw"
+        assertThat (fun () -> d.[null] <- 1) (tag "Item set null key should throw" >> throws)
+    )
 
-    testCase "DefaultDict-Fable - null key throws on Pop" <| fun _ ->
+    test ("DefaultDict-Fable - null key throws on Pop", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.throws (fun () -> d.Pop null |> ignore) "Pop null key should throw"
+        assertThat (fun () -> d.Pop null |> ignore) (tag "Pop null key should throw" >> throws)
+    )
 
-    testCase "DefaultDict-Fable - null key throws on TryPop" <| fun _ ->
+    test ("DefaultDict-Fable - null key throws on TryPop", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.throws (fun () -> d.TryPop null |> ignore) "TryPop null key should throw"
+        assertThat (fun () -> d.TryPop null |> ignore) (tag "TryPop null key should throw" >> throws)
+    )
 
-    testCase "DefaultDict-Fable - Pop existing key" <| fun _ ->
+    test ("DefaultDict-Fable - Pop existing key", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 42
         let v = d.Pop "A"
-        Expect.equal v 42 "Pop should return stored value"
-        Expect.isFalse (d.ContainsKey "A") "Pop should remove key"
+        assertThat v (tag "Pop should return stored value" >> isEqualTo 42)
+        assertThat (d.ContainsKey "A") (tag "Pop should remove key" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - Pop missing key throws (does not create default)" <| fun _ ->
+    test ("DefaultDict-Fable - Pop missing key throws (does not create default)", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.throws (fun () -> d.Pop "missing" |> ignore) "Pop missing key should throw, not create default"
+        assertThat (fun () -> d.Pop "missing" |> ignore) (tag "Pop missing key should throw, not create default" >> throws)
+    )
 
-    testCase "DefaultDict-Fable - TryPop existing key" <| fun _ ->
+    test ("DefaultDict-Fable - TryPop existing key", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 42
         let v = d.TryPop "A"
-        Expect.equal v (Some 42) "TryPop should return Some"
-        Expect.isFalse (d.ContainsKey "A") "TryPop should remove key"
+        assertThat v (tag "TryPop should return Some" >> isEqualTo (Some 42))
+        assertThat (d.ContainsKey "A") (tag "TryPop should remove key" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - TryPop missing key returns None (no default creation)" <| fun _ ->
+    test ("DefaultDict-Fable - TryPop missing key returns None (no default creation)", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         let v = d.TryPop "missing"
-        Expect.equal v None "TryPop missing should return None"
-        Expect.isFalse (d.ContainsKey "missing") "TryPop should not create key"
+        assertThat v (tag "TryPop missing should return None" >> isEqualTo None)
+        assertThat (d.ContainsKey "missing") (tag "TryPop should not create key" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - TryGetValue does not create default" <| fun _ ->
+    test ("DefaultDict-Fable - TryGetValue does not create default", fun _ ->
         let d = DefaultDict(fun _ -> 42)
         let ok, _ = d.TryGetValue "missing"
-        Expect.isFalse ok "TryGetValue should return false for missing key"
-        Expect.isFalse (d.ContainsKey "missing") "TryGetValue should NOT create key"
-        Expect.equal d.Count 0 "Count should still be 0"
+        assertThat ok (tag "TryGetValue should return false for missing key" >> isFalse)
+        assertThat (d.ContainsKey "missing") (tag "TryGetValue should NOT create key" >> isFalse)
+        assertThat d.Count (tag "Count should still be 0" >> isEqualTo 0)
+    )
 
-    testCase "DefaultDict-Fable - TryGetValue existing key" <| fun _ ->
+    test ("DefaultDict-Fable - TryGetValue existing key", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 99
         let ok, v = d.TryGetValue "A"
-        Expect.isTrue ok "TryGetValue should return true"
-        Expect.equal v 99 "TryGetValue should return value"
+        assertThat ok (tag "TryGetValue should return true" >> isTrue)
+        assertThat v (tag "TryGetValue should return value" >> isEqualTo 99)
+    )
 
-    testCase "DefaultDict-Fable - ContainsKey on empty" <| fun _ ->
+    test ("DefaultDict-Fable - ContainsKey on empty", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.isFalse (d.ContainsKey "A") "Empty DefaultDict should not contain any key"
+        assertThat (d.ContainsKey "A") (tag "Empty DefaultDict should not contain any key" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - DoesNotContainKey" <| fun _ ->
+    test ("DefaultDict-Fable - DoesNotContainKey", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.isTrue (d.DoesNotContainKey "A") "Empty DefaultDict DoesNotContainKey"
+        assertThat (d.DoesNotContainKey "A") (tag "Empty DefaultDict DoesNotContainKey" >> isTrue)
         d.Set "A" 1
-        Expect.isFalse (d.DoesNotContainKey "A") "Should not say DoesNotContainKey for present key"
+        assertThat (d.DoesNotContainKey "A") (tag "Should not say DoesNotContainKey for present key" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - Remove existing key" <| fun _ ->
+    test ("DefaultDict-Fable - Remove existing key", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         let removed = d.Remove "A"
-        Expect.isTrue removed "Remove existing key should return true"
-        Expect.isFalse (d.ContainsKey "A") "Key should be gone"
+        assertThat removed (tag "Remove existing key should return true" >> isTrue)
+        assertThat (d.ContainsKey "A") (tag "Key should be gone" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - Remove missing key" <| fun _ ->
+    test ("DefaultDict-Fable - Remove missing key", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         let removed = d.Remove "missing"
-        Expect.isFalse removed "Remove missing key should return false"
+        assertThat removed (tag "Remove missing key should return false" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - Clear" <| fun _ ->
+    test ("DefaultDict-Fable - Clear", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         for i in 1..50 do d.Set (string i) i
-        Expect.equal d.Count 50 "Should have 50 entries"
+        assertThat d.Count (tag "Should have 50 entries" >> isEqualTo 50)
         d.Clear()
-        Expect.equal d.Count 0 "Clear should remove all"
+        assertThat d.Count (tag "Clear should remove all" >> isEqualTo 0)
+    )
 
-    testCase "DefaultDict-Fable - Clear preserves default function" <| fun _ ->
+    test ("DefaultDict-Fable - Clear preserves default function", fun _ ->
         let d = DefaultDict(fun _ -> 42)
         d.Set "A" 1
         d.Clear()
         let v = d.Get "B"
-        Expect.equal v 42 "Default function should still work after Clear"
+        assertThat v (tag "Default function should still work after Clear" >> isEqualTo 42)
+    )
 
-    testCase "DefaultDict-Fable - Count" <| fun _ ->
+    test ("DefaultDict-Fable - Count", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.equal d.Count 0 "Initial count 0"
+        assertThat d.Count (tag "Initial count 0" >> isEqualTo 0)
         d.Set "A" 1
-        Expect.equal d.Count 1 "Count after set"
+        assertThat d.Count (tag "Count after set" >> isEqualTo 1)
         let _ = d.Get "B" // creates default
-        Expect.equal d.Count 2 "Count after Get on missing key"
+        assertThat d.Count (tag "Count after Get on missing key" >> isEqualTo 2)
         d.Remove "A" |> ignore
-        Expect.equal d.Count 1 "Count after remove"
+        assertThat d.Count (tag "Count after remove" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict-Fable - Keys and Values" <| fun _ ->
+    test ("DefaultDict-Fable - Keys and Values", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "X" 10
         d.Set "Y" 20
         let keys = d.Keys |> Seq.toList |> List.sort
         let values = d.Values |> Seq.toList |> List.sort
-        Expect.equal keys ["X"; "Y"] "Keys"
-        Expect.equal values [10; 20] "Values"
+        assertThat keys (tag "Keys" >> isEqualTo ["X"; "Y"])
+        assertThat values (tag "Values" >> isEqualTo [10; 20])
+    )
 
-    testCase "DefaultDict-Fable - Items" <| fun _ ->
+    test ("DefaultDict-Fable - Items", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         d.Set "B" 2
         let items = d.Items |> Seq.toList |> List.sortBy fst
-        Expect.equal items [("A", 1); ("B", 2)] "Items should return tuples"
+        assertThat items (tag "Items should return tuples" >> isEqualTo [("A", 1); ("B", 2)])
+    )
 
-    testCase "DefaultDict-Fable - empty string key" <| fun _ ->
+    test ("DefaultDict-Fable - empty string key", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "" 42
-        Expect.equal (d.Get "") 42 "Empty string key should work"
+        assertThat (d.Get "") (tag "Empty string key should work" >> isEqualTo 42)
+    )
 
-    testCase "DefaultDict-Fable - null value allowed" <| fun _ ->
+    test ("DefaultDict-Fable - null value allowed", fun _ ->
         let d = DefaultDict(fun _ -> "default")
         d.Set "key" null
-        Expect.equal (d.Get "key") null "Null value should be stored and retrieved"
+        assertThat (d.Get "key") (tag "Null value should be stored and retrieved" >> isEqualTo null)
+    )
 
-    testCase "DefaultDict-Fable - reference type default (list)" <| fun _ ->
+    test ("DefaultDict-Fable - reference type default (list)", fun _ ->
         let d = DefaultDict(fun _ -> ResizeArray<int>())
         d.Get("A").Add(1)
         d.Get("A").Add(2)
         d.Get("B").Add(10)
-        Expect.equal (d.Get("A") |> Seq.toList) [1; 2] "List for A"
-        Expect.equal (d.Get("B") |> Seq.toList) [10] "List for B"
+        assertThat (d.Get("A") |> Seq.toList) (tag "List for A" >> isEqualTo [1; 2])
+        assertThat (d.Get("B") |> Seq.toList) (tag "List for B" >> isEqualTo [10])
+    )
 
-    testCase "DefaultDict-Fable - ref cell default (value type wrapper)" <| fun _ ->
+    test ("DefaultDict-Fable - ref cell default (value type wrapper)", fun _ ->
         let d = DefaultDict(fun _ -> ref 0)
         incr d.["counter1"]
         incr d.["counter1"]
         incr d.["counter2"]
-        Expect.equal d.["counter1"].Value 2 "Counter1 should be 2"
-        Expect.equal d.["counter2"].Value 1 "Counter2 should be 1"
+        assertThat d.["counter1"].Value (tag "Counter1 should be 2" >> isEqualTo 2)
+        assertThat d.["counter2"].Value (tag "Counter2 should be 1" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict-Fable - int key with default" <| fun _ ->
+    test ("DefaultDict-Fable - int key with default", fun _ ->
         let d = DefaultDict(fun k -> k * 10)
-        Expect.equal (d.Get 5) 50 "Default for key 5"
-        Expect.equal (d.Get 0) 0 "Default for key 0"
-        Expect.equal (d.Get -3) -30 "Default for key -3"
+        assertThat (d.Get 5) (tag "Default for key 5" >> isEqualTo 50)
+        assertThat (d.Get 0) (tag "Default for key 0" >> isEqualTo 0)
+        assertThat (d.Get -3) (tag "Default for key -3" >> isEqualTo (-30))
+    )
 
-    testCase "DefaultDict-Fable - many entries" <| fun _ ->
+    test ("DefaultDict-Fable - many entries", fun _ ->
         let d = DefaultDict(fun k -> k * k)
         for i in 0..999 do
             let _ = d.Get i
             ()
-        Expect.equal d.Count 1000 "Should have 1000 entries"
-        Expect.equal (d.Get 0) 0 "Value at 0"
-        Expect.equal (d.Get 999) (999 * 999) "Value at 999"
+        assertThat d.Count (tag "Should have 1000 entries" >> isEqualTo 1000)
+        assertThat (d.Get 0) (tag "Value at 0" >> isEqualTo 0)
+        assertThat (d.Get 999) (tag "Value at 999" >> isEqualTo (999 * 999))
+    )
 
-    testCase "DefaultDict-Fable - create from pairs" <| fun _ ->
+    test ("DefaultDict-Fable - create from pairs", fun _ ->
         let d = DefaultDict.create (fun _ -> 0) [("a", 1); ("b", 2)]
-        Expect.equal d.Count 2 "Should have 2 items"
-        Expect.equal (d.Get "a") 1 "Existing value a"
-        Expect.equal (d.Get "b") 2 "Existing value b"
-        Expect.equal (d.Get "c") 0 "Missing key gets default"
+        assertThat d.Count (tag "Should have 2 items" >> isEqualTo 2)
+        assertThat (d.Get "a") (tag "Existing value a" >> isEqualTo 1)
+        assertThat (d.Get "b") (tag "Existing value b" >> isEqualTo 2)
+        assertThat (d.Get "c") (tag "Missing key gets default" >> isEqualTo 0)
+    )
 
-    testCase "DefaultDict-Fable - create from empty" <| fun _ ->
+    test ("DefaultDict-Fable - create from empty", fun _ ->
         let d = DefaultDict.create (fun _ -> 99) []
-        Expect.equal d.Count 0 "Should be empty"
-        Expect.equal (d.Get "any") 99 "Missing key gets default"
+        assertThat d.Count (tag "Should be empty" >> isEqualTo 0)
+        assertThat (d.Get "any") (tag "Missing key gets default" >> isEqualTo 99)
+    )
 
-    testCase "DefaultDict-Fable - Add method" <| fun _ ->
+    test ("DefaultDict-Fable - Add method", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Add("A", 1)
-        Expect.equal (d.Get "A") 1 "Add should store value"
+        assertThat (d.Get "A") (tag "Add should store value" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict-Fable - ContainsValue" <| fun _ ->
+    test ("DefaultDict-Fable - ContainsValue", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 42
-        Expect.isTrue (d.ContainsValue 42) "Should find existing value"
-        Expect.isFalse (d.ContainsValue 99) "Should not find missing value"
+        assertThat (d.ContainsValue 42) (tag "Should find existing value" >> isTrue)
+        assertThat (d.ContainsValue 99) (tag "Should not find missing value" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - enumerate empty" <| fun _ ->
+    test ("DefaultDict-Fable - enumerate empty", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         let items = d |> Seq.toList
-        Expect.equal items [] "Enumerating empty DefaultDict should yield empty list"
+        assertThat items (tag "Enumerating empty DefaultDict should yield empty list" >> isEqualTo [])
+    )
 
-    testCase "DefaultDict-Fable - enumerate with items" <| fun _ ->
+    test ("DefaultDict-Fable - enumerate with items", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         d.Set "B" 2
         let items = d |> Seq.map (fun kvp -> kvp.Key, kvp.Value) |> Seq.toList |> List.sortBy fst
-        Expect.equal items [("A", 1); ("B", 2)] "Should enumerate all entries"
+        assertThat items (tag "Should enumerate all entries" >> isEqualTo [("A", 1); ("B", 2)])
+    )
 
     // DefaultDict - AsString / ToString (FABLE_COMPILER branching)
 
-    testCase "DefaultDict-Fable - AsString empty" <| fun _ ->
+    test ("DefaultDict-Fable - AsString empty", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         let s = d.AsString
-        Expect.isTrue (s.Contains "DefaultDict") "AsString should contain DefaultDict"
-        Expect.isTrue (s.Contains "empty") "AsString on empty should say empty"
+        assertThat (s.Contains "DefaultDict") (tag "AsString should contain DefaultDict" >> isTrue)
+        assertThat (s.Contains "empty") (tag "AsString on empty should say empty" >> isTrue)
+    )
 
-    testCase "DefaultDict-Fable - AsString with items" <| fun _ ->
+    test ("DefaultDict-Fable - AsString with items", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         let s = d.AsString
-        Expect.isTrue (s.Contains "A") "AsString should contain key"
-        Expect.isTrue (s.Contains "1") "AsString should contain value"
+        assertThat (s.Contains "A") (tag "AsString should contain key" >> isTrue)
+        assertThat (s.Contains "1") (tag "AsString should contain value" >> isTrue)
+    )
 
-    testCase "DefaultDict-Fable - AsString with more than 5 items shows ellipsis" <| fun _ ->
+    test ("DefaultDict-Fable - AsString with more than 5 items shows ellipsis", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         for i in 1..7 do
             d.Set (string (char (64 + i))) i
         let s = d.AsString
-        Expect.isTrue (s.Contains "...") "AsString with >5 items should show ellipsis"
+        assertThat (s.Contains "...") (tag "AsString with >5 items should show ellipsis" >> isTrue)
+    )
 
-    testCase "DefaultDict-Fable - AsString with exactly 5 items no ellipsis" <| fun _ ->
+    test ("DefaultDict-Fable - AsString with exactly 5 items no ellipsis", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         for i in 1..5 do
             d.Set (string (char (64 + i))) i
         let s = d.AsString
-        Expect.isFalse (s.Contains "...") "AsString with exactly 5 items should not show ellipsis"
+        assertThat (s.Contains "...") (tag "AsString with exactly 5 items should not show ellipsis" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - ToString() empty" <| fun _ ->
+    test ("DefaultDict-Fable - ToString() empty", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         let s = d.ToString()
-        Expect.isTrue (s.Contains "DefaultDict") "ToString should contain DefaultDict"
-        Expect.isTrue (s.Contains "empty") "ToString on empty should say empty"
+        assertThat (s.Contains "DefaultDict") (tag "ToString should contain DefaultDict" >> isTrue)
+        assertThat (s.Contains "empty") (tag "ToString on empty should say empty" >> isTrue)
+    )
 
-    testCase "DefaultDict-Fable - ToString() with items" <| fun _ ->
+    test ("DefaultDict-Fable - ToString() with items", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         d.Set "B" 2
         let s = d.ToString()
-        Expect.isTrue (s.Contains "2") "ToString should show count"
+        assertThat (s.Contains "2") (tag "ToString should show count" >> isTrue)
+    )
 
-    testCase "DefaultDict-Fable - ToString(0) hides entries" <| fun _ ->
+    test ("DefaultDict-Fable - ToString(0) hides entries", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         let s = d.ToString(0)
-        Expect.isTrue (s.Contains "DefaultDict") "Should contain DefaultDict"
-        Expect.isFalse (s.Contains "A : 1") "Should not show entries"
+        assertThat (s.Contains "DefaultDict") (tag "Should contain DefaultDict" >> isTrue)
+        assertThat (s.Contains "A : 1") (tag "Should not show entries" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - ToString(n) with limited entries" <| fun _ ->
+    test ("DefaultDict-Fable - ToString(n) with limited entries", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         for i in 1..10 do
             d.Set (string (char (64 + i))) i
         let s = d.ToString(3)
-        Expect.isTrue (s.Contains "...") "ToString(3) with 10 items should show ellipsis"
+        assertThat (s.Contains "...") (tag "ToString(3) with 10 items should show ellipsis" >> isTrue)
+    )
 
     // DefaultDict - ICollection interface
 
-    testCase "DefaultDict-Fable - ICollection Add" <| fun _ ->
+    test ("DefaultDict-Fable - ICollection Add", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         let coll = d :> ICollection<KeyValuePair<string, int>>
         coll.Add(KeyValuePair("A", 1))
-        Expect.equal d.Count 1 "ICollection Add should work"
-        Expect.equal (d.Get "A") 1 "Value should be accessible"
+        assertThat d.Count (tag "ICollection Add should work" >> isEqualTo 1)
+        assertThat (d.Get "A") (tag "Value should be accessible" >> isEqualTo 1)
+    )
 
-    testCase "DefaultDict-Fable - ICollection Contains" <| fun _ ->
+    test ("DefaultDict-Fable - ICollection Contains", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         let coll = d :> ICollection<KeyValuePair<string, int>>
-        Expect.isTrue (coll.Contains(KeyValuePair("A", 1))) "Should contain existing pair"
+        assertThat (coll.Contains(KeyValuePair("A", 1))) (tag "Should contain existing pair" >> isTrue)
+    )
 
-    testCase "DefaultDict-Fable - ICollection Remove" <| fun _ ->
+    test ("DefaultDict-Fable - ICollection Remove", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         let coll = d :> ICollection<KeyValuePair<string, int>>
         let removed = coll.Remove(KeyValuePair("A", 1))
-        Expect.isTrue removed "Should remove"
-        Expect.equal d.Count 0 "Count should be 0"
+        assertThat removed (tag "Should remove" >> isTrue)
+        assertThat d.Count (tag "Count should be 0" >> isEqualTo 0)
+    )
 
-    testCase "DefaultDict-Fable - ICollection Clear" <| fun _ ->
+    test ("DefaultDict-Fable - ICollection Clear", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         d.Set "B" 2
         let coll = d :> ICollection<KeyValuePair<string, int>>
         coll.Clear()
-        Expect.equal d.Count 0 "Should be empty after clear"
+        assertThat d.Count (tag "Should be empty after clear" >> isEqualTo 0)
+    )
 
-    testCase "DefaultDict-Fable - ICollection IsReadOnly" <| fun _ ->
+    test ("DefaultDict-Fable - ICollection IsReadOnly", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         let coll = d :> ICollection<KeyValuePair<string, int>>
-        Expect.isFalse coll.IsReadOnly "Should not be read-only"
+        assertThat coll.IsReadOnly (tag "Should not be read-only" >> isFalse)
+    )
 
-    testCase "DefaultDict-Fable - IReadOnlyCollection Count" <| fun _ ->
+    test ("DefaultDict-Fable - IReadOnlyCollection Count", fun _ ->
         let d = DefaultDict(fun _ -> 0)
         d.Set "A" 1
         d.Set "B" 2
         let roc = d :> IReadOnlyCollection<KeyValuePair<string, int>>
-        Expect.equal roc.Count 2 "IReadOnlyCollection count should match"
+        assertThat roc.Count (tag "IReadOnlyCollection count should match" >> isEqualTo 2)
+    )
 
     // =============================================================
     // IDictionary Extension Methods - Fable/JS parity tests
     // =============================================================
 
-    testCase "IDic-Fable - SetValue and GetValue" <| fun _ ->
+    test ("IDic-Fable - SetValue and GetValue", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         d.SetValue "K" 42
-        Expect.equal (d.GetValue "K") 42 "SetValue/GetValue round-trip"
+        assertThat (d.GetValue "K") (tag "SetValue/GetValue round-trip" >> isEqualTo 42)
+    )
 
-    testCase "IDic-Fable - GetValue missing key throws" <| fun _ ->
+    test ("IDic-Fable - GetValue missing key throws", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
-        Expect.throws (fun () -> d.GetValue "missing" |> ignore) "GetValue missing key should throw"
+        assertThat (fun () -> d.GetValue "missing" |> ignore) (tag "GetValue missing key should throw" >> throws)
+    )
 
-    testCase "IDic-Fable - Pop existing" <| fun _ ->
+    test ("IDic-Fable - Pop existing", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         d.["A"] <- 1
         let v = d.Pop "A"
-        Expect.equal v 1 "Pop should return value"
-        Expect.isFalse (d.ContainsKey "A") "Pop should remove key"
+        assertThat v (tag "Pop should return value" >> isEqualTo 1)
+        assertThat (d.ContainsKey "A") (tag "Pop should remove key" >> isFalse)
+    )
 
-    testCase "IDic-Fable - Pop missing throws" <| fun _ ->
+    test ("IDic-Fable - Pop missing throws", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
-        Expect.throws (fun () -> d.Pop "missing" |> ignore) "Pop missing should throw"
+        assertThat (fun () -> d.Pop "missing" |> ignore) (tag "Pop missing should throw" >> throws)
+    )
 
-    testCase "IDic-Fable - TryPop existing" <| fun _ ->
+    test ("IDic-Fable - TryPop existing", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         d.["A"] <- 1
         let v = d.TryPop "A"
-        Expect.equal v (Some 1) "TryPop should return Some"
-        Expect.isFalse (d.ContainsKey "A") "TryPop should remove key"
+        assertThat v (tag "TryPop should return Some" >> isEqualTo (Some 1))
+        assertThat (d.ContainsKey "A") (tag "TryPop should remove key" >> isFalse)
+    )
 
-    testCase "IDic-Fable - TryPop missing returns None" <| fun _ ->
+    test ("IDic-Fable - TryPop missing returns None", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         let v = d.TryPop "missing"
-        Expect.equal v None "TryPop missing should return None"
+        assertThat v (tag "TryPop missing should return None" >> isEqualTo None)
+    )
 
-    testCase "IDic-Fable - Items empty" <| fun _ ->
+    test ("IDic-Fable - Items empty", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         let items = d.Items |> Seq.toList
-        Expect.equal items [] "Items on empty should be empty"
+        assertThat items (tag "Items on empty should be empty" >> isEqualTo [])
+    )
 
-    testCase "IDic-Fable - Items with entries" <| fun _ ->
+    test ("IDic-Fable - Items with entries", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         d.["A"] <- 1
         d.["B"] <- 2
         let items = d.Items |> Seq.toList |> List.sortBy fst
-        Expect.equal items [("A", 1); ("B", 2)] "Items should return tuples"
+        assertThat items (tag "Items should return tuples" >> isEqualTo [("A", 1); ("B", 2)])
+    )
 
-    testCase "IDic-Fable - KeysSeq and ValuesSeq" <| fun _ ->
+    test ("IDic-Fable - KeysSeq and ValuesSeq", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         d.["A"] <- 1
         d.["B"] <- 2
         let ks = d.KeysSeq |> Seq.toList |> List.sort
         let vs = d.ValuesSeq |> Seq.toList |> List.sort
-        Expect.equal ks ["A"; "B"] "KeysSeq"
-        Expect.equal vs [1; 2] "ValuesSeq"
+        assertThat ks (tag "KeysSeq" >> isEqualTo ["A"; "B"])
+        assertThat vs (tag "ValuesSeq" >> isEqualTo [1; 2])
+    )
 
-    testCase "IDic-Fable - DoesNotContainKey" <| fun _ ->
+    test ("IDic-Fable - DoesNotContainKey", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
-        Expect.isTrue (d.DoesNotContainKey "A") "Empty dict DoesNotContainKey"
+        assertThat (d.DoesNotContainKey "A") (tag "Empty dict DoesNotContainKey" >> isTrue)
         d.["A"] <- 1
-        Expect.isFalse (d.DoesNotContainKey "A") "Present key"
+        assertThat (d.DoesNotContainKey "A") (tag "Present key" >> isFalse)
+    )
 
-    testCase "IDic-Fable - AsString empty" <| fun _ ->
+    test ("IDic-Fable - AsString empty", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         let s = d.AsString
-        Expect.isTrue (s.Contains "empty") "AsString on empty should say empty"
+        assertThat (s.Contains "empty") (tag "AsString on empty should say empty" >> isTrue)
+    )
 
-    testCase "IDic-Fable - AsString with items" <| fun _ ->
+    test ("IDic-Fable - AsString with items", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         d.["A"] <- 1
         let s = d.AsString
-        Expect.isTrue (s.Contains "A") "AsString should contain key"
-        Expect.isTrue (s.Contains "1") "AsString should contain value"
+        assertThat (s.Contains "A") (tag "AsString should contain key" >> isTrue)
+        assertThat (s.Contains "1") (tag "AsString should contain value" >> isTrue)
+    )
 
-    testCase "IDic-Fable - AsString with more than 5 items shows ellipsis" <| fun _ ->
+    test ("IDic-Fable - AsString with more than 5 items shows ellipsis", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         for i in 1..7 do
             d.[string (char (64 + i))] <- i
         let s = d.AsString
-        Expect.isTrue (s.Contains "...") "Should show ellipsis for >5 items"
+        assertThat (s.Contains "...") (tag "Should show ellipsis for >5 items" >> isTrue)
+    )
 
-    testCase "IDic-Fable - ToString(n) with 0 entries" <| fun _ ->
+    test ("IDic-Fable - ToString(n) with 0 entries", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         d.["A"] <- 1
         let s = d.ToString(0)
-        Expect.isFalse (s.Contains "A : 1") "Should not show entries with 0 entriesToPrint"
+        assertThat (s.Contains "A : 1") (tag "Should not show entries with 0 entriesToPrint" >> isFalse)
+    )
 
-    testCase "IDic-Fable - ToString(n) with limited entries shows ellipsis" <| fun _ ->
+    test ("IDic-Fable - ToString(n) with limited entries shows ellipsis", fun _ ->
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         for i in 1..10 do
             d.[string (char (64 + i))] <- i
         let s = d.ToString(3)
-        Expect.isTrue (s.Contains "...") "Should show ellipsis"
+        assertThat (s.Contains "...") (tag "Should show ellipsis" >> isTrue)
+    )
 
     // IDictionary extensions used via Dict (cast to IDictionary)
 
-    testCase "IDic-Fable - Dict cast to IDictionary Pop" <| fun _ ->
+    test ("IDic-Fable - Dict cast to IDictionary Pop", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 42
         let iDict = d :> IDictionary<string, int>
         let v = iDict.Pop "A"
-        Expect.equal v 42 "Pop via IDictionary on Dict"
-        Expect.isFalse (d.ContainsKey "A") "Should be removed from Dict too"
+        assertThat v (tag "Pop via IDictionary on Dict" >> isEqualTo 42)
+        assertThat (d.ContainsKey "A") (tag "Should be removed from Dict too" >> isFalse)
+    )
 
-    testCase "IDic-Fable - Dict cast to IDictionary TryPop" <| fun _ ->
+    test ("IDic-Fable - Dict cast to IDictionary TryPop", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 42
         let iDict = d :> IDictionary<string, int>
         let v = iDict.TryPop "A"
-        Expect.equal v (Some 42) "TryPop via IDictionary on Dict"
-        Expect.equal d.Count 0 "Should be removed"
+        assertThat v (tag "TryPop via IDictionary on Dict" >> isEqualTo (Some 42))
+        assertThat d.Count (tag "Should be removed" >> isEqualTo 0)
+    )
 
-    testCase "IDic-Fable - Dict cast to IDictionary Items" <| fun _ ->
+    test ("IDic-Fable - Dict cast to IDictionary Items", fun _ ->
         let d = Dict<string, int>()
         d.Set "A" 1
         d.Set "B" 2
         let iDict = d :> IDictionary<string, int>
         let items = iDict.Items |> Seq.toList |> List.sortBy fst
-        Expect.equal items [("A", 1); ("B", 2)] "Items via IDictionary on Dict"
+        assertThat items (tag "Items via IDictionary on Dict" >> isEqualTo [("A", 1); ("B", 2)])
+    )
 
     // Edge cases: value types as values
 
-    testCase "Dict-Fable - struct tuple values" <| fun _ ->
+    test ("Dict-Fable - struct tuple values", fun _ ->
         let d = Dict<string, struct(int * int)>()
         d.Set "point" (struct(1, 2))
         let struct(x, y) = d.Get "point"
-        Expect.equal x 1 "Struct tuple x"
-        Expect.equal y 2 "Struct tuple y"
+        assertThat x (tag "Struct tuple x" >> isEqualTo 1)
+        assertThat y (tag "Struct tuple y" >> isEqualTo 2)
+    )
 
-    testCase "DefaultDict-Fable - zero default for int" <| fun _ ->
+    test ("DefaultDict-Fable - zero default for int", fun _ ->
         let d = DefaultDict(fun _ -> 0)
-        Expect.equal (d.Get "any") 0 "Default int should be 0"
+        assertThat (d.Get "any") (tag "Default int should be 0" >> isEqualTo 0)
+    )
 
-    testCase "DefaultDict-Fable - empty string default" <| fun _ ->
+    test ("DefaultDict-Fable - empty string default", fun _ ->
         let d = DefaultDict(fun _ -> "")
-        Expect.equal (d.Get "any") "" "Default string should be empty"
+        assertThat (d.Get "any") (tag "Default string should be empty" >> isEqualTo "")
+    )
 
-    testCase "DefaultDict-Fable - false default for bool" <| fun _ ->
+    test ("DefaultDict-Fable - false default for bool", fun _ ->
         let d = DefaultDict(fun _ -> false)
-        Expect.equal (d.Get "any") false "Default bool should be false"
+        assertThat (d.Get "any") (tag "Default bool should be false" >> isEqualTo false)
+    )
 
 
 
@@ -1854,7 +2109,7 @@ let tests  =
 
 
 
-  ]
+  ])
 
 
 

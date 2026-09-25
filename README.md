@@ -208,6 +208,7 @@ d.ToString(1)   // prints only the first entry
 
 ## Tests
 All Tests run in both javascript and dotnet.
+They are written with [Scriptorium](https://fable-hub.github.io/Scriptorium/guides/getting-started/), so the same tests run unchanged on both.
 Successful Fable compilation to typescript is verified too.
 Go to the tests folder:
 
@@ -215,15 +216,16 @@ Go to the tests folder:
 cd Tests
 ```
 
-For testing with .NET using Expecto:
+For testing with .NET:
 
 ```bash
 dotnet run
 ```
 
-for JS testing with Fable.Mocha and TS verification:
+for JS testing via Fable and TS verification:
 
 ```bash
+npm ci
 npm test
 ```
 
