@@ -21,9 +21,9 @@ updates:
       # the allow key is needed so that the ignore key below works
       - dependency-type: "all"
     ignore:
+      # keeps the library at its minimum FSharp.Core version.
+      # This also ignores FSharp.Core in Tests.fsproj, bump that one manually.
       - dependency-name: "FSharp.Core"
-    cooldown:
-      default-days: 7
 
 
 

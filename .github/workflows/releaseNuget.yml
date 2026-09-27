@@ -5,8 +5,16 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
 
+permissions:
+  contents: read
+
 jobs:
+  # run the .NET and JS tests first, don't publish if they fail
+  test:
+    uses: ./.github/workflows/test.yml
+
   publish:
+    needs: test
     runs-on: windows-latest
 
     steps:
@@ -22,7 +30,7 @@ jobs:
       run: |
         $content = Get-Content -Path README.md -Raw
         $content = $content -replace "<br>", "  "
-        Set-Content -Path README.md -Value $content    
+        Set-Content -Path README.md -Value $content
 
     - name: Build
       run: dotnet build --configuration Release
@@ -37,21 +45,17 @@ jobs:
       run: |
         CHANGELOG_VERSION=$(cat ./Src/bin/ChangelogVersion.txt | tr -d '[:space:]')
         echo "CHANGELOG_VERSION=$CHANGELOG_VERSION"
-        echo "github.ref_name=${{ github.ref_name }}"  
+        echo "github.ref_name=${{ github.ref_name }}"
         if [ "${{ github.ref_name }}" != "$CHANGELOG_VERSION" ]; then
           echo "Version mismatch: git tag (${{ github.ref_name }}) and version in CHANGELOG.md ($CHANGELOG_VERSION) are not the same."
           exit 1
-        fi 
-
-    - name: Get repository name
-      id: repo-name
-      run: echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+        fi
 
     - name: Publish NuGet package
       run: |
-        $nupkgPath = Get-ChildItem -Path "./Src/bin/Release/" -Filter "*.symbols.nupkg" -Recurse | Select-Object -First 1 -ExpandProperty FullName
+        $nupkgPath = Get-ChildItem -Path "./Src/bin/Release/" -Filter "*.nupkg" -Recurse | Select-Object -First 1 -ExpandProperty FullName
         if (-not $nupkgPath) {
-          Write-Error "No .symbols.nupkg file found in ./Src/bin/Release/ folder."
+          Write-Error "No .nupkg file found in ./Src/bin/Release/ folder."
           exit 1
         }
         dotnet nuget push $nupkgPath --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
