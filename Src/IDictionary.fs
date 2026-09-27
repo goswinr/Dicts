@@ -19,20 +19,38 @@ module internal ExtensionsExceptions =
     let argumentFail msg : 'T = Printf.kprintf (fun s -> raise (ArgumentException(s))) msg
 
 
-/// Shared implementation of AsString and ToString(entriesToPrint)
+/// Shared implementation of AsString and ToString(entriesToPrint),
+/// with the same format as in https://github.com/goswinr/ResizeArrayT
 module internal PrettyPrint =
 
+    /// The item as a string on one line, cut off after charCount characters.
+    let itemInOneLineWithMaxChars charCount (item:'T) =
+        let s =  $"{item}".Split('\n') |> Array.map (fun l -> l.Trim()) |> String.concat " "
+        if s.Length > charCount then
+            s.Substring(0, charCount) + " ..."
+        else
+            s
+
+    /// One entry as "  key: value", key and value each on one line and cut off after 200 characters.
+    let entryLine (KeyValue(k:'K, v:'V)) : string =
+        $"  {itemInOneLineWithMaxChars 200 k}: {itemInOneLineWithMaxChars 200 v}"
+
     /// The header, followed by up to entriesToPrint entries, one per line.
-    /// Ends with "  ..." if not all entries are shown.
+    /// If entries are left out, "  ..." and the last entry follow.
+    /// If only one entry would be left out, it is shown instead of "  ...".
     let withEntries (header:string) (count:int) (entries:seq<KeyValuePair<'K,'V>>) (entriesToPrint:int) : string =
         let b = Text.StringBuilder()
         b.Append header |> ignore
         if count > 0 && entriesToPrint > 0 then
             b.AppendLine ":" |> ignore
-            for KeyValue(k, v) in entries |> Seq.truncate entriesToPrint do // Add sorting ? print 3 lines??
-                b.AppendLine $"  {k} : {v}" |> ignore
-            if count > entriesToPrint then
+            for kv in entries |> Seq.truncate entriesToPrint do
+                b.AppendLine (entryLine kv) |> ignore
+            // compare with count-1 instead of entriesToPrint+1 to avoid an overflow for Int32.MaxValue
+            if count - 1 = entriesToPrint then
+                b.AppendLine (entryLine (Seq.last entries)) |> ignore // print one more line if it's the last instead of "..."
+            elif count - 1 > entriesToPrint then
                 b.AppendLine "  ..." |> ignore
+                b.AppendLine (entryLine (Seq.last entries)) |> ignore
         b.ToString()
 
 
@@ -125,7 +143,7 @@ module ExtensionsIDictionary =
         member d.DoesNotContainKey(key) = not(d.ContainsKey(key))
 
 
-        /// A string representation of the IDictionary including the count of entries and the first 5 entries.
+        /// A string representation of the IDictionary including the count of entries, the first 5 entries and the last entry.
         #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
         member inline this.AsString : string =  // inline needed for Fable reflection
         #else
@@ -134,12 +152,12 @@ module ExtensionsIDictionary =
             PrettyPrint.withEntries (toString this) this.Count this 5
 
 
-        /// <summary>A string representation of the IDictionary including the count of entries
-        /// and the specified amount of entries.</summary>
+        /// <summary>A string representation of the IDictionary including the count of entries,
+        /// the specified amount of entries and the last entry.</summary>
         /// <param name="entriesToPrint">The maximum number of entries to show. Zero or less shows only the header.</param>
         #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
-        member inline this.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
+        member inline this.ToString(entriesToPrint:int) : string =  // inline needed for Fable reflection
         #else
-        member this.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
+        member this.ToString(entriesToPrint:int) : string = // on .NET inline fails because it's using internal DefaultDictUtil
         #endif
             PrettyPrint.withEntries (toString this) this.Count this entriesToPrint

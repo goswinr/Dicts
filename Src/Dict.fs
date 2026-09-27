@@ -252,7 +252,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         toString k v dic
 
 
-    /// A string representation of the Dict including the count of entries and the first 5 entries.
+    /// A string representation of the Dict including the count of entries, the first 5 entries and the last entry.
     /// When used in Fable this member is inlined for reflection to work.
     #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     member inline _.AsString : string =  // inline needed for Fable reflection
@@ -262,14 +262,14 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         PrettyPrint.withEntries (toString (typeof<'K>.Name) (typeof<'V>.Name) dic) dic.Count dic 5
 
 
-    /// <summary>A string representation of the Dict including the count of entries
-    /// and the specified amount of entries.
+    /// <summary>A string representation of the Dict including the count of entries,
+    /// the specified amount of entries and the last entry.
     /// When used in Fable this member is inlined for reflection to work.</summary>
     /// <param name="entriesToPrint">The maximum number of entries to show. Zero or less shows only the header.</param>
     #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
-    member inline _.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
+    member inline _.ToString(entriesToPrint:int) : string =  // inline needed for Fable reflection
     #else
-    member _.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
+    member _.ToString(entriesToPrint:int) : string = // on .NET inline fails because it's using internal DefaultDictUtil
     #endif
         PrettyPrint.withEntries (toString (typeof<'K>.Name) (typeof<'V>.Name) dic) dic.Count dic entriesToPrint
 

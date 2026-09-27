@@ -204,15 +204,17 @@ d.DoesNotContainKey "w"  // true
 
 ### Pretty printing
 
-All types provide readable string representations:
+All types provide readable string representations, in the same format as [ResizeArrayT](https://github.com/goswinr/ResizeArrayT):
 ```fsharp
-let d = Dict.create [ "name", "Alice"; "city", "Zurich" ]
+let d = Dict.create [ "name", "Alice"; "city", "Zurich"; "lang", "F#" ]
 
-d.ToString()    // "Dict<String,String> with 2 items"
-d.AsString      // "Dict<String,String> with 2 items:\n  name : Alice\n  city : Zurich\n"
-d.ToString(1)   // "Dict<String,String> with 2 items:\n  name : Alice\n  ...\n"
+d.ToString()    // "Dict<String,String> with 3 items"
+d.AsString      // "Dict<String,String> with 3 items:\n  name: Alice\n  city: Zurich\n  lang: F#\n"
+d.ToString(1)   // "Dict<String,String> with 3 items:\n  name: Alice\n  ...\n  lang: F#\n"
 ```
 
+`AsString` shows up to 5 entries, `ToString(n)` up to n entries. If entries are left out, `...` and the last entry follow.
+Each key and value is shown on one line and cut off after 200 characters.
 In Fable `ToString()` shows the generic parameters as `Dict<'K,'V>`, while `AsString` and `ToString(n)` show the actual type names.
 
 ## Full API Documentation

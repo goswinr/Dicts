@@ -244,7 +244,7 @@ let tests  =
         let b = Dict<string, int>()
         b.["A"] <- 1
         let result = b.AsString.Replace("\r\n", "\n").Replace("\n", "$")
-        assertThat result (tag "AsString should return the correct string for a dictionary with one item" >> isEqualTo "Dict<String,Int32> with 1 item:$  A : 1$")
+        assertThat result (tag "AsString should return the correct string for a dictionary with one item" >> isEqualTo "Dict<String,Int32> with 1 item:$  A: 1$")
     )
 
     test ("AsString - multiple items", fun _ ->
@@ -256,7 +256,7 @@ let tests  =
         b.["E"] <- 5
         b.["F"] <- 6
         let result = b.AsString.Replace("\r\n", "\n").Replace("\n", "$")
-        assertThat result (tag "AsString should return the correct string for a dictionary with multiple items" >> isEqualTo "Dict<String,Int32> with 6 items:$  A : 1$  B : 2$  C : 3$  D : 4$  E : 5$  ...$")
+        assertThat result (tag "AsString should show the sixth and last entry instead of ..." >> isEqualTo "Dict<String,Int32> with 6 items:$  A: 1$  B: 2$  C: 3$  D: 4$  E: 5$  F: 6$")
     )
 
 
@@ -582,7 +582,7 @@ let tests  =
             b.["A"] <- 1
             b.["B"] <- 2
             let result = b.AsString.Replace("\r\n", "\n").Replace("\n", "$")
-            assertThat result (tag "DefaultDict should return the correct string representation with items" >> isEqualTo "DefaultDict<String,Int32> with 2 items:$  A : 1$  B : 2$")
+            assertThat result (tag "DefaultDict should return the correct string representation with items" >> isEqualTo "DefaultDict<String,Int32> with 2 items:$  A: 1$  B: 2$")
     )
 
     test ("DefaultDict - KV-Add", fun _ ->
@@ -1429,7 +1429,7 @@ let tests  =
         d.Set "A" 1
         let s = d.ToString(0)
         assertThat (s.Contains "Dict") (tag "ToString(0) should contain Dict" >> isTrue)
-        assertThat (s.Contains "A : 1") (tag "ToString(0) should not show entries" >> isFalse)
+        assertThat (s.Contains "A: 1") (tag "ToString(0) should not show entries" >> isFalse)
     )
 
     test ("Dict-Fable - ToString(n) with limited entries", fun _ ->
@@ -1882,7 +1882,7 @@ let tests  =
         d.Set "A" 1
         let s = d.ToString(0)
         assertThat (s.Contains "DefaultDict") (tag "Should contain DefaultDict" >> isTrue)
-        assertThat (s.Contains "A : 1") (tag "Should not show entries" >> isFalse)
+        assertThat (s.Contains "A: 1") (tag "Should not show entries" >> isFalse)
     )
 
     test ("DefaultDict-Fable - ToString(n) with limited entries", fun _ ->
@@ -2041,7 +2041,7 @@ let tests  =
         let d = Dictionary<string, int>() :> IDictionary<string, int>
         d.["A"] <- 1
         let s = d.ToString(0)
-        assertThat (s.Contains "A : 1") (tag "Should not show entries with 0 entriesToPrint" >> isFalse)
+        assertThat (s.Contains "A: 1") (tag "Should not show entries with 0 entriesToPrint" >> isFalse)
     )
 
     test ("IDic-Fable - ToString(n) with limited entries shows ellipsis", fun _ ->
@@ -2284,26 +2284,38 @@ let tests  =
         let norm (s:string) = s.Replace("\r\n", "\n").Replace("\n", "$")
         let d = Dict<string, int>()
         assertThat (d.ToString(-1)) (tag "negative count on empty Dict" >> isEqualTo "empty Dict<String,Int32>")
-        d.Set "A" 1
-        d.Set "B" 2
-        d.Set "C" 3
-        assertThat (norm (d.ToString(0))) (tag "zero entries: header only" >> isEqualTo "Dict<String,Int32> with 3 items")
-        assertThat (norm (d.ToString(-1))) (tag "negative count: header only" >> isEqualTo "Dict<String,Int32> with 3 items")
-        assertThat (norm (d.ToString(2))) (tag "two of three entries" >> isEqualTo "Dict<String,Int32> with 3 items:$  A : 1$  B : 2$  ...$")
-        assertThat (norm (d.ToString(3))) (tag "all entries, no ellipsis" >> isEqualTo "Dict<String,Int32> with 3 items:$  A : 1$  B : 2$  C : 3$")
+        for k, v in ["A", 1; "B", 2; "C", 3; "D", 4] do d.Set k v
+        let all = "Dict<String,Int32> with 4 items:$  A: 1$  B: 2$  C: 3$  D: 4$"
+        assertThat (norm (d.ToString(0))) (tag "zero entries: header only" >> isEqualTo "Dict<String,Int32> with 4 items")
+        assertThat (norm (d.ToString(-1))) (tag "negative count: header only" >> isEqualTo "Dict<String,Int32> with 4 items")
+        assertThat (norm (d.ToString(2))) (tag "two entries, then ... and the last entry" >> isEqualTo "Dict<String,Int32> with 4 items:$  A: 1$  B: 2$  ...$  D: 4$")
+        assertThat (norm (d.ToString(3))) (tag "only one entry left: shown instead of ..." >> isEqualTo all)
+        assertThat (norm (d.ToString(4))) (tag "all entries" >> isEqualTo all)
+        assertThat (norm (d.ToString(Int32.MaxValue))) (tag "Int32.MaxValue prints all entries once" >> isEqualTo all)
     )
 
     test ("ToString(n) edge cases DefaultDict and IDictionary", fun _ ->
         let norm (s:string) = s.Replace("\r\n", "\n").Replace("\n", "$")
         let dd = DefaultDict(fun _ -> 0)
-        dd.Set "A" 1
-        dd.Set "B" 2
-        assertThat (norm (dd.ToString(0))) (tag "DefaultDict zero entries: header only" >> isEqualTo "DefaultDict<String,Int32> with 2 items")
-        assertThat (norm (dd.ToString(1))) (tag "DefaultDict one of two entries" >> isEqualTo "DefaultDict<String,Int32> with 2 items:$  A : 1$  ...$")
+        for k, v in ["A", 1; "B", 2; "C", 3] do dd.Set k v
+        assertThat (norm (dd.ToString(0))) (tag "DefaultDict zero entries: header only" >> isEqualTo "DefaultDict<String,Int32> with 3 items")
+        assertThat (norm (dd.ToString(1))) (tag "DefaultDict one entry, then ... and the last entry" >> isEqualTo "DefaultDict<String,Int32> with 3 items:$  A: 1$  ...$  C: 3$")
+        assertThat (norm (dd.ToString(2))) (tag "DefaultDict only one entry left: shown instead of ..." >> isEqualTo "DefaultDict<String,Int32> with 3 items:$  A: 1$  B: 2$  C: 3$")
         let iDic = Dictionary<string, int>() :> IDictionary<string, int>
-        iDic.["A"] <- 1
+        for k, v in ["A", 1; "B", 2; "C", 3] do iDic.[k] <- v
         assertThat ((iDic.ToString(0)).Contains "...") (tag "IDictionary zero entries: no ellipsis" >> isFalse)
         assertThat ((iDic.ToString(-1)).Contains "...") (tag "IDictionary negative count: no ellipsis" >> isFalse)
+        assertThat (norm (iDic.ToString(1))) (tag "IDictionary one entry, then ... and the last entry" >> satisfy (fun s -> s.EndsWith ":$  A: 1$  ...$  C: 3$"))
+        assertThat (norm (iDic.ToString(Int32.MaxValue))) (tag "IDictionary Int32.MaxValue prints all entries once" >> satisfy (fun s -> s.EndsWith ":$  A: 1$  B: 2$  C: 3$"))
+    )
+
+    test ("AsString shows each entry on one line and cuts long values", fun _ ->
+        let d = Dict<string, string>()
+        d.Set "multi" "line1\nline2"
+        d.Set "long" (String.replicate 300 "x")
+        let s = d.AsString.Replace("\r\n", "\n")
+        assertThat s (tag "a multi-line value is shown on one line" >> satisfy (fun s -> s.Contains "\n  multi: line1 line2\n"))
+        assertThat s (tag "a long value is cut after 200 characters" >> satisfy (fun s -> s.Contains ("\n  long: " + String.replicate 200 "x" + " ...\n")))
     )
 
   ])

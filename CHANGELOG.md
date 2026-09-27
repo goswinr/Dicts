@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING CHANGE: `Dict.create` and `DefaultDict.create` throw an ArgumentException on duplicate keys, like the `Dictionary` constructor.
 - BREAKING CHANGE: `DefaultDict.get` and `DefaultDict.set` take the key first, like `Dict.get` and `Dict.set`.
 - `IDictionary.SetValue` no longer turns every exception into a KeyNotFoundException, it only adds a nicer message for null keys.
+- `AsString` and `ToString(n)` use the same format as ResizeArrayT: entries as `key: value`, each on one line and cut off after 200 characters, and after `...` the last entry is shown too. If only one entry would be left out, it is shown instead of `...`.
 - Tests now run on [Scriptorium](https://fable-hub.github.io/Scriptorium/guides/getting-started/) (`Scriptorium.Quill` and `Scriptorium.Nib`) on .NET and JavaScript, replacing Expecto on .NET and Fable.Mocha plus the `mocha` npm package on JavaScript.
 - The JavaScript tests are run by `dotnet fable --runScript` instead of `mocha`, so `Tests/package.json` has no runtime test dependency left.
 ### Removed

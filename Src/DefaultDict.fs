@@ -158,7 +158,7 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
         #endif
         toString baseDic k v
 
-    /// A string representation of the DefaultDict including the count of entries and the first 5 entries.
+    /// A string representation of the DefaultDict including the count of entries, the first 5 entries and the last entry.
     /// When used in Fable this member is inlined for reflection to work.
     #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     member inline _.AsString : string =  // inline needed for Fable reflection
@@ -168,14 +168,14 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
         PrettyPrint.withEntries (toString baseDic (typeof<'K>.Name) (typeof<'V>.Name)) baseDic.Count baseDic 5
 
 
-    /// <summary>A string representation of the DefaultDict including the count of entries
-    /// and the specified amount of entries.
+    /// <summary>A string representation of the DefaultDict including the count of entries,
+    /// the specified amount of entries and the last entry.
     /// When used in Fable this member is inlined for reflection to work.</summary>
     /// <param name="entriesToPrint">The maximum number of entries to show. Zero or less shows only the header.</param>
     #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
-    member inline _.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
+    member inline _.ToString(entriesToPrint:int) : string =  // inline needed for Fable reflection
     #else
-    member _.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
+    member _.ToString(entriesToPrint:int) : string = // on .NET inline fails because it's using internal DefaultDictUtil
     #endif
         PrettyPrint.withEntries (toString baseDic (typeof<'K>.Name) (typeof<'V>.Name)) baseDic.Count baseDic entriesToPrint
 
