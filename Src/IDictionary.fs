@@ -64,8 +64,10 @@ module ExtensionsIDictionary =
         // overrides of existing methods are unfortunately silently ignored and not possible.
         // see https://github.com/dotnet/fsharp/issues/3692#issuecomment-334297164
 
-        /// Set value at key, adds the key if it is missing. With a nicer error message for null keys.
-        /// Same as <c>Dict.set key value dic</c>
+        /// <summary>Set value at key, adds the key if it is missing. With a nicer error message for null keys.
+        /// Same as <c>Dict.set key value dic</c></summary>
+        /// <param name="k">The key to set.</param>
+        /// <param name="v">The value to set.</param>
         member d.SetValue k v : unit =
             // this cant be called just .Set because
             // there would be a clash in member overloading a curried function with Dicts type that is also a IDictionary ??
@@ -73,14 +75,19 @@ module ExtensionsIDictionary =
             | null -> ArgumentNullException.Raise "Dicts: IDictionary.SetValue: key is null for value %A" v
             | _ -> d.[k] <- v
 
-        /// Get value at key, with nicer error messages.
+        /// <summary>Get value at key, with nicer error messages.
+        /// Throws a KeyNotFoundException if the key is not found.</summary>
+        /// <param name="k">The key to look up.</param>
         member d.GetValue k : 'V =
             let ok, v = d.TryGetValue(k)
             if ok then  v
             else KeyNotFoundException.Raise "Dicts: IDictionary.GetValue(key) failed to find key %A in %A of %d items" k d d.Count
 
 
-        /// Get a value and remove it from Dictionary, like *.pop() in Python.
+        /// <summary>Get a value and remove it from Dictionary, like *.pop() in Python.
+        /// Throws a KeyNotFoundException if the key is not found.</summary>
+        /// <param name="k">The key to remove.</param>
+        /// <returns>The value that was stored at the key.</returns>
         member d.Pop k : 'V =
             let ok, v = d.TryGetValue(k)
             if ok then
@@ -89,8 +96,9 @@ module ExtensionsIDictionary =
             else
                 KeyNotFoundException.Raise "Dicts: IDictionary.Pop(key): Failed to pop key %A in %A of %d items" k d d.Count
 
-        /// Try to get a value and remove it from Dictionary, like *.pop() in Python.
-        /// Returns None if key is not found.
+        /// <summary>Try to get a value and remove it from Dictionary, like *.pop() in Python.</summary>
+        /// <param name="k">The key to remove.</param>
+        /// <returns><c>Some value</c> if the key was found, <c>None</c> if not.</returns>
         member d.TryPop k : 'V option =
             let ok, v = d.TryGetValue(k)
             if ok then
@@ -111,8 +119,9 @@ module ExtensionsIDictionary =
         member d.KeysSeq with get() =
             seq { for kvp in d -> kvp.Key}
 
-        /// Determines whether the Dictionary does not contains the specified key.
-        /// not(dic.ContainsKey(key))
+        /// <summary>Determines whether the Dictionary does not contain the specified key.
+        /// Same as <c>not(dic.ContainsKey(key))</c></summary>
+        /// <param name="key">The key to look for.</param>
         member d.DoesNotContainKey(key) = not(d.ContainsKey(key))
 
 
@@ -125,8 +134,9 @@ module ExtensionsIDictionary =
             PrettyPrint.withEntries (toString this) this.Count this 5
 
 
-        /// A string representation of the IDictionary including the count of entries
-        /// and the specified amount of entries.
+        /// <summary>A string representation of the IDictionary including the count of entries
+        /// and the specified amount of entries.</summary>
+        /// <param name="entriesToPrint">The maximum number of entries to show. Zero or less shows only the header.</param>
         #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
         member inline this.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
         #else

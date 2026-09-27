@@ -60,6 +60,7 @@ module internal DictUtil =
     let inline removePair (kvp:KeyValuePair<'K,'V>) (dic:Dictionary<'K,'V>) : bool =
         containsPair kvp dic && dic.Remove(kvp.Key)
 
+    /// The header of the string representation, k and v are the names of the key and value types.
     let inline toString (k:string) (v:string) (dic:Dictionary<'K,'V>) : string =
         if dic.Count = 0 then
             $"empty Dict<{k},{v}>"
@@ -98,8 +99,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     new () =
         Dict(new Dictionary<'K,'V>())
 
-    /// Create a new empty Dict<'K,'V>  with an IEqualityComparer like HashIdentity.Structural.
-    /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary<'K,'V> ) with nicer Error messages on accessing missing keys.
+    /// <summary>Create a new empty Dict&lt;'K,'V&gt; with an IEqualityComparer like HashIdentity.Structural.
+    /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary&lt;'K,'V&gt; with nicer Error messages on accessing missing keys.</summary>
+    /// <param name="iEqualityComparer">The comparer used to determine the equality of keys.</param>
     new (iEqualityComparer:IEqualityComparer<'K>) =
         Dict(new Dictionary<'K,'V>(iEqualityComparer))
 
@@ -114,7 +116,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         member _.values() = dic.Values
     #endif
 
-    /// Constructs a new Dict by using the supplied Dictionary<'K,'V>  directly, without any copying of items
+    /// <summary>Constructs a new Dict by using the supplied Dictionary&lt;'K,'V&gt; directly, without any copying of items.</summary>
+    /// <param name="dic">The Dictionary to wrap. Changes to it show in the new Dict and the other way round.</param>
     static member createDirectly (dic:Dictionary<'K,'V> ) : Dict<'K,'V> =
         if isNull dic then ArgumentNullException.Raise "Dictionary in Dict.createDirectly is null"
         Dict(dic)
@@ -130,30 +133,41 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         with get k   = get' k dic
         and  set k v = set' k v dic
 
-    /// Get value for given key
+    /// <summary>Get value for given key.
+    /// Throws a KeyNotFoundException with a descriptive message if the key is not found.</summary>
+    /// <param name="key">The key to look up.</param>
     member _.Get key : 'V =
         get' key dic
 
-    /// Set value for given key, adds the key if it is missing.
-    /// Same as <c>Dict.set key value dict</c>
+    /// <summary>Set value for given key, adds the key if it is missing.
+    /// Same as <c>Dict.set key value dict</c></summary>
+    /// <param name="key">The key to set.</param>
+    /// <param name="value">The value to set.</param>
     member _.Set key value : unit =
         set' key value dic
 
 
-    /// Set value only if key does not exist yet.
-    /// Returns false if key already exist, does not set value in this case.
-    /// Same as <c>Dict.AddIfKeyAbsent key value</c>
+    /// <summary>Set value only if key does not exist yet.
+    /// Same as <c>Dict.AddIfKeyAbsent key value</c></summary>
+    /// <param name="key">The key to set.</param>
+    /// <param name="value">The value to set if the key is missing.</param>
+    /// <returns><c>true</c> if the value was set, <c>false</c> if the key already existed and nothing was changed.</returns>
     member _.SetIfKeyAbsent (key:'K) (value:'V) : bool =
         setIfKeyAbsent' "Dict.SetIfKeyAbsent" key value dic
 
-    /// Set value only if key does not exist yet.
-    /// Returns false if key already exist, does not set value in this case.
-    /// Same as <c>Dict.SetIfKeyAbsent key value</c>
+    /// <summary>Set value only if key does not exist yet.
+    /// Same as <c>Dict.SetIfKeyAbsent key value</c></summary>
+    /// <param name="key">The key to set.</param>
+    /// <param name="value">The value to set if the key is missing.</param>
+    /// <returns><c>true</c> if the value was set, <c>false</c> if the key already existed and nothing was changed.</returns>
     member _.AddIfKeyAbsent  (key:'K) (value:'V) : bool =
         setIfKeyAbsent' "Dict.AddIfKeyAbsent" key value dic
 
-    /// If the key ist not present calls the default function, set it as value at the key and return the value.
-    /// This function is an alternative to the DefaultDic type. Use it if you need to provide a custom implementation of the default function depending on the key.
+    /// <summary>If the key is not present calls the default function, sets its result as value at the key and returns it.
+    /// This function is an alternative to the DefaultDict type. Use it if you need to provide a custom implementation of the default function depending on the key.</summary>
+    /// <param name="getDefault">The function to create the value from the key, only called if the key is missing.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The existing or the newly created value.</returns>
     member _.GetOrSetDefault (getDefault:'K -> 'V) (key:'K) : 'V =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.GetOrSetDefault key is null "
@@ -165,7 +179,10 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 dic.[key] <- v
                 v
 
-    /// If the key ist not present set it as value at the key and return the value.
+    /// <summary>If the key is not present sets the default value at the key and returns it.</summary>
+    /// <param name="defaultValue">The value to set if the key is missing.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The existing value or the default value.</returns>
     member _.GetOrSetDefaultValue (defaultValue: 'V) (key:'K) : 'V =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.GetOrSetDefaultValue key is null "
@@ -176,8 +193,10 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
                 dic.[key] <- defaultValue
                 defaultValue
 
-    /// Get a value and remove key and value it from Dict.
-    /// Will fail if key does not exist
+    /// <summary>Get a value and remove the key and value from the Dict, like *.pop() in Python.
+    /// Throws a KeyNotFoundException if the key does not exist.</summary>
+    /// <param name="key">The key to remove.</param>
+    /// <returns>The value that was stored at the key.</returns>
     member _.Pop(key:'K) : 'V =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.Pop(key) key is null"
@@ -189,9 +208,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
             else
                 KeyNotFoundException.Raise "Dict.Pop(key): Failed to pop key %A in %A of %d items" key dic dic.Count
 
-    /// Try to get a value and remove key and value it from Dict.
-    /// Returns None if key is not found.
-    /// Returns Some value if key is found.
+    /// <summary>Try to get a value and remove the key and value from the Dict.</summary>
+    /// <param name="key">The key to remove.</param>
+    /// <returns><c>Some value</c> if the key was found, <c>None</c> if not.</returns>
     member _.TryPop(key:'K) : 'V option =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise "Dict.TryPop(key) key is null"
@@ -215,8 +234,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     member _.KeysSeq with get() =
         seq { for kvp in dic -> kvp.Key}
 
-    /// Determines whether the Dict does not contains the specified key.
-    /// not(dic.ContainsKey(key))
+    /// <summary>Determines whether the Dict does not contain the specified key.
+    /// Same as <c>not(dic.ContainsKey(key))</c></summary>
+    /// <param name="key">The key to look for.</param>
     member _.DoesNotContainKey(key) : bool = not(dic.ContainsKey(key))
 
 
@@ -242,9 +262,10 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         PrettyPrint.withEntries (toString (typeof<'K>.Name) (typeof<'V>.Name) dic) dic.Count dic 5
 
 
-    /// A string representation of the Dict including the count of entries
+    /// <summary>A string representation of the Dict including the count of entries
     /// and the specified amount of entries.
-    /// When used in Fable this member is inlined for reflection to work.
+    /// When used in Fable this member is inlined for reflection to work.</summary>
+    /// <param name="entriesToPrint">The maximum number of entries to show. Zero or less shows only the header.</param>
     #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     member inline _.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
     #else
@@ -285,22 +306,28 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
     // -------------------------------------methods:-------------------------------
 
-    /// Add the specified key and value to the Dict.
+    /// <summary>Add the specified key and value to the Dict.
     /// Like Dictionary.Add, it throws an ArgumentException if the key already exists.
-    /// Use .Set(key, value) or the indexer to add or replace a value.
+    /// Use .Set(key, value) or the indexer to add or replace a value.</summary>
+    /// <param name="key">The key to add.</param>
+    /// <param name="value">The value to add.</param>
     member _.Add(key:'K, value:'V) : unit = add' "Dict.Add" key value dic
 
     /// Removes all keys and values from the Dict
     member _.Clear() : unit = dic.Clear()
 
-    /// Determines whether the Dict contains the specified key.
+    /// <summary>Determines whether the Dict contains the specified key.</summary>
+    /// <param name="key">The key to look for.</param>
     member _.ContainsKey(key) : bool = dic.ContainsKey(key)
 
-    /// Determines whether the Dict contains a specific value.
+    /// <summary>Determines whether the Dict contains a specific value.</summary>
+    /// <param name="value">The value to look for.</param>
     member _.ContainsValue(value) : bool = dic.ContainsValue(value)
 
-    /// Removes the value with the specified key from the Dict.
-    /// See also .Pop(key) method that return the contained value.
+    /// <summary>Removes the value with the specified key from the Dict.
+    /// See also the .Pop(key) method that returns the removed value.</summary>
+    /// <param name="key">The key to remove.</param>
+    /// <returns><c>true</c> if the key was found and removed, <c>false</c> if not.</returns>
     member _.Remove(key) : bool = dic.Remove(key)
 
     /// <summary>Lookup an element in the Dict, assigning it to <c>refValue</c> if the element is in the Dict and return true. Otherwise returning <c>false</c> .</summary>
@@ -318,7 +345,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     member _.GetEnumerator() : Dictionary<'K,'V>.Enumerator = dic.GetEnumerator()
 
     //---------------------------------------interfaces:-------------------------------------
-    // TODO dic XML doc str
+    // The interface implementations have no own docs, editors show the docs of the interface members.
 
     interface IEnumerable<KeyValuePair<'K ,'V>> with
         member _.GetEnumerator() : IEnumerator<KeyValuePair<'K,'V>> = (dic:>IDictionary<'K,'V>).GetEnumerator()
