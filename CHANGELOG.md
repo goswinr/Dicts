@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2026-09-27
 ### Changed
 - BREAKING CHANGE: `Dict.Add`, `DefaultDict.Add`, their `IDictionary` and `ICollection` implementations and the module function `Dict.add` now work like `Dictionary.Add` and throw an ArgumentException if the key already exists. Use `Set`, the indexer or `Dict.set` to add or replace a value.
 - BREAKING CHANGE: `Dict.create` and `DefaultDict.create` throw an ArgumentException on duplicate keys, like the `Dictionary` constructor.
@@ -75,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added more tests
 
 
-[Unreleased]: https://github.com/goswinr/Dicts/compare/0.5.1...HEAD
+[0.6.0]: https://github.com/goswinr/Dicts/compare/0.5.1...0.6.0
 [0.5.1]: https://github.com/goswinr/Dicts/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/goswinr/Dicts/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/goswinr/Dicts/compare/0.3.0...0.4.0
