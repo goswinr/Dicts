@@ -2,7 +2,6 @@ module TestList
 
 open Dicts
 open System.Collections.Generic
-
 open Scriptorium.Nib.Assertion
 open type Scriptorium.Quill.Test
 
@@ -10,6 +9,18 @@ open System
 open ExtensionsIDictionary
 
 #nowarn "3370" // incr ref
+
+/// Checks that f throws and that the exception message contains the given text.
+/// On .NET it also checks the exact exception type.
+let throwsWith<'E when 'E :> exn> (text:string) (f: unit -> unit) (msg:string) =
+    assertThat f (
+        tag msg
+        >> throws
+        >> assertion (fun e -> e.Message.Contains text) (fun e -> $"message '{e.Message}' should contain '{text}'")
+        #if !FABLE_COMPILER
+        >> assertion (fun e -> e.GetType() = typeof<'E>) (fun e -> $"exception type {e.GetType().Name} should be {typeof<'E>.Name}")
+        #endif
+    )
 
 
 let tests  =
@@ -1446,8 +1457,7 @@ let tests  =
         d.Set "A" 1
         let coll = d :> ICollection<KeyValuePair<string, int>>
         assertThat (coll.Contains(KeyValuePair("A", 1))) (tag "ICollection should contain existing pair" >> isTrue)
-        // Contains checks key only in this implementation
-        assertThat (coll.Contains(KeyValuePair("A", 999))) (tag "ICollection Contains checks key only" >> isTrue)
+        assertThat (coll.Contains(KeyValuePair("A", 999))) (tag "ICollection Contains checks the value too, like Dictionary" >> isFalse)
     )
 
     test ("Dict-Fable - ICollection Remove", fun _ ->
@@ -2097,17 +2107,204 @@ let tests  =
     )
 
 
+    // =============================================================
+    // Same semantics as System.Collections.Generic.Dictionary:
+    // Add and create throw on duplicate keys, ICollection compares values
+    // =============================================================
 
+    test ("Dict.Add throws on duplicate key", fun _ ->
+        let d = Dict<string, int>()
+        d.Add("dupKey", 1)
+        throwsWith<ArgumentException> "dupKey" (fun () -> d.Add("dupKey", 2)) "Dict.Add duplicate"
+        assertThat d.["dupKey"] (tag "Value should be unchanged" >> isEqualTo 1)
+    )
 
+    test ("Dict.Add throws on null key", fun _ ->
+        let d = Dict<string, int>()
+        throwsWith<ArgumentNullException> "Dict.Add" (fun () -> d.Add(null, 1)) "Dict.Add null key"
+    )
 
+    test ("Dict IDictionary.Add throws on duplicate key", fun _ ->
+        let d = Dict<string, int>()
+        d.Set "dupKey" 1
+        let iDict = d :> IDictionary<string, int>
+        throwsWith<ArgumentException> "dupKey" (fun () -> iDict.Add("dupKey", 2)) "IDictionary.Add duplicate"
+        assertThat d.["dupKey"] (tag "Value should be unchanged" >> isEqualTo 1)
+    )
 
+    test ("Dict IDictionary indexer set null key throws", fun _ ->
+        let d = Dict<string, int>() :> IDictionary<string, int>
+        assertThat (fun () -> d.[null] <- 1) (tag "IDictionary indexer set with null key should throw" >> throws)
+    )
 
+    test ("Dict ICollection.Add throws on duplicate key", fun _ ->
+        let d = Dict<string, int>()
+        d.Set "dupKey" 1
+        let coll = d :> ICollection<KeyValuePair<string, int>>
+        throwsWith<ArgumentException> "dupKey" (fun () -> coll.Add(KeyValuePair("dupKey", 2))) "ICollection.Add duplicate"
+    )
 
+    test ("Dict ICollection Contains and Remove compare the value", fun _ ->
+        let d = Dict<string, int>()
+        d.Set "A" 1
+        let coll = d :> ICollection<KeyValuePair<string, int>>
+        assertThat (coll.Contains(KeyValuePair("A", 2))) (tag "Contains with a different value" >> isFalse)
+        assertThat (coll.Contains(KeyValuePair("B", 1))) (tag "Contains with a missing key" >> isFalse)
+        assertThat (coll.Remove(KeyValuePair("A", 2))) (tag "Remove with a different value" >> isFalse)
+        assertThat d.Count (tag "Remove with a different value should not remove" >> isEqualTo 1)
+        assertThat (coll.Remove(KeyValuePair("A", 1))) (tag "Remove with the same value" >> isTrue)
+        assertThat d.Count (tag "Remove with the same value should remove" >> isEqualTo 0)
+    )
 
+    test ("Dict ICollection Contains uses value equality", fun _ ->
+        let d = Dict<string, int list>()
+        d.Set "A" [1; 2]
+        let coll = d :> ICollection<KeyValuePair<string, int list>>
+        assertThat (coll.Contains(KeyValuePair("A", [1; 2]))) (tag "An equal list should be found" >> isTrue)
+        assertThat (coll.Contains(KeyValuePair("A", [1]))) (tag "A different list should not be found" >> isFalse)
+    )
 
+    test ("DefaultDict.Add throws on duplicate key", fun _ ->
+        let d = DefaultDict(fun _ -> 0)
+        d.Add("dupKey", 1)
+        throwsWith<ArgumentException> "dupKey" (fun () -> d.Add("dupKey", 2)) "DefaultDict.Add duplicate"
+        assertThat d.["dupKey"] (tag "Value should be unchanged" >> isEqualTo 1)
+    )
 
+    test ("DefaultDict.Add throws on null key", fun _ ->
+        let d = DefaultDict(fun _ -> 0)
+        throwsWith<ArgumentNullException> "DefaultDict.Add" (fun () -> d.Add(null, 1)) "DefaultDict.Add null key"
+    )
 
+    test ("DefaultDict ICollection.Add throws on duplicate key", fun _ ->
+        let d = DefaultDict(fun _ -> 0)
+        d.Set "dupKey" 1
+        let coll = d :> ICollection<KeyValuePair<string, int>>
+        throwsWith<ArgumentException> "dupKey" (fun () -> coll.Add(KeyValuePair("dupKey", 2))) "DefaultDict ICollection.Add duplicate"
+    )
 
+    test ("DefaultDict ICollection Contains and Remove compare the value", fun _ ->
+        let d = DefaultDict(fun _ -> 0)
+        d.Set "A" 1
+        let coll = d :> ICollection<KeyValuePair<string, int>>
+        assertThat (coll.Contains(KeyValuePair("A", 2))) (tag "Contains with a different value" >> isFalse)
+        assertThat (coll.Remove(KeyValuePair("A", 2))) (tag "Remove with a different value" >> isFalse)
+        assertThat d.Count (tag "Remove with a different value should not remove" >> isEqualTo 1)
+        assertThat (coll.Remove(KeyValuePair("A", 1))) (tag "Remove with the same value" >> isTrue)
+        assertThat d.Count (tag "Remove with the same value should remove" >> isEqualTo 0)
+    )
+
+    test ("Dict.add throws on duplicate key", fun _ ->
+        let d = Dict<string, int>()
+        Dict.add "dupKey" 1 d
+        throwsWith<ArgumentException> "dupKey" (fun () -> Dict.add "dupKey" 2 d) "Dict.add duplicate"
+        assertThat d.["dupKey"] (tag "Value should be unchanged" >> isEqualTo 1)
+    )
+
+    test ("Dict.add on a Dictionary throws on duplicate key", fun _ ->
+        let d = Dictionary<string, int>()
+        Dict.add "dupKey" 1 d
+        throwsWith<ArgumentException> "dupKey" (fun () -> Dict.add "dupKey" 2 d) "Dict.add duplicate on Dictionary"
+    )
+
+    test ("Dict.add throws on null key", fun _ ->
+        let d = Dict<string, int>()
+        throwsWith<ArgumentNullException> "Dict.add" (fun () -> Dict.add null 1 d) "Dict.add null key"
+    )
+
+    test ("Dict.create throws on duplicate keys", fun _ ->
+        throwsWith<ArgumentException> "dupKey" (fun () -> Dict.create ["dupKey", 1; "dupKey", 2] |> ignore) "Dict.create duplicate"
+    )
+
+    test ("Dict.create throws on null key", fun _ ->
+        throwsWith<ArgumentNullException> "Dict.create" (fun () -> Dict.create [(null:string), 1] |> ignore) "Dict.create null key"
+    )
+
+    test ("DefaultDict.create throws on duplicate keys", fun _ ->
+        throwsWith<ArgumentException> "dupKey" (fun () -> DefaultDict.create (fun _ -> 0) ["dupKey", 1; "dupKey", 2] |> ignore) "DefaultDict.create duplicate"
+    )
+
+    test ("Dict.createDirectly shares the Dictionary", fun _ ->
+        let src = Dictionary<string, int>()
+        src.["A"] <- 1
+        let d = Dict.createDirectly src
+        assertThat (d.Get "A") (tag "Existing item should be there" >> isEqualTo 1)
+        src.["B"] <- 2
+        assertThat d.Count (tag "Items added to the source should show in the Dict" >> isEqualTo 2)
+        d.Set "C" 3
+        assertThat src.["C"] (tag "Items added to the Dict should show in the source" >> isEqualTo 3)
+        assertThat d.InternalDictionary.Count (tag "InternalDictionary should be the source" >> isEqualTo 3)
+    )
+
+    test ("DefaultDict.createDirectly shares the Dictionary", fun _ ->
+        let src = Dictionary<string, int>()
+        src.["A"] <- 1
+        let d = DefaultDict.createDirectly (fun _ -> 0) src
+        assertThat d.Count (tag "Existing item should be there" >> isEqualTo 1)
+        assertThat (d.Get "A") (tag "Existing value" >> isEqualTo 1)
+        assertThat (d.Get "B") (tag "Default value" >> isEqualTo 0)
+        assertThat (src.ContainsKey "B") (tag "Default value should be added to the source" >> isTrue)
+        assertThat d.InternalDictionary.Count (tag "InternalDictionary should be the source" >> isEqualTo 2)
+    )
+
+    test ("DefaultDict.get and DefaultDict.set take the key first", fun _ ->
+        let d = DefaultDict(fun _ -> 0)
+        DefaultDict.set "A" 5 d
+        assertThat (DefaultDict.get "A" d) (tag "get after set" >> isEqualTo 5)
+        assertThat (d |> DefaultDict.get "B") (tag "get of missing key returns default" >> isEqualTo 0)
+    )
+
+    test ("IDictionary.SetValue null key throws", fun _ ->
+        let d = Dictionary<string, int>() :> IDictionary<string, int>
+        throwsWith<ArgumentNullException> "SetValue" (fun () -> d.SetValue null 1) "SetValue null key"
+    )
+
+    #if !FABLE_COMPILER
+    test ("IDictionary.SetValue keeps the original exception", fun _ ->
+        let ro = Collections.ObjectModel.ReadOnlyDictionary(Dictionary<string, int>()) :> IDictionary<string, int>
+        assertThat (fun () -> ro.SetValue "A" 1) (tag "Read-only dictionary should throw NotSupportedException" >> throws >> satisfy (fun e -> e :? NotSupportedException))
+    )
+    #endif
+
+    test ("Error messages contain the missing key", fun _ ->
+        let d = Dict.create ["A", 1]
+        throwsWith<KeyNotFoundException> "missingKey" (fun () -> d.Get "missingKey" |> ignore) "Dict.Get"
+        throwsWith<KeyNotFoundException> "missingKey" (fun () -> d.["missingKey"] |> ignore) "Dict.Item"
+        throwsWith<KeyNotFoundException> "missingKey" (fun () -> d.Pop "missingKey" |> ignore) "Dict.Pop"
+        throwsWith<KeyNotFoundException> "missingKey" (fun () -> Dict.get "missingKey" d |> ignore) "Dict.get"
+        throwsWith<KeyNotFoundException> "missingKey" (fun () -> Dict.pop "missingKey" d |> ignore) "Dict.pop"
+        let dd = DefaultDict(fun _ -> 0)
+        throwsWith<KeyNotFoundException> "missingKey" (fun () -> dd.Pop "missingKey" |> ignore) "DefaultDict.Pop"
+        let iDic = Dictionary<string, int>() :> IDictionary<string, int>
+        throwsWith<KeyNotFoundException> "missingKey" (fun () -> iDic.GetValue "missingKey" |> ignore) "IDictionary.GetValue"
+        throwsWith<KeyNotFoundException> "missingKey" (fun () -> iDic.Pop "missingKey" |> ignore) "IDictionary.Pop"
+    )
+
+    test ("ToString(n) edge cases", fun _ ->
+        let norm (s:string) = s.Replace("\r\n", "\n").Replace("\n", "$")
+        let d = Dict<string, int>()
+        assertThat (d.ToString(-1)) (tag "negative count on empty Dict" >> isEqualTo "empty Dict<String,Int32>")
+        d.Set "A" 1
+        d.Set "B" 2
+        d.Set "C" 3
+        assertThat (norm (d.ToString(0))) (tag "zero entries: header only" >> isEqualTo "Dict<String,Int32> with 3 items")
+        assertThat (norm (d.ToString(-1))) (tag "negative count: header only" >> isEqualTo "Dict<String,Int32> with 3 items")
+        assertThat (norm (d.ToString(2))) (tag "two of three entries" >> isEqualTo "Dict<String,Int32> with 3 items:$  A : 1$  B : 2$  ...$")
+        assertThat (norm (d.ToString(3))) (tag "all entries, no ellipsis" >> isEqualTo "Dict<String,Int32> with 3 items:$  A : 1$  B : 2$  C : 3$")
+    )
+
+    test ("ToString(n) edge cases DefaultDict and IDictionary", fun _ ->
+        let norm (s:string) = s.Replace("\r\n", "\n").Replace("\n", "$")
+        let dd = DefaultDict(fun _ -> 0)
+        dd.Set "A" 1
+        dd.Set "B" 2
+        assertThat (norm (dd.ToString(0))) (tag "DefaultDict zero entries: header only" >> isEqualTo "DefaultDict<String,Int32> with 2 items")
+        assertThat (norm (dd.ToString(1))) (tag "DefaultDict one of two entries" >> isEqualTo "DefaultDict<String,Int32> with 2 items:$  A : 1$  ...$")
+        let iDic = Dictionary<string, int>() :> IDictionary<string, int>
+        iDic.["A"] <- 1
+        assertThat ((iDic.ToString(0)).Contains "...") (tag "IDictionary zero entries: no ellipsis" >> isFalse)
+        assertThat ((iDic.ToString(-1)).Contains "...") (tag "IDictionary negative count: no ellipsis" >> isFalse)
+    )
 
   ])
 

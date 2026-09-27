@@ -1,4 +1,4 @@
-﻿namespace Dicts
+namespace Dicts
 
 open System
 open System.Collections.Generic
@@ -13,6 +13,28 @@ module internal ExtensionsExceptions =
     type KeyNotFoundException with
         /// Raise KeyNotFoundException with F# printf string formatting
         static member Raise msg : 'T = Printf.kprintf (fun s -> raise (KeyNotFoundException(s))) msg
+
+    /// Raise ArgumentException with F# printf string formatting
+    /// (a function, not a static extension, so it can't clash with ArgumentNullException.Raise)
+    let argumentFail msg : 'T = Printf.kprintf (fun s -> raise (ArgumentException(s))) msg
+
+
+/// Shared implementation of AsString and ToString(entriesToPrint)
+module internal PrettyPrint =
+
+    /// The header, followed by up to entriesToPrint entries, one per line.
+    /// Ends with "  ..." if not all entries are shown.
+    let withEntries (header:string) (count:int) (entries:seq<KeyValuePair<'K,'V>>) (entriesToPrint:int) : string =
+        let b = Text.StringBuilder()
+        b.Append header |> ignore
+        if count > 0 && entriesToPrint > 0 then
+            b.AppendLine ":" |> ignore
+            for KeyValue(k, v) in entries |> Seq.truncate entriesToPrint do // Add sorting ? print 3 lines??
+                b.AppendLine $"  {k} : {v}" |> ignore
+            if count > entriesToPrint then
+                b.AppendLine "  ..." |> ignore
+        b.ToString()
+
 
 open ExtensionsExceptions
 
@@ -42,22 +64,20 @@ module ExtensionsIDictionary =
         // overrides of existing methods are unfortunately silently ignored and not possible.
         // see https://github.com/dotnet/fsharp/issues/3692#issuecomment-334297164
 
-        /// Set/add value at key, with nicer error messages.
-        /// Same as <c>Dicts.addValue key value</c>
+        /// Set value at key, adds the key if it is missing. With a nicer error message for null keys.
+        /// Same as <c>Dict.set key value dic</c>
         member d.SetValue k v : unit =
             // this cant be called just .Set because
             // there would be a clash in member overloading a curried function with Dicts type that is also a IDictionary ??
-            try d.[k] <- v
-            with _  -> KeyNotFoundException.Raise "Dicts: IDictionary.SetValue key value ;failed for key '%A' in %A of %d items (for value: '%A')" k d d.Count v
+            match box k with // or https://stackoverflow.com/a/864860/969070
+            | null -> ArgumentNullException.Raise "Dicts: IDictionary.SetValue: key is null for value %A" v
+            | _ -> d.[k] <- v
 
         /// Get value at key, with nicer error messages.
         member d.GetValue k : 'V =
-            // try d.[k]
-            // with _ -> KeyNotFoundException.Raise "Dicts: IDictionary.GetValue(key) failed to find key %A in %A of %d items" k d d.Count
-            // don't do it like this, because get on a defaultDict should set a missing value, TryGetValue does not for defaultDict
             let ok, v = d.TryGetValue(k)
             if ok then  v
-            else KeyNotFoundException.Raise "Dicts: IDictionary.Get(key) failed to find key %A in %A of %d items" k d d.Count
+            else KeyNotFoundException.Raise "Dicts: IDictionary.GetValue(key) failed to find key %A in %A of %d items" k d d.Count
 
 
         /// Get a value and remove it from Dictionary, like *.pop() in Python.
@@ -102,14 +122,7 @@ module ExtensionsIDictionary =
         #else
         member this.AsString : string =  // on .NET inline fails because it's using internal DefaultDictUtil
         #endif
-            let b = Text.StringBuilder()
-            let c = this.Count
-            b.Append(toString this) |> ignore
-            if c > 0  then b.AppendLine ":"  |> ignore
-            for KeyValue(k, v) in this |> Seq.truncate 5 do // Add sorting ? print 3 lines??
-                b.AppendLine $"  {k} : {v}" |> ignore
-            if c > 5 then b.AppendLine "  ..." |> ignore
-            b.ToString()
+            PrettyPrint.withEntries (toString this) this.Count this 5
 
 
         /// A string representation of the IDictionary including the count of entries
@@ -119,11 +132,4 @@ module ExtensionsIDictionary =
         #else
         member this.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
         #endif
-            let b = Text.StringBuilder()
-            let c = this.Count
-            b.Append(toString this) |> ignore
-            if c > 0  && entriesToPrint > 0 then b.AppendLine ":"  |> ignore
-            for KeyValue(k, v) in this |> Seq.truncate (max 0 entriesToPrint) do // Add sorting ? print 3 lines??
-                b.AppendLine $"  {k} : {v}" |> ignore
-            if c > entriesToPrint then b.AppendLine "  ..." |> ignore
-            b.ToString()
+            PrettyPrint.withEntries (toString this) this.Count this entriesToPrint

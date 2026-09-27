@@ -4,10 +4,6 @@ open System
 open System.Collections.Generic
 open ExtensionsExceptions
 
-// #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
-// open Fable.Core.JsInterop // to work around https://github.com/fable-compiler/Fable/issues/3914
-// #endif
-
 
 module internal DictUtil =
     // these functions can't be inside the class because of https://github.com/fable-compiler/Fable/issues/3911
@@ -30,6 +26,39 @@ module internal DictUtil =
         match box key with // or https://stackoverflow.com/a/864860/969070
         | null -> ArgumentNullException.Raise  "Dict.set key is null for value %A" value
         | _ -> dic.[key] <- value
+
+    /// The internal add function, like Dictionary.Add it throws if the key is null or already exists.
+    /// The name is the calling function, used in the error message.
+    let inline add' (name:string) key value (dic:Dictionary<'K,'V>) : unit =
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise "%s: key is null for value %A" name value
+        | _ ->
+            if dic.ContainsKey key then
+                argumentFail "%s: an item with the same key %A has already been added to %A of %d items" name key dic dic.Count
+            else
+                dic.Add(key, value)
+
+    /// The internal set-if-absent function, that throws an exception if the key is null.
+    /// The name is the calling function, used in the error message.
+    let inline setIfKeyAbsent' (name:string) key value (dic:Dictionary<'K,'V>) : bool =
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise "%s: key is null for value %A" name value
+        | _ ->
+            if dic.ContainsKey key then
+                false
+            else
+                dic.[key] <- value
+                true
+
+    /// For ICollection<KeyValuePair>.Contains: true if the key exists and has an equal value, like in Dictionary.
+    let inline containsPair (kvp:KeyValuePair<'K,'V>) (dic:Dictionary<'K,'V>) : bool =
+        match dic.TryGetValue(kvp.Key) with
+        | true, v -> EqualityComparer<'V>.Default.Equals(v, kvp.Value)
+        | false, _ -> false
+
+    /// For ICollection<KeyValuePair>.Remove: only removes if the key exists and has an equal value, like in Dictionary.
+    let inline removePair (kvp:KeyValuePair<'K,'V>) (dic:Dictionary<'K,'V>) : bool =
+        containsPair kvp dic && dic.Remove(kvp.Key)
 
     let inline toString (k:string) (v:string) (dic:Dictionary<'K,'V>) : string =
         if dic.Count = 0 then
@@ -64,12 +93,6 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     // just using inheritance from Dictionary would not work because  the dict.Item method is sealed and can't have an override.
 
 
-    // #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
-    // do
-    //     emitJsStatement () "this.push = ((kv) => {this.dic.set(kv[0], kv[1])});" //  temp fix for https://github.com/fable-compiler/Fable/issues/3914
-    //     emitJsStatement () "this.clear = (() => {this.dic.clear()});"
-    // #endif
-
     /// Create a new empty Dict<'K,'V> .
     /// A Dict is a thin wrapper over System.Collections.Generic.Dictionary<'K,'V> ) with nicer Error messages on accessing missing keys.
     new () =
@@ -84,8 +107,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     // use an interface so that the members don't get mangled by Fable
     interface IJSMap<'K,'V> with // otherwise IDictionary is not available in Fable
         member _.has(x:'K) = dic.ContainsKey x
-        member _.set(x:'K, v:'V) = dic.[x] <- v
-        member _.get(x:'K) = dic.[x]
+        member _.set(x:'K, v:'V) = set' x v dic
+        member _.get(x:'K) = get' x dic
         member _.delete(x:'K) = dic.Remove x
         member _.keys() = dic.Keys
         member _.values() = dic.Values
@@ -95,21 +118,6 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     static member createDirectly (dic:Dictionary<'K,'V> ) : Dict<'K,'V> =
         if isNull dic then ArgumentNullException.Raise "Dictionary in Dict.createDirectly is null"
         Dict(dic)
-
-    /// Constructs a new Dict from a sequence of key-value tuples.
-    static member create (pairs:seq<'K * 'V>) : Dict<'K,'V> =
-        let dic = Dictionary()
-        for k, v in pairs do
-            dic.Add(k, v)
-        Dict(dic)
-
-        /// Set value for given key, same as the static <c>Dict.Add(key, value)</c>
-    static member set (key:'K) (value:'V) (dd:Dict<'K,'V>) : unit =
-        dd.Set key value
-
-    /// Get value for given key.
-    static member get key (dd:Dict<'K,'V>) : 'V =
-        dd.Get key
 
     /// Access the underlying Collections.Generic.Dictionary<'K,'V>.
     /// ATTENTION! This is not even a shallow copy, mutating it will also change this instance of Dict!
@@ -126,7 +134,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     member _.Get key : 'V =
         get' key dic
 
-    /// Set value for given key, same as the static <c>Dict.add key value</c>
+    /// Set value for given key, adds the key if it is missing.
+    /// Same as <c>Dict.set key value dict</c>
     member _.Set key value : unit =
         set' key value dic
 
@@ -135,27 +144,13 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// Returns false if key already exist, does not set value in this case.
     /// Same as <c>Dict.AddIfKeyAbsent key value</c>
     member _.SetIfKeyAbsent (key:'K) (value:'V) : bool =
-        match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "Dict.SetIfKeyAbsent key is null "
-        | _ ->
-            if dic.ContainsKey key then
-                false
-            else
-                dic.[key] <- value
-                true
+        setIfKeyAbsent' "Dict.SetIfKeyAbsent" key value dic
 
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case.
     /// Same as <c>Dict.SetIfKeyAbsent key value</c>
     member _.AddIfKeyAbsent  (key:'K) (value:'V) : bool =
-        match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "Dict.AddIfKeyAbsent key is null "
-        | _ ->
-            if dic.ContainsKey key then
-                false
-            else
-                dic.[key] <- value
-                true
+        setIfKeyAbsent' "Dict.AddIfKeyAbsent" key value dic
 
     /// If the key ist not present calls the default function, set it as value at the key and return the value.
     /// This function is an alternative to the DefaultDic type. Use it if you need to provide a custom implementation of the default function depending on the key.
@@ -178,9 +173,8 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
             match dic.TryGetValue(key) with
             |true, v-> v
             |false, _ ->
-                let v = defaultValue
-                dic.[key] <- v
-                v
+                dic.[key] <- defaultValue
+                defaultValue
 
     /// Get a value and remove key and value it from Dict.
     /// Will fail if key does not exist
@@ -245,34 +239,18 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     #else
     member _.AsString : string =  // on .NET inline fails because it's using internal DefaultDictUtil
     #endif
-        let b = Text.StringBuilder()
-        let c = dic.Count
-        let st = toString (typeof<'K>.Name) (typeof<'V>.Name) dic
-        b.Append st |> ignore
-        if c > 0  then b.AppendLine ":"  |> ignore
-        for KeyValue(k, v) in dic  |> Seq.truncate 5 do // Add sorting ? print 3 lines??
-            b.AppendLine $"  {k} : {v}" |> ignore
-        if c > 5 then b.AppendLine "  ..." |> ignore
-        b.ToString()
+        PrettyPrint.withEntries (toString (typeof<'K>.Name) (typeof<'V>.Name) dic) dic.Count dic 5
 
 
     /// A string representation of the Dict including the count of entries
     /// and the specified amount of entries.
-    /// /// When used in Fable this member is inlined for reflection to work.
+    /// When used in Fable this member is inlined for reflection to work.
     #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     member inline _.ToString(entriesToPrint) : string =  // inline needed for Fable reflection
     #else
     member _.ToString(entriesToPrint) : string = // on .NET inline fails because it's using internal DefaultDictUtil
     #endif
-        let b = Text.StringBuilder()
-        let c = dic.Count
-        let st = toString (typeof<'K>.Name) (typeof<'V>.Name) dic
-        b.Append st |> ignore
-        if c > 0  && entriesToPrint > 0 then b.AppendLine ":"  |> ignore
-        for KeyValue(k, v) in dic |> Seq.truncate (max 0 entriesToPrint) do // Add sorting ? print 3 lines??
-            b.AppendLine $"  {k} : {v}" |> ignore
-        if c > entriesToPrint then b.AppendLine "  ..." |> ignore
-        b.ToString()
+        PrettyPrint.withEntries (toString (typeof<'K>.Name) (typeof<'V>.Name) dic) dic.Count dic entriesToPrint
 
 
     // -------------------------------------------------------------------
@@ -308,7 +286,9 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     // -------------------------------------methods:-------------------------------
 
     /// Add the specified key and value to the Dict.
-    member _.Add(key:'K, value:'V) : unit = set' key value dic
+    /// Like Dictionary.Add, it throws an ArgumentException if the key already exists.
+    /// Use .Set(key, value) or the indexer to add or replace a value.
+    member _.Add(key:'K, value:'V) : unit = add' "Dict.Add" key value dic
 
     /// Removes all keys and values from the Dict
     member _.Clear() : unit = dic.Clear()
@@ -346,25 +326,17 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     interface Collections.IEnumerable with // Non generic needed too ?
         member __.GetEnumerator() : Collections.IEnumerator = dic.GetEnumerator():> System.Collections.IEnumerator
 
-
-    // interface Collections.ICollection with // Non generic needed too ? // would yield invalid signatures in Fable Typescript target
+    // The non generic Collections.ICollection is not implemented because it would yield invalid signatures in Fable Typescript target:
     // https://fable.io/repl/#?code=LAKA9gDgpgdgBAZQJ4GcAuUC2pK0ajTAOgCUBXGNAS0yiIElKoAnSBFgNyoGMoUdo8ZOixEAwmAA2kqN2pgYKIgHFYLHqFBok0OAFkkAER5oAPAHIA0gBpzANTgB3ABZ4rALigBHMgENJVNpwAHxwABQAlHAAvJogcAlwMmhwACY8MXDGclQKvsxIFjb2wZFxiXBUTMwAZr68cPQAojBktMy+AEYyppZQSHb+ZFAACr5UzEVwtnbBoY6BzqAVFbSYnSxwAPoqUGgtbSy+aGDMkZl1VJILaM41cABEABoP5YlVGLX1UHAS0rLyRQMA7tLoyJyLOAAeihcAAcgo4ABzNTMHjWOAwKBQVI4uAnMBwZYrBJrDbMbY7VT7Vqgk5nKLROCXa6Le7PV4gYkJGGVap1Bp-GQ5BRKehCgG5eA3ZzQ2EI+AorFo7gYrE4vEEuAAfm5cpWZM2OwkFBSTJZMvZLz1vNWWHJ23EkCQABUwGF8swMVRGczxqzblbORVbYlDRSdvQUMgYNxnKwYFQAF5483+y2Pa3xRKh0n2o1EGPcEhgMBmv1XDMct4JD4sAU-cVSYWA3r9QaSYZjCZFGZzCG3PV29YFgCCqVSYQAHr6LWzM8GSXBw46xDJ8uc05X59XsySVzsSFgwBwfgBrDgQC7pndZpfL-MRp2UcaKOAXq9MisBu4Lodhx9V2dN0PWYL1KlnG9Az-PcDUAyMUCPXxUgAeRgSQkGvbdoN3e8DydU0sJ-IMaz5T4G0abJAXyQorD7Acllg4cHUjQh-xJGVkT2d9EiZdJuAAbTPABddiVl8GBUgSFBuLPOAOEyfihOEuBTAAWnkokuSYgCRyfPpUCIqs7yXfCO2GFAjNvRd93gohx0nM8MQ4SDsN-XDTLsiQXyqFADJ4rdiJgvC7JdApqXMqAwjPfp3CsaY4AE0wULINBghU5goBqSK4HcOBOiQTKagsWYojyzpS0kKycJM2y9MdI9MBPKKYqQVygo5IA&html=Q&css=Q
-    //     member _.Count = dic.Count
-
-    //     member _.CopyTo(arr, i) = (dic:>Collections.ICollection).CopyTo(arr, i)
-
-    //     member _.IsSynchronized= (dic:>Collections.ICollection).IsSynchronized
-
-    //     member _.SyncRoot= (dic:>Collections.ICollection).SyncRoot
 
     interface ICollection<KeyValuePair<'K,'V>> with
-        member _.Add(x) : unit = set' x.Key x.Value dic
+        member _.Add(kvp) : unit = add' "Dict.Add" kvp.Key kvp.Value dic
 
         member _.Clear() : unit = dic.Clear()
 
-        member _.Remove kvp : bool = dic.Remove(kvp.Key) // (dic:>ICollection<KeyValuePair<'K,'V>>).Remove kvp
+        member _.Remove kvp : bool = removePair kvp dic
 
-        member _.Contains kvp : bool =  dic.ContainsKey kvp.Key  // (dic:>ICollection<KeyValuePair<'K,'V>>).Contains kvp
+        member _.Contains kvp : bool = containsPair kvp dic
 
         member _.CopyTo(arr, i) : unit = (dic:>ICollection<KeyValuePair<'K,'V>>).CopyTo(arr, i)
 
@@ -382,7 +354,7 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
 
         member _.Values = (dic:>IDictionary<'K,'V>).Values
 
-        member _.Add(k, v) : unit = dic.Add(k, v)
+        member _.Add(k, v) : unit = add' "Dict.Add" k v dic
 
         member _.ContainsKey k : bool = dic.ContainsKey k
 
@@ -412,23 +384,3 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
             let found = dic.TryGetValue(key, &out)
             refValue <- out
             found
-
-
-    // TODO
-
-
-    //member _.GetObjectData(info,context) = dic.GetObjectData(info,context)
-
-    //member _.OnDeserialization() = dic.OnDeserialization()
-
-    //member _.Equals() = dic.Equals()
-
-    //member _.GetHashCode() = dic.GetHashCode()
-
-    //member _.GetType() = dic.GetType()
-
-
-    //interface _.ISerializable() = dic.ISerializable()
-
-    //interface _.IDeserializationCallback() = dic.IDeserializationCallback()
-

@@ -7,8 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- BREAKING CHANGE: `Dict.Add`, `DefaultDict.Add`, their `IDictionary` and `ICollection` implementations and the module function `Dict.add` now work like `Dictionary.Add` and throw an ArgumentException if the key already exists. Use `Set`, the indexer or `Dict.set` to add or replace a value.
+- BREAKING CHANGE: `Dict.create` and `DefaultDict.create` throw an ArgumentException on duplicate keys, like the `Dictionary` constructor.
+- BREAKING CHANGE: `DefaultDict.get` and `DefaultDict.set` take the key first, like `Dict.get` and `Dict.set`.
+- `IDictionary.SetValue` no longer turns every exception into a KeyNotFoundException, it only adds a nicer message for null keys.
 - Tests now run on [Scriptorium](https://fable-hub.github.io/Scriptorium/guides/getting-started/) (`Scriptorium.Quill` and `Scriptorium.Nib`) on .NET and JavaScript, replacing Expecto on .NET and Fable.Mocha plus the `mocha` npm package on JavaScript.
 - The JavaScript tests are run by `dotnet fable --runScript` instead of `mocha`, so `Tests/package.json` has no runtime test dependency left.
+### Removed
+- BREAKING CHANGE: the static members `create`, `get` and `set` on the `Dict<'K,'V>` type. They were hidden by the `Dict` module functions of the same name.
+### Fixed
+- `DefaultDict.createDirectly` ignored the given Dictionary and returned an empty DefaultDict.
+- `ICollection<KeyValuePair>.Contains` and `.Remove` on `Dict` and `DefaultDict` now compare the value too, like `Dictionary`.
+- `ToString(n)` with n <= 0 no longer appends "  ..." to the header line.
+- Wrong function names in some error messages.
 
 ## [0.5.1] - 2026-09-07
 ### Fixed
@@ -46,11 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - TryPop function
 ### Changed
-- in IDictionary rename Get ans Set to GetValue and SetValue
+- in IDictionary rename Get and Set to GetValue and SetValue
 
 ## [0.2.1] - 2024-10-30
 ### Changed
-- Removed IDictionary and IEnumerable interface becaus not compatible with Fable JS & TS yet
+- Removed IDictionary and IEnumerable interface because not compatible with Fable JS & TS yet
 - Unified API
 ### Fixed
 - fixed ToString() members

@@ -12,22 +12,23 @@
 
 This F# library provides:
 
-- A dedicated `Dict<'T>` type. It is a thin wrapper around `Dictionary<'T>` with more functionality and nicer Error messages.
+- A dedicated `Dict<'K,'V>` type. It is a thin wrapper around `Dictionary<'K,'V>` with more functionality and nicer Error messages.
 
-- A `DefaultDict<'T>` type. It works like [Python's' defaultdict](https://docs.python.org/3/library/collections.html#collections.defaultdict).<br>
+- A `DefaultDict<'K,'V>` type. It works like [Python's defaultdict](https://docs.python.org/3/library/collections.html#collections.defaultdict).<br>
 By providing a default function in the constructor it will always return a value for any key.
 
-- Extension methods for working with the `IDictionary<'T>` interface.
+- Extension methods for working with the `IDictionary<'K,'V>` interface.
 
 It also works in JS and TS with [Fable](https://fable.io/).
 
 This library was designed for use with F# scripting.
-Functions and methods never return null.
-Only functions starting with `try...` will return an F# Option.
+It follows the semantics of `System.Collections.Generic.Dictionary`,
+but a missing key never gives you a null or default value silently.
+Functions starting with `try...` return an F# Option (except `TryGetValue`, which keeps the .NET `bool * value` shape).
 Otherwise when a function fails on invalid input it will throw a descriptive exception.
 
-I was always annoyed that a KeyNotFoundExceptions does not include the actual bad key nor a pretty printed dictionary.
-This library fixes that in `iDictionary.Get`, `iDictionary.Set` and other item access functions.
+I was always annoyed that a KeyNotFoundException does not include the actual bad key nor a pretty printed dictionary.
+This library fixes that in `Dict.Get`, the `Dict` indexer, `Pop`, the `IDictionary` extension `GetValue` and other item access functions.
 
 ## Examples
 
@@ -42,7 +43,7 @@ open Dicts
 `Dict<'K,'V>` is a thin wrapper around `Dictionary<'K,'V>` that gives descriptive exceptions when a key is missing, including the key, item count, and a pretty-printed dictionary.
 
 ```fsharp
-// Create from key-value pairs
+// Create from key-value pairs (throws on duplicate keys, like the Dictionary constructor)
 let d = Dict.create [ "a", 1; "b", 2; "c", 3 ]
 
 d.["a"]          // 1
@@ -50,9 +51,13 @@ d.Get "b"        // 2
 d.Set "d" 4      // adds or updates key "d"
 d.Count          // 4
 
+// Add works like Dictionary.Add: it throws if the key already exists.
+d.Add("e", 5)    // adds key "e"
+d.Add("e", 6)    // throws ArgumentException, use d.Set or d.["e"] <- 6 to replace a value
+
 // Nicer error messages than System.Collections.Generic.Dictionary:
 d.["z"]          // throws KeyNotFoundException:
-                 // "Dict.get failed to find key "z" in Dict<...> of 4 items"
+                 // "Dict.get failed to find key "z" in seq [[a, 1]; [b, 2]; [c, 3]; [d, 4]; ...] of 5 items"
 
 // Check for keys
 d.ContainsKey "a"       // true
@@ -126,6 +131,10 @@ dd.["x"]                   // 0  (now "x" IS created with the default)
 dd.ContainsKey "x"         // true
 ```
 
+`DefaultDict` implements `IEnumerable`, `ICollection` and `IReadOnlyCollection` of `KeyValuePair`, but not `IDictionary`,
+because a `TryGetValue` that finds nothing while `Get` always returns a value would break the `IDictionary` contract.
+So the `Dict` module functions below don't take a `DefaultDict`. Use `dd.InternalDictionary` if you need an `IDictionary`.
+
 ### Dict module — Functional-style operations
 
 The `Dict` module provides functions that work on any `IDictionary<'K,'V>`, including plain `Dictionary` and `Dict`.
@@ -133,9 +142,10 @@ The `Dict` module provides functions that work on any `IDictionary<'K,'V>`, incl
 ```fsharp
 let d = Dict.create [ "a", 1; "b", 2; "c", 3 ]
 
-// Functional get / set / tryGet
+// Functional get / set / add / tryGet
 Dict.get "a" d            // 1
-Dict.set "d" 4 d          // sets key "d" to 4
+Dict.set "d" 4 d          // sets key "d" to 4 (adds or replaces)
+Dict.add "d" 5 d          // throws ArgumentException, key "d" exists already (like Dictionary.Add)
 Dict.tryGet "z" d         // None
 Dict.tryGet "a" d         // Some 1
 
@@ -171,6 +181,8 @@ expensiveComputation 5   // prints "computing 5...", returns 25
 expensiveComputation 5   // returns 25 immediately, no print
 ```
 
+The cache is a plain `Dictionary`, so don't call a memoized function from several threads at the same time.
+
 ### IDictionary extensions
 
 Extension methods available on any `IDictionary<'K,'V>` (including `Dictionary<'K,'V>`):
@@ -198,8 +210,10 @@ let d = Dict.create [ "name", "Alice"; "city", "Zurich" ]
 
 d.ToString()    // "Dict<String,String> with 2 items"
 d.AsString      // "Dict<String,String> with 2 items:\n  name : Alice\n  city : Zurich\n"
-d.ToString(1)   // prints only the first entry
+d.ToString(1)   // "Dict<String,String> with 2 items:\n  name : Alice\n  ...\n"
 ```
+
+In Fable `ToString()` shows the generic parameters as `Dict<'K,'V>`, while `AsString` and `ToString(n)` show the actual type names.
 
 ## Full API Documentation
 

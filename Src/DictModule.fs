@@ -15,6 +15,7 @@ module Dict =
     /// Caches the results of a function in a Dictionary.
     /// The argument 'T is packed in a wrapper so it can be unit or null(=None) too.
     /// (A Dictionary would fail on a null as key )
+    /// The cache is not thread-safe, don't call the returned function from several threads at the same time.
     let memoize (f: 'T -> 'U)  : 'T -> 'U =
         // https://stackoverflow.com/questions/20548864/memoize-a-function-of-type-a
         let cache = Dictionary<Wrapper<'T>,'U>() // using a Dictionary  fails on a null or unit key
@@ -24,7 +25,7 @@ module Dict =
             | true, res -> res
             | false, _ ->
                 let res = f x
-                cache.Add(w, res)
+                cache.[w] <- res
                 res
 
 
@@ -34,16 +35,23 @@ module Dict =
         if ok then  v
         else KeyNotFoundException.Raise "Dict.get failed to find key %A in %A of %d items" key dic dic.Count
 
-    /// Set value at key in a IDictionary
+    /// Set value at key in a IDictionary, adds the key if it is missing.
     /// just d.[k]<-v
     let set (key:'Key) (value:'Value) (dic:IDictionary<'Key,'Value>) : unit =
         dic.[key] <- value
 
 
-    /// Set value at key in a IDictionary
-    /// just d.[k]<-v
+    /// Add a key and value to a IDictionary.
+    /// Like Dictionary.Add, it throws an ArgumentException if the key already exists.
+    /// Use Dict.set to add or replace a value.
     let add (key:'Key) (value:'Value) (dic:IDictionary<'Key,'Value>) : unit =
-        dic.[key] <- value
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise "Dict.add: key is null for value %A" value
+        | _ ->
+            if dic.ContainsKey key then
+                argumentFail "Dict.add: an item with the same key %A has already been added to %A of %d items" key dic dic.Count
+            else
+                dic.Add(key, value)
 
     /// Tries to get a value from a IDictionary
     let tryGet (k:'Key) (dic:IDictionary<'Key,'Value>) : 'Value option=
@@ -51,44 +59,44 @@ module Dict =
         if ok then Some v
         else None
 
-    /// Create a Dict from seq of key and value pairs
+    /// Create a Dict from seq of key and value pairs.
+    /// Like the Dictionary constructor, it throws an ArgumentException on duplicate keys.
     let create (xs:seq<'Key * 'Value>) : Dict<'Key,'Value>=
-        let dic = Dict()
+        if isNull xs then ArgumentNullException.Raise "seq in Dict.create is null"
+        let dic = Dictionary()
         for k,v in xs do
-            dic.[k] <- v
-        dic
+            DictUtil.add' "Dict.create" k v dic
+        Dict.createDirectly dic
+
+    /// The shared implementation of setIfKeyAbsent and addIfKeyAbsent.
+    /// The name is the calling function, used in the error message.
+    let private setIfAbsent (name:string) (key:'Key) (value:'Value) (dic:IDictionary<'Key,'Value>) : bool =
+        match box key with // or https://stackoverflow.com/a/864860/969070
+        | null -> ArgumentNullException.Raise "%s: key is null for value %A" name value
+        | _ ->
+            if dic.ContainsKey key then
+                false
+            else
+                dic.[key] <- value
+                true
 
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
     /// Same as <c>Dict.addIfKeyAbsent key value dic</c>
     let setIfKeyAbsent  (key:'Key) (value:'Value)  (dic:IDictionary<'Key,'Value>) : bool =
-        match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise $"Dict.setIfKeyAbsent key is null, value: {value}"
-        | _ ->
-            if dic.ContainsKey key then
-                false
-            else
-                dic.[key] <- value
-                true
+        setIfAbsent "Dict.setIfKeyAbsent" key value dic
 
     /// Set value only if key does not exist yet.
     /// Returns false if key already exist, does not set value in this case
     /// Same as <c>Dict.setIfKeyAbsent key value dic</c>
     let addIfKeyAbsent  (key:'Key) (value:'Value)  (dic:IDictionary<'Key,'Value>) : bool =
-        match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise $"Dict.addIfKeyAbsent key is null, value: {value}"
-        | _ ->
-            if dic.ContainsKey key then
-                false
-            else
-                dic.[key] <- value
-                true
+        setIfAbsent "Dict.addIfKeyAbsent" key value dic
 
     /// If the key ist not present calls the default function, set it as value at the key and return the value.
     /// This function is an alternative to the DefaultDict type. Use it if you need to provide a custom implementation of the default function depending on the key.
     let getOrSetDefault (getDefault:'Key -> 'Value) (key:'Key)  (dic:IDictionary<'Key,'Value>) : 'Value =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "Dict.getOrSetDefault key is null, value"
+        | null -> ArgumentNullException.Raise "Dict.getOrSetDefault: key is null"
         | _ ->
             match dic.TryGetValue(key) with
             |true, v-> v
@@ -100,20 +108,19 @@ module Dict =
     /// If the key ist not present set it as value at the key and return the value.
     let getOrSetDefaultValue (defaultValue: 'Value) (key:'Key)  (dic:IDictionary<'Key,'Value>) : 'Value =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise $"Dict.getOrSetDefaultValue key is null, value"
+        | null -> ArgumentNullException.Raise "Dict.getOrSetDefaultValue: key is null for default value %A" defaultValue
         | _ ->
             match dic.TryGetValue(key) with
             |true, v-> v
             |false, _ ->
-                let v = defaultValue
-                dic.[key] <- v
-                v
+                dic.[key] <- defaultValue
+                defaultValue
 
     /// Tries to  get a value and remove key and value it from dictionary, like *.pop() in Python.
     /// Will return None if key does not exist
     let tryPop(key:'Key)  (dic:IDictionary<'Key,'Value>) : 'Value option =
         match box key with // or https://stackoverflow.com/a/864860/969070
-        | null -> ArgumentNullException.Raise "Dict.pop(key) key is null"
+        | null -> ArgumentNullException.Raise "Dict.tryPop(key) key is null"
         | _ ->
             let ok, v = dic.TryGetValue(key)
             if ok then
