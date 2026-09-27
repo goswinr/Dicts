@@ -225,6 +225,7 @@ dotnet run
 for JS testing via Fable and TS verification:
 
 ```bash
+dotnet tool restore
 npm ci
 npm test
 ```

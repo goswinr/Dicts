@@ -1,9 +1,9 @@
 {
   "type": "module",
   "scripts": {
-    "watchTS": "dotnet fable watch --outDir ts --lang typescript ../Src/Dicts.fsproj --run npx tsc" ,
+    "watchTS": "dotnet fable watch ../Src/Dicts.fsproj --outDir ts --lang typescript --run npx tsc" ,
 
-    "buildTS": "dotnet fable --outDir ts --noCache  --lang typescript ../Src/Dicts.fsproj --silent --run npx tsc" ,
+    "buildTS": "dotnet fable ../Src/Dicts.fsproj --outDir ts --noCache --lang typescript --silent --run npx tsc" ,
     "testJS": "dotnet fable --outDir js --noCache --runScript" ,
     "test": "npm run testJS && npm run buildTS"
   },
