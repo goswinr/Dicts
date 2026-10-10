@@ -232,7 +232,7 @@ Go to the tests folder:
 cd Tests
 ```
 
-For testing with .NET:
+For testing with .NET (the tests target net8.0, so the .NET 8 runtime is required):
 
 ```bash
 dotnet run

@@ -26,13 +26,14 @@ dotnet fsdocs build --clean --strict --properties Configuration=Release --input 
 Tests must pass on **both** .NET and JavaScript - they are not interchangeable:
 
 ```bash
-# .NET tests (Scriptorium)
+# .NET tests (Scriptorium), the test project targets net8.0 only
 cd Tests && dotnet run
 
 # JavaScript tests (Scriptorium via Fable) - requires npm ci first
 cd Tests && npm test
 ```
 
+The library targets netstandard2.0 only. The tests target net8.0 only (needs the .NET 8 runtime; CI installs .NET 8 and 10 SDKs).
 Tests are written with Scriptorium (`Scriptorium.Quill` for `testList`/`test`, `Scriptorium.Nib` for `assertThat`), the same code runs on both targets.
 `npm test` transpiles the tests to JavaScript via Fable and runs them with `dotnet fable --runScript`, then verifies that `Src` compiles to TypeScript and type checks with `tsc`.
 

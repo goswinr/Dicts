@@ -24,7 +24,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6.0.0
         with:
-           dotnet-version: '10.x'
+           # .NET 10 SDK to build, .NET 8 runtime for the tests (Tests target net8.0 only)
+           dotnet-version: |
+             8.x
+             10.x
 
       - name: Restore dependencies
         run: dotnet restore
