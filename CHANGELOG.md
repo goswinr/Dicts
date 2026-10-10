@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-10-10
+### Changed
+- The library is unchanged. It still targets `netstandard2.0`. The tests now run on `net8.0` only and the CI workflows install the .NET 8 and 10 SDKs.
 ## [0.6.0] - 2026-09-27
 ### Changed
 - BREAKING CHANGE: `Dict.Add`, `DefaultDict.Add`, their `IDictionary` and `ICollection` implementations and the module function `Dict.add` now work like `Dictionary.Add` and throw an ArgumentException if the key already exists. Use `Set`, the indexer or `Dict.set` to add or replace a value.
@@ -75,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added more tests
 
 
+[0.6.1]: https://github.com/goswinr/Dicts/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/goswinr/Dicts/compare/0.5.1...0.6.0
 [0.5.1]: https://github.com/goswinr/Dicts/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/goswinr/Dicts/compare/0.4.0...0.5.0
