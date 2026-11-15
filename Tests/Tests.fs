@@ -1238,6 +1238,14 @@ let tests  =
         assertThat v (tag "TryGetValue should return default int value" >> isEqualTo 0)
     )
 
+    test ("Dict-Fable - TryGetValue missing with reused out variable", fun _ ->
+        let d = Dict<string, int>()
+        let mutable v = 5
+        let ok = d.TryGetValue("missing", &v)
+        assertThat ok (tag "TryGetValue should return false for missing key" >> isFalse)
+        assertThat v (tag "TryGetValue should set the out variable to the default int value, like .NET" >> isEqualTo 0)
+    )
+
     test ("Dict-Fable - TryGetValue missing string value", fun _ ->
         let d = Dict<int, string>()
         let ok, v = d.TryGetValue 42
@@ -1660,6 +1668,13 @@ let tests  =
         assertThat ok (tag "TryGetValue should return false for missing key" >> isFalse)
         assertThat (d.ContainsKey "missing") (tag "TryGetValue should NOT create key" >> isFalse)
         assertThat d.Count (tag "Count should still be 0" >> isEqualTo 0)
+    )
+
+    test ("DefaultDict-Fable - TryGetValue missing returns default int", fun _ ->
+        let d = DefaultDict(fun _ -> 42)
+        let ok, v = d.TryGetValue "missing"
+        assertThat ok (tag "TryGetValue should return false for missing key" >> isFalse)
+        assertThat v (tag "TryGetValue should return the default int value for a missing key" >> isEqualTo 0)
     )
 
     test ("DefaultDict-Fable - TryGetValue existing key", fun _ ->

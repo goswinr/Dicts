@@ -334,9 +334,10 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
     /// <param name="key">The input key.</param>
     /// <param name="refValue">A reference to the output value.</param>
     /// <returns><c>true</c> if the value is present, <c>false</c> if not.</returns>
-    member _.TryGetValue(key:'K , [<Runtime.InteropServices.Out>] refValue : byref<'V>) : bool =
+    member inline x.TryGetValue(key:'K , [<Runtime.InteropServices.Out>] refValue : byref<'V>) : bool =
+        // inline, so that Fable knows 'V here and gives the default of 'V (0 for int) for a missing key, like .NET does
         let mutable out = Unchecked.defaultof<'V>
-        let found = dic.TryGetValue(key, &out)
+        let found = x.InternalDictionary.TryGetValue(key, &out)
         refValue <- out
         found
 
@@ -388,7 +389,12 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         member _.TryGetValue(key:'K , [<Runtime.InteropServices.Out>] refValue : byref<'V>) : bool =
             let mutable out = Unchecked.defaultof<'V>
             let found = dic.TryGetValue(key, &out)
+            #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
+            // no typed default is available in this generic code in Fable, the caller's out value already is the default on a miss
+            if found then refValue <- out
+            #else
             refValue <- out
+            #endif
             found
 
         member _.Remove(key) : bool = dic.Remove(key)
@@ -409,5 +415,10 @@ type Dict<'K,'V when 'K:equality > private (dic : Dictionary<'K,'V>) =
         member _.TryGetValue(key:'K , [<Runtime.InteropServices.Out>] refValue : byref<'V>) : bool =
             let mutable out = Unchecked.defaultof<'V>
             let found = dic.TryGetValue(key, &out)
+            #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
+            // no typed default is available in this generic code in Fable, the caller's out value already is the default on a miss
+            if found then refValue <- out
+            #else
             refValue <- out
+            #endif
             found

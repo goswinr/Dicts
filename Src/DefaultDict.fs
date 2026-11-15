@@ -248,7 +248,11 @@ type DefaultDict<'K,'V when 'K:equality > private (defaultOfKeyFun: 'K -> 'V, ba
     /// As opposed to Get(key) this does not create a key if it is missing.</summary>
     /// <param name="k">The key to look up.</param>
     /// <returns><c>true</c> and the value if the key was found, <c>false</c> and the default of 'V if not.</returns>
-    member _.TryGetValue(k) : bool * 'V = baseDic.TryGetValue(k)
+    member inline x.TryGetValue(k) : bool * 'V =
+        // inline, so that Fable gives the default of 'V for a missing key, like .NET does
+        let mutable out = Unchecked.defaultof<'V>
+        let found = x.InternalDictionary.TryGetValue(k, &out)
+        found, out
 
 
     /// Returns an enumerator that iterates through the DefaultDict.

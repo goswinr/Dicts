@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- `Dict.TryGetValue` and `DefaultDict.TryGetValue` returned `null` instead of the default value (`0` for `int`) for a missing key when compiled to JavaScript with Fable 5.27. They now return the default value like .NET.
 ## [0.6.1] - 2026-10-10
 ### Changed
 - The library is unchanged. It still targets `netstandard2.0`. The tests now run on `net8.0` only and the CI workflows install the .NET 8 and 10 SDKs.
