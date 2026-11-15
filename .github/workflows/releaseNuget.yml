@@ -16,6 +16,9 @@ jobs:
   publish:
     needs: test
     runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write # NuGet trusted publishing: GitHub OIDC token for a short-lived NuGet API key
 
     steps:
     - name: Checkout repository
@@ -51,6 +54,12 @@ jobs:
           exit 1
         fi
 
+    - name: NuGet login (trusted publishing)
+      id: login
+      uses: NuGet/login@v1.2.0
+      with:
+        user: goswinr
+
     - name: Publish NuGet package
       run: |
         $nupkgPath = Get-ChildItem -Path "./Src/bin/Release/" -Filter "*.nupkg" -Recurse | Select-Object -First 1 -ExpandProperty FullName
@@ -58,4 +67,4 @@ jobs:
           Write-Error "No .nupkg file found in ./Src/bin/Release/ folder."
           exit 1
         }
-        dotnet nuget push $nupkgPath --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        dotnet nuget push $nupkgPath --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
