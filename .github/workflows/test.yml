@@ -9,6 +9,8 @@ on:
       - main
   # so that releaseNuget.yml can run the tests before publishing:
   workflow_call:
+  # to allow manual triggering of the workflow from the GitHub Actions tab:
+  workflow_dispatch:
 
 permissions:
   contents: read
